@@ -111,8 +111,10 @@
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5Z2N6cHdnb3dtbWFyZmt3ZGJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY0OTUwNDYsImV4cCI6MjA3MjA3MTA0Nn0.euY43Bd9gJW4y2qvxjwAZqrP6RPQXmGwcpD1H1Qx_pg";
 
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // IMPORTANT : on cible le schéma 'garden' pour toutes les requêtes
+    const db = sb.schema('garden');
 
-    // baseRedirect = URL du dossier courant (ex: https://cmaslard.xyz/garden-harvest/)
+    // Redirection magic link vers le sous-dossier courant (ex: /garden-harvest/)
     const baseRedirect = (() => {
       const base = location.origin + location.pathname.replace(/[^/]*$/, '');
       return base.endsWith('/') ? base : base + '/';
@@ -183,7 +185,7 @@
     }
 
     async function loadProducts(){
-      const { data, error } = await sb.from('products').select('id,name,variety,unit_harvest').order('name');
+      const { data, error } = await db.from('products').select('id,name,variety,unit_harvest').order('name');
       if (error){ rowsMsg.textContent = 'Erreur produits : '+error.message; return; }
       selProduct.innerHTML = '<option value="">— choisir —</option>' +
         data.map(p => `<option value="${p.id}" data-unit="${p.unit_harvest}">${p.name}${p.variety?` — ${p.variety}`:''}</option>`).join('');
@@ -191,14 +193,14 @@
     }
 
     async function loadLocations(){
-      const { data, error } = await sb.from('locations').select('id,name').order('name');
+      const { data, error } = await db.from('locations').select('id,name').order('name');
       if (error){ selLoc.innerHTML = '<option value="">— aucun —</option>'; return; }
       selLoc.innerHTML = '<option value="">— aucun —</option>' +
         data.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
     }
 
     async function refreshRows(){
-      const { data, error } = await sb.from('harvests_view').select('*').limit(100);
+      const { data, error } = await db.from('harvests_view').select('*').limit(100);
       if (error){ rowsMsg.textContent = 'Erreur lecture : '+error.message; return; }
       rowsBody.innerHTML = data.map(r => `
         <tr>
@@ -225,7 +227,7 @@
         note: noteInp.value || null,
         location_id: selLoc.value ? Number(selLoc.value) : null,
       };
-      const { error } = await sb.from('harvests').insert(payload);
+      const { error } = await db.from('harvests').insert(payload);
       if (error){ addMsg.className='muted err'; addMsg.textContent = error.message; return; }
       addMsg.className='muted ok'; addMsg.textContent = 'Récolte ajoutée.';
       qtyInp.value=''; noteInp.value='';
