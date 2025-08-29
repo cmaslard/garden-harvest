@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Garden Harvests – Mini-app</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;max-width:960px;margin:24px auto;padding:0 16px}
+    .card{border:1px solid #ddd;border-radius:12px;padding:16px;margin:16px 0}
+    label{font-size:.9rem;color:#444;display:block;margin-bottom:4px}
+    input,select,button{padding:.5rem;border:1px solid #ccc;border-radius:10px;width:100%}
+    button{cursor:pointer}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:.5rem;border-top:1px solid #eee;text-align:left;vertical-align:top}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+    .muted{color:#666;font-size:.9rem}
+    .right{display:flex;justify-content:flex-end;gap:.5rem}
+    .ok{color:#117a00}
+    .err{color:#b00020}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #ddd;font-size:.8rem}
+    .hide{display:none}
+  </style>
+</head>
+<body>
+  <h1>Garden Harvests – Mini-app</h1>
+
+  <!-- Auth -->
+  <div id="auth" class="card">
+    <h2>Connexion par email</h2>
+    <p>Entre ton email pour recevoir un lien magique.</p>
+    <div class="row">
+      <input id="email" type="email" placeholder="toi@example.com" />
+      <button id="send-link">Envoyer le lien</button>
+    </div>
+    <p id="auth-msg" class="muted"></p>
+  </div>
+
+  <!-- App -->
+  <div id="app" class="hide">
+    <div class="card" id="whoami">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          Connecté : <span id="who"></span>
+          <span id="policies" class="pill">RLS actif</span>
+        </div>
+        <div class="right">
+          <button id="reload">Rafraîchir</button>
+          <button id="signout">Se déconnecter</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Ajouter une récolte</h2>
+      <div class="row3">
+        <div>
+          <label>Produit</label>
+          <select id="product"></select>
+        </div>
+        <div>
+          <label>Lieu (optionnel)</label>
+          <select id="location"></select>
+        </div>
+        <div>
+          <label>Date</label>
+          <input id="date" type="date" />
+        </div>
+      </div>
+      <div class="row3" style="margin-top:1rem">
+        <div>
+          <label>Quantité (<span id="unit">–</span>)</label>
+          <input id="qty" type="number" step="0.01" min="0" />
+        </div>
+        <div>
+          <label>Note</label>
+          <input id="note" placeholder="rang, commentaire…" />
+        </div>
+        <div style="align-self:end">
+          <button id="add">Ajouter</button>
+        </div>
+      </div>
+      <p id="add-msg" class="muted"></p>
+    </div>
+
+    <div class="card">
+      <h2>Dernières entrées</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Produit</th>
+            <th>Variété</th>
+            <th>Qté</th>
+            <th>Unité</th>
+            <th>Lieu</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <p id="rows-msg" class="muted"></p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+    // ==== ton projet Supabase fixé ici ====
+    const SUPABASE_URL = "https://xygczpwgowmmarfkwdbc.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5Z2N6cHdnb3dtbWFyZmt3ZGJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY0OTUwNDYsImV4cCI6MjA3MjA3MTA0Nn0.euY43Bd9gJW4y2qvxjwAZqrP6RPQXmGwcpD1H1Qx_pg";
+
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // éléments UI
+    const authCard  = document.getElementById('auth');
+    const appCard   = document.getElementById('app');
+    const emailInp  = document.getElementById('email');
+    const sendBtn   = document.getElementById('send-link');
+    const authMsg   = document.getElementById('auth-msg');
+    const whoSpan   = document.getElementById('who');
+    const signout   = document.getElementById('signout');
+    const reloadBtn = document.getElementById('reload');
+    const selProduct= document.getElementById('product');
+    const selLoc    = document.getElementById('location');
+    const dateInp   = document.getElementById('date');
+    const qtyInp    = document.getElementById('qty');
+    const noteInp   = document.getElementById('note');
+    const addBtn    = document.getElementById('add');
+    const unitSpan  = document.getElementById('unit');
+    const addMsg    = document.getElementById('add-msg');
+    const rowsBody  = document.getElementById('rows');
+    const rowsMsg   = document.getElementById('rows-msg');
+
+    // session
+    sb.auth.getSession().then(({ data }) => toggleUI(!!data.session));
+    sb.auth.onAuthStateChange((_e, s) => toggleUI(!!s));
+
+    function toggleUI(signedIn){
+      if (signedIn){
+        authCard.classList.add('hide');
+        appCard.classList.remove('hide');
+        initApp();
+      } else {
+        authCard.classList.remove('hide');
+        appCard.classList.add('hide');
+      }
+    }
+
+    // Auth
+    sendBtn.onclick = async () => {
+      authMsg.textContent = 'Envoi…';
+      const { error } = await sb.auth.signInWithOtp({ email: emailInp.value.trim() });
+      authMsg.textContent = error ? ('Erreur : '+error.message) : 'Lien envoyé ! Vérifie tes emails.';
+    };
+    signout.onclick = async () => { await sb.auth.signOut(); location.reload(); };
+    reloadBtn.onclick = () => { refreshAll(); };
+
+    // App
+    async function initApp(){
+      dateInp.valueAsDate = new Date();
+      selProduct.onchange = () => {
+        const opt = selProduct.selectedOptions[0];
+        unitSpan.textContent = opt?.dataset.unit || '–';
+      };
+      await refreshAll();
+      const { data: { user } } = await sb.auth.getUser();
+      whoSpan.textContent = user?.email || '(session)';
+      addBtn.onclick = onAdd;
+    }
+
+    async function refreshAll(){
+      await Promise.all([loadProducts(), loadLocations(), refreshRows()]);
+    }
+
+    async function loadProducts(){
+      const { data, error } = await sb.from('products').select('id,name,variety,unit_harvest').order('name');
+      if (error){ rowsMsg.textContent = 'Erreur produits : '+error.message; return; }
+      selProduct.innerHTML = '<option value="">— choisir —</option>' +
+        data.map(p => `<option value="${p.id}" data-unit="${p.unit_harvest}">${p.name}${p.variety?` — ${p.variety}`:''}</option>`).join('');
+      unitSpan.textContent = '–';
+    }
+
+    async function loadLocations(){
+      const { data, error } = await sb.from('locations').select('id,name').order('name');
+      if (error){ selLoc.innerHTML = '<option value="">— aucun —</option>'; return; }
+      selLoc.innerHTML = '<option value="">— aucun —</option>' +
+        data.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+    }
+
+    async function refreshRows(){
+      const { data, error } = await sb.from('harvests_view').select('*').limit(100);
+      if (error){ rowsMsg.textContent = 'Erreur lecture : '+error.message; return; }
+      rowsBody.innerHTML = data.map(r => `
+        <tr>
+          <td>${r.harvest_date ?? ''}</td>
+          <td>${r.product_name ?? ''}</td>
+          <td>${r.variety ?? ''}</td>
+          <td>${r.quantity ?? ''}</td>
+          <td>${r.harvest_unit ?? ''}</td>
+          <td>${r.location_name ?? ''}</td>
+          <td>${r.note ?? ''}</td>
+        </tr>
+      `).join('');
+      rowsMsg.textContent = data.length ? '' : 'Aucune ligne pour le moment.';
+    }
+
+    async function onAdd(){
+      addMsg.textContent = '';
+      const productId = selProduct.value ? Number(selProduct.value) : null;
+      if (!productId){ addMsg.textContent = 'Choisis un produit.'; return; }
+      const payload = {
+        product_id: productId,
+        harvest_date: dateInp.value || null,
+        quantity: Number(qtyInp.value || 0),
+        note: noteInp.value || null,
+        location_id: selLoc.value ? Number(selLoc.value) : null,
+      };
+      const { error } = await sb.from('harvests').insert(payload);
+      if (error){ addMsg.className='muted err'; addMsg.textContent = error.message; return; }
+      addMsg.className='muted ok'; addMsg.textContent = 'Récolte ajoutée.';
+      qtyInp.value=''; noteInp.value='';
+      await refreshRows();
+    }
+  </script>
+</body>
+</html>
