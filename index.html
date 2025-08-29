@@ -42,7 +42,7 @@
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
           Connecté : <span id="who"></span>
-          <span id="policies" class="pill">RLS actif</span>
+          <span class="pill">RLS actif</span>
         </div>
         <div class="right">
           <button id="reload">Rafraîchir</button>
@@ -106,11 +106,17 @@
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-    // ==== ton projet Supabase fixé ici ====
+    // ==== Projet Supabase (fixé) ====
     const SUPABASE_URL = "https://xygczpwgowmmarfkwdbc.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5Z2N6cHdnb3dtbWFyZmt3ZGJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY0OTUwNDYsImV4cCI6MjA3MjA3MTA0Nn0.euY43Bd9gJW4y2qvxjwAZqrP6RPQXmGwcpD1H1Qx_pg";
 
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // baseRedirect = URL du dossier courant (ex: https://cmaslard.xyz/garden-harvest/)
+    const baseRedirect = (() => {
+      const base = location.origin + location.pathname.replace(/[^/]*$/, '');
+      return base.endsWith('/') ? base : base + '/';
+    })();
 
     // éléments UI
     const authCard  = document.getElementById('auth');
@@ -150,10 +156,13 @@
     // Auth
     sendBtn.onclick = async () => {
       authMsg.textContent = 'Envoi…';
-      const { error } = await sb.auth.signInWithOtp({ email: emailInp.value.trim() });
+      const { error } = await sb.auth.signInWithOtp({
+        email: emailInp.value.trim(),
+        options: { emailRedirectTo: baseRedirect }
+      });
       authMsg.textContent = error ? ('Erreur : '+error.message) : 'Lien envoyé ! Vérifie tes emails.';
     };
-    signout.onclick = async () => { await sb.auth.signOut(); location.reload(); };
+    signout.onclick = async () => { await sb.auth.signOut(); location.href = baseRedirect; };
     reloadBtn.onclick = () => { refreshAll(); };
 
     // App
