@@ -144,6 +144,7 @@
         <thead>
           <tr>
             <th>Date</th>
+            <th>Par</th>
             <th>Produit</th>
             <th>Variété</th>
             <th>Qté</th>
@@ -316,6 +317,7 @@
       rowsBody.innerHTML = data.map(r => `
         <tr>
           <td>${r.harvest_date ?? ''}</td>
+          <td>${r.created_by_name ?? ''}</td>
           <td>${r.product_name ?? ''}</td>
           <td>${r.variety ?? ''}</td>
           <td>${r.quantity ?? ''}</td>
