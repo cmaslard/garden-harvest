@@ -3,43 +3,98 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Garden Harvests – Mini-app</title>
+  <title>Garden Harvests – Mini‑app</title>
   <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;max-width:960px;margin:24px auto;padding:0 16px}
-    .card{border:1px solid #ddd;border-radius:12px;padding:16px;margin:16px 0}
-    label{font-size:.9rem;color:#444;display:block;margin-bottom:4px}
-    input,select,button{padding:.5rem;border:1px solid #ccc;border-radius:10px;width:100%}
+    :root{
+      color-scheme: light dark;
+      --bg: #0b0c10;
+      --fg: #e5e7eb;
+      --muted:#9ca3af;
+      --card:#1f2937;
+      --border:#374151;
+      --primary:#60a5fa;
+      --ok:#22c55e;
+      --err:#ef4444;
+    }
+    html,body{height:100%}
+    body{
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;
+      max-width:1000px;margin:24px auto;padding:0 16px;
+      background:var(--bg);color:var(--fg)
+    }
+    h1{letter-spacing:.2px}
+    .card{
+      border:1px solid var(--border);
+      border-radius:14px;padding:16px;margin:16px 0;background:var(--card)
+    }
+    label{font-size:.9rem;color:#cbd5e1;display:block;margin-bottom:6px}
+    input,select,button{
+      padding:.6rem;border:1px solid var(--border);border-radius:12px;width:100%;
+      background:transparent;color:var(--fg)
+    }
+    input::placeholder{color:#6b7280}
     button{cursor:pointer}
     table{width:100%;border-collapse:collapse}
-    th,td{padding:.5rem;border-top:1px solid #eee;text-align:left;vertical-align:top}
+    th,td{padding:.6rem;border-top:1px solid var(--border);text-align:left;vertical-align:top}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
     .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
-    .muted{color:#666;font-size:.9rem}
-    .right{display:flex;justify-content:flex-end;gap:.5rem}
-    .ok{color:#117a00}
-    .err{color:#b00020}
-    .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #ddd;font-size:.8rem}
+    .muted{color:var(--muted);font-size:.92rem}
+    .right{display:flex;justify-content:flex-end;gap:.6rem}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--border);font-size:.8rem;color:var(--muted)}
     .hide{display:none}
+    .tabs{display:flex;gap:8px;margin-bottom:12px}
+    .tab{padding:.35rem .8rem;border:1px solid var(--border);border-radius:999px;background:transparent}
+    .tab.active{border-color:var(--primary);color:var(--primary)}
+    .btn-primary{border-color:var(--primary);color:var(--primary)}
+    .msg-ok{color:var(--ok)} .msg-err{color:var(--err)}
   </style>
 </head>
 <body>
-  <h1>Garden Harvests – Mini-app test 1</h1>
+  <h1>Garden Harvests – Mini‑app</h1>
 
   <!-- Auth -->
   <div id="auth" class="card">
-    <h2>Connexion par email</h2>
-    <p>Entre ton email pour recevoir un lien magique.</p>
-    <div class="row">
-      <input id="email" type="email" placeholder="toi@example.com" />
-      <button id="send-link">Envoyer le lien</button>
+    <h2>Connexion</h2>
+    <div class="tabs">
+      <button id="tab-magic" class="tab active">Magic link</button>
+      <button id="tab-pass" class="tab">Email + mot de passe</button>
     </div>
-    <p id="auth-msg" class="muted"></p>
+
+    <!-- Magic link -->
+    <div id="pane-magic">
+      <p class="muted">Entre ton email pour recevoir un lien magique.</p>
+      <div class="row">
+        <input id="email-magic" type="email" placeholder="toi@example.com" />
+        <button id="send-link" class="btn-primary">Envoyer le lien</button>
+      </div>
+      <p id="auth-msg-magic" class="muted"></p>
+    </div>
+
+    <!-- Email + password -->
+    <div id="pane-pass" class="hide">
+      <div class="row">
+        <div>
+          <label>Email</label>
+          <input id="email-pass" type="email" placeholder="toi@example.com" />
+        </div>
+        <div>
+          <label>Mot de passe</label>
+          <input id="pwd-pass" type="password" placeholder="••••••••" />
+        </div>
+      </div>
+      <div class="right" style="margin-top:12px">
+        <button id="btn-signin" class="btn-primary">Se connecter</button>
+        <button id="btn-signup">Créer un compte</button>
+      </div>
+      <p class="muted" style="margin-top:8px">Après inscription il peut être nécessaire de confirmer l’email selon tes paramètres Supabase.</p>
+      <p id="auth-msg-pass" class="muted"></p>
+    </div>
   </div>
 
   <!-- App -->
   <div id="app" class="hide">
     <div class="card" id="whoami">
-      <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
         <div>
           Connecté : <span id="who"></span>
           <span class="pill">RLS actif</span>
@@ -77,7 +132,7 @@
           <input id="note" placeholder="rang, commentaire…" />
         </div>
         <div style="align-self:end">
-          <button id="add">Ajouter</button>
+          <button id="add" class="btn-primary">Ajouter</button>
         </div>
       </div>
       <p id="add-msg" class="muted"></p>
@@ -111,24 +166,102 @@
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5Z2N6cHdnb3dtbWFyZmt3ZGJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY0OTUwNDYsImV4cCI6MjA3MjA3MTA0Nn0.euY43Bd9gJW4y2qvxjwAZqrP6RPQXmGwcpD1H1Qx_pg";
 
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    // IMPORTANT : on cible le schéma 'garden' pour toutes les requêtes
+    // IMPORTANT : on cible le schéma 'garden' (ajoute-le dans Settings → API → Exposed Schemas)
     const db = sb.schema('garden');
 
-    // Redirection magic link vers le sous-dossier courant (ex: /garden-harvest/)
+    // baseRedirect = URL du dossier courant (ex: https://cmaslard.xyz/garden-harvest/)
     const baseRedirect = (() => {
       const base = location.origin + location.pathname.replace(/[^/]*$/, '');
       return base.endsWith('/') ? base : base + '/';
     })();
 
-    // éléments UI
+    // UI elems
     const authCard  = document.getElementById('auth');
     const appCard   = document.getElementById('app');
-    const emailInp  = document.getElementById('email');
-    const sendBtn   = document.getElementById('send-link');
-    const authMsg   = document.getElementById('auth-msg');
     const whoSpan   = document.getElementById('who');
     const signout   = document.getElementById('signout');
     const reloadBtn = document.getElementById('reload');
+
+    // Tabs
+    const tabMagic  = document.getElementById('tab-magic');
+    const tabPass   = document.getElementById('tab-pass');
+    const paneMagic = document.getElementById('pane-magic');
+    const panePass  = document.getElementById('pane-pass');
+
+    tabMagic.onclick = () => { tabMagic.classList.add('active'); tabPass.classList.remove('active'); paneMagic.classList.remove('hide'); panePass.classList.add('hide'); };
+    tabPass.onclick  = () => { tabPass.classList.add('active');  tabMagic.classList.remove('active'); panePass.classList.remove('hide'); paneMagic.classList.add('hide'); };
+
+    // Magic link
+    const emailMagic = document.getElementById('email-magic');
+    const sendBtn    = document.getElementById('send-link');
+    const msgMagic   = document.getElementById('auth-msg-magic');
+
+    sendBtn.onclick = async () => {
+      msgMagic.textContent = 'Envoi…';
+      const { error } = await sb.auth.signInWithOtp({
+        email: (emailMagic.value || '').trim(),
+        options: { emailRedirectTo: baseRedirect }
+      });
+      msgMagic.className = 'muted ' + (error ? 'msg-err' : 'msg-ok');
+      msgMagic.textContent = error ? ('Erreur : ' + error.message) : 'Lien envoyé ! Vérifie tes emails.';
+    };
+
+    // Password auth
+    const emailPass = document.getElementById('email-pass');
+    const pwdPass   = document.getElementById('pwd-pass');
+    const btnSignin = document.getElementById('btn-signin');
+    const btnSignup = document.getElementById('btn-signup');
+    const msgPass   = document.getElementById('auth-msg-pass');
+
+    btnSignin.onclick = async () => {
+      msgPass.textContent = 'Connexion…';
+      const { error } = await sb.auth.signInWithPassword({
+        email: (emailPass.value || '').trim(),
+        password: pwdPass.value || ''
+      });
+      msgPass.className = 'muted ' + (error ? 'msg-err' : 'msg-ok');
+      msgPass.textContent = error ? ('Erreur : ' + error.message) : 'Connecté !';
+      if (!error) await afterAuth();
+    };
+
+    btnSignup.onclick = async () => {
+      msgPass.textContent = 'Création du compte…';
+      const { data, error } = await sb.auth.signUp({
+        email: (emailPass.value || '').trim(),
+        password: pwdPass.value || '',
+        options: { emailRedirectTo: baseRedirect }
+      });
+      msgPass.className = 'muted ' + (error ? 'msg-err' : 'msg-ok');
+      msgPass.textContent = error
+        ? ('Erreur : ' + error.message)
+        : (data?.user?.identities?.length ? 'Compte créé ! Connecte-toi.' : 'Vérifie ton email pour confirmer le compte.');
+    };
+
+    // Session
+    sb.auth.getSession().then(({ data }) => toggleUI(!!data.session));
+    sb.auth.onAuthStateChange((_e, s) => toggleUI(!!s));
+
+    function toggleUI(signedIn){
+      if (signedIn){
+        authCard.classList.add('hide');
+        appCard.classList.remove('hide');
+        afterAuth();
+      } else {
+        authCard.classList.remove('hide');
+        appCard.classList.add('hide');
+      }
+    }
+
+    async function afterAuth(){
+      const { data: { user } } = await sb.auth.getUser();
+      whoSpan.textContent = user?.email || '(session)';
+      await refreshAll();
+    }
+
+    signout.onclick = async () => { await sb.auth.signOut(); location.href = baseRedirect; };
+    reloadBtn.onclick = () => { refreshAll(); };
+
+    // App elems
     const selProduct= document.getElementById('product');
     const selLoc    = document.getElementById('location');
     const dateInp   = document.getElementById('date');
@@ -140,53 +273,24 @@
     const rowsBody  = document.getElementById('rows');
     const rowsMsg   = document.getElementById('rows-msg');
 
-    // session
-    sb.auth.getSession().then(({ data }) => toggleUI(!!data.session));
-    sb.auth.onAuthStateChange((_e, s) => toggleUI(!!s));
-
-    function toggleUI(signedIn){
-      if (signedIn){
-        authCard.classList.add('hide');
-        appCard.classList.remove('hide');
-        initApp();
-      } else {
-        authCard.classList.remove('hide');
-        appCard.classList.add('hide');
-      }
-    }
-
-    // Auth
-    sendBtn.onclick = async () => {
-      authMsg.textContent = 'Envoi…';
-      const { error } = await sb.auth.signInWithOtp({
-        email: emailInp.value.trim(),
-        options: { emailRedirectTo: baseRedirect }
-      });
-      authMsg.textContent = error ? ('Erreur : '+error.message) : 'Lien envoyé ! Vérifie tes emails.';
-    };
-    signout.onclick = async () => { await sb.auth.signOut(); location.href = baseRedirect; };
-    reloadBtn.onclick = () => { refreshAll(); };
-
-    // App
-    async function initApp(){
-      dateInp.valueAsDate = new Date();
+    // App logic
+    async function refreshAll(){
+      // date par défaut = aujourd’hui
+      if (!dateInp.value) dateInp.valueAsDate = new Date();
       selProduct.onchange = () => {
         const opt = selProduct.selectedOptions[0];
         unitSpan.textContent = opt?.dataset.unit || '–';
       };
-      await refreshAll();
-      const { data: { user } } = await sb.auth.getUser();
-      whoSpan.textContent = user?.email || '(session)';
-      addBtn.onclick = onAdd;
-    }
-
-    async function refreshAll(){
       await Promise.all([loadProducts(), loadLocations(), refreshRows()]);
+      addBtn.onclick = onAdd;
     }
 
     async function loadProducts(){
       const { data, error } = await db.from('products').select('id,name,variety,unit_harvest').order('name');
-      if (error){ rowsMsg.textContent = 'Erreur produits : '+error.message; return; }
+      if (error){
+        rowsMsg.textContent = 'Erreur produits : ' + error.message + ' — Vérifie "Exposed Schemas" (Settings → API) contient "garden".';
+        return;
+      }
       selProduct.innerHTML = '<option value="">— choisir —</option>' +
         data.map(p => `<option value="${p.id}" data-unit="${p.unit_harvest}">${p.name}${p.variety?` — ${p.variety}`:''}</option>`).join('');
       unitSpan.textContent = '–';
@@ -194,14 +298,21 @@
 
     async function loadLocations(){
       const { data, error } = await db.from('locations').select('id,name').order('name');
-      if (error){ selLoc.innerHTML = '<option value="">— aucun —</option>'; return; }
+      if (error){
+        // pas bloquant pour l'ajout sans lieu
+        return;
+      }
       selLoc.innerHTML = '<option value="">— aucun —</option>' +
         data.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
     }
 
     async function refreshRows(){
       const { data, error } = await db.from('harvests_view').select('*').limit(100);
-      if (error){ rowsMsg.textContent = 'Erreur lecture : '+error.message; return; }
+      if (error){
+        rowsMsg.textContent = 'Erreur lecture : ' + error.message;
+        rowsBody.innerHTML = '';
+        return;
+      }
       rowsBody.innerHTML = data.map(r => `
         <tr>
           <td>${r.harvest_date ?? ''}</td>
@@ -228,8 +339,8 @@
         location_id: selLoc.value ? Number(selLoc.value) : null,
       };
       const { error } = await db.from('harvests').insert(payload);
-      if (error){ addMsg.className='muted err'; addMsg.textContent = error.message; return; }
-      addMsg.className='muted ok'; addMsg.textContent = 'Récolte ajoutée.';
+      if (error){ addMsg.className='muted msg-err'; addMsg.textContent = error.message; return; }
+      addMsg.className='muted msg-ok'; addMsg.textContent = 'Récolte ajoutée.';
       qtyInp.value=''; noteInp.value='';
       await refreshRows();
     }
