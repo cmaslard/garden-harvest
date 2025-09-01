@@ -166,22 +166,12 @@
     <div id="auth" class="card">
       <h2>Connexion</h2>
       <div class="tabs">
-        <button id="tab-pass" class="tab">Email + mot de passe</button>
-        <button id="tab-magic" class="tab active">Magic link</button>
+        <button id="tab-pass" class="tab active">Email + mot de passe</button>
+        <button id="tab-magic" class="tab">Magic link</button>
       </div>
-
-      <!-- Magic link -->
-      <div id="pane-magic">
-        <p class="muted">Entre ton email pour recevoir un lien magique.</p>
-        <div class="row">
-          <input id="email-magic" type="email" placeholder="toi@example.com" />
-          <button id="send-link" class="btn-primary">Envoyer le lien</button>
-        </div>
-        <p id="auth-msg-magic" class="muted"></p>
-      </div>
-
+      
       <!-- Email + password -->
-      <div id="pane-pass" class="hide">
+      <div id="pane-pass">
         <div class="row">
           <div>
             <label>Email</label>
@@ -199,6 +189,16 @@
         <p class="muted" style="margin-top:8px">Après inscription il peut être nécessaire de confirmer l’email selon tes paramètres Supabase.</p>
         <p id="auth-msg-pass" class="muted"></p>
       </div>
+    </div>
+    
+    <!-- Magic link -->
+    <div id="pane-magic" class="hide">
+      <p class="muted">Entre ton email pour recevoir un lien magique.</p>
+      <div class="row">
+        <input id="email-magic" type="email" placeholder="toi@example.com" />
+        <button id="send-link" class="btn-primary">Envoyer le lien</button>
+      </div>
+      <p id="auth-msg-magic" class="muted"></p>
     </div>
 
     <!-- App -->
