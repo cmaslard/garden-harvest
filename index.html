@@ -73,21 +73,34 @@
       background:var(--bg);
       border-bottom:1px solid var(--border);
     }
-    .topbar .wrap{
-      max-width:1000px; margin:0 auto;
-      display:flex; align-items:center; justify-content:space-between; gap:12px;
-      padding:10px 16px;
-    }
-    .topbar h1{ margin:0; font-size:1.35rem; letter-spacing:.2px; }
 
-    /* Bouton de thème dans le header */
-    #theme-toggle{
-      display:flex; align-items:center; gap:.5rem;
-      padding:.4rem .6rem; border:1px solid var(--border);
-      border-radius:999px; background:var(--card); color:var(--fg);
-      cursor:pointer;
+    /* Bouton thème compact, à droite, sans prendre toute la hauteur */
+    .topbar .wrap{
+      justify-content: space-between;   /* titre à gauche, bouton à droite */
+      padding: 8px 12px;                /* header un peu moins haut */
+      gap: 8px;
     }
-    #theme-toggle svg{ width:18px; height:18px; display:block; }
+
+        /* Bouton de thème dans le header */
+    #theme-toggle{
+      width: 32px; height: 32px;        /* compact */
+      padding: 0;
+      display: grid; place-items: center;
+      margin-left: auto;                /* pousse à droite si besoin */
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--card);
+      color: var(--fg);
+    }
+
+    #theme-toggle svg{ width:16px; height:16px; }
+
+    /* encore plus petit sur mobile */
+    @media (max-width: 760px){
+      .topbar .wrap{ padding: 6px 10px; }
+      #theme-toggle{ width: 28px; height: 28px; }
+      #theme-toggle svg{ width: 14px; height: 14px; }
+    }
 
     /* Cartes / formulaires / tableaux */
     .card{
