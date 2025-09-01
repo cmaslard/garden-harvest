@@ -80,13 +80,11 @@
     }
     .topbar h1{ margin:0; font-size:1.35rem; letter-spacing:.2px; }
 
-
-
       /* Fix: bouton dark/light compact dans le header */
       .topbar #theme-toggle{
         width: auto;        /* override le width:100% global */
         flex: 0 0 auto;     /* ne s'étire pas */
-        padding: 1rem;    /* compact */
+        padding: .8rem;    /* compact */
         gap: 0;
         min-width: auto;
         border:1px solid var(--border);
@@ -141,14 +139,26 @@
     .msg-ok{color:var(--ok)} .msg-err{color:var(--err)}
 
     /* ===== Mobile ===== */
-    @media (max-width: 760px){
-      .container{ padding:12px; }
-      .topbar .wrap{ padding:8px 12px; }
-      .topbar h1{ font-size:1.1rem; }
-      .row, .row3{ grid-template-columns:1fr; }
-      .right{ justify-content:flex-start; gap:.5rem; flex-wrap:wrap; }
-      th, td{ padding:.5rem; }
-    }
+@media (max-width: 760px){
+  .container{ padding:12px; }
+  .topbar .wrap{ padding:8px 12px; }
+  .topbar h1{ font-size:1.1rem; }
+  .row, .row3{ grid-template-columns:1fr; }
+  .right{ justify-content:flex-start; gap:.5rem; flex-wrap:wrap; }
+  th, td{ padding:.5rem; }
+
+  /* ↓ AJOUT ICI */
+  .topbar #theme-toggle{
+    padding: .35rem;      /* au lieu de 1rem */
+    min-width: auto;      /* garde l'override */
+    line-height: 0;       /* retire la hauteur inutile du texte */
+    border-radius: 999px;
+  }
+  .topbar #theme-toggle svg{
+    width: 14px;
+    height: 14px;
+  }
+} 
   </style>
 </head>
 
