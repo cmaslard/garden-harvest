@@ -1,19 +1,25 @@
+voilà le fichier complet, responsive desktop/mobile avec header sticky + bouton de thème intégré 👇
+
 <!doctype html>
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Anti-flash thème au tout début -->
   <script>
-try{
-  var t = localStorage.getItem('gh_theme');
-  if(t) document.documentElement.setAttribute('data-theme', t);
-  else {
-    var h = new Date().getHours();
-    document.documentElement.setAttribute('data-theme', (h>=7 && h<19)?'light':'dark');
-  }
-}catch(e){}
-</script>
-  <title>Garden Harvests – Mini‑app</title>
+  try{
+    var t = localStorage.getItem('gh_theme');
+    if(t) document.documentElement.setAttribute('data-theme', t);
+    else {
+      var h = new Date().getHours();
+      document.documentElement.setAttribute('data-theme', (h>=7 && h<19)?'light':'dark');
+    }
+  }catch(e){}
+  </script>
+
+  <title>Garden Harvests – Mini-app</title>
+
   <style>
     :root{
       color-scheme: light dark;
@@ -26,38 +32,57 @@ try{
       --ok:#22c55e;
       --err:#ef4444;
     }
-    html{ color-scheme: dark; }
-/* Thème clair : on surcharge uniquement les variables */
-html[data-theme="light"]{
-  color-scheme: light;
-  --bg:#f8fafc;
-  --fg:#0f172a;
-  --muted:#475569;
-  --card:#ffffff;
-  --border:#e2e8f0;
-  --primary:#0ea5e9;
-  --ok:#16a34a;
-  --err:#dc2626;
-}
 
-/* Bouton de thème (fixé en haut à droite) */
-#theme-toggle{
-  position:fixed; top:16px; right:16px; z-index:1000;
-  display:flex; align-items:center; gap:.5rem;
-  padding:.4rem .6rem; border:1px solid var(--border);
-  border-radius:999px; background:var(--card); color:var(--fg);
-}
-#theme-toggle svg{ width:18px; height:18px; display:block; }
+    /* Thème par défaut (sombre) + variante claire */
+    html{ color-scheme: dark; }
+    html[data-theme="light"]{
+      color-scheme: light;
+      --bg:#f8fafc;
+      --fg:#0f172a;
+      --muted:#475569;
+      --card:#ffffff;
+      --border:#e2e8f0;
+      --primary:#0ea5e9;
+      --ok:#16a34a;
+      --err:#dc2626;
+    }
+
     html,body{height:100%}
     body{
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;
-      max-width:1000px;margin:24px auto;padding:0 16px;
-      background:var(--bg);color:var(--fg)
+      margin:0;
+      background:var(--bg); color:var(--fg);
     }
-    h1{letter-spacing:.2px}
+
+    /* ===== Layout responsive ===== */
+    .container{ max-width:1000px; margin:0 auto; padding:16px; }
+
+    /* Header sticky (titre + switch de thème) */
+    .topbar{
+      position:sticky; top:0; z-index:50;
+      background:var(--bg);
+      border-bottom:1px solid var(--border);
+    }
+    .topbar .wrap{
+      max-width:1000px; margin:0 auto;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:10px 16px;
+    }
+    .topbar h1{ margin:0; font-size:1.35rem; letter-spacing:.2px; }
+
+    /* Bouton de thème dans le header */
+    #theme-toggle{
+      display:flex; align-items:center; gap:.5rem;
+      padding:.4rem .6rem; border:1px solid var(--border);
+      border-radius:999px; background:var(--card); color:var(--fg);
+      cursor:pointer;
+    }
+    #theme-toggle svg{ width:18px; height:18px; display:block; }
+
+    /* Cartes / formulaires / tableaux */
     .card{
       border:1px solid var(--border);
-      border-radius:14px;padding:16px;margin:16px 0;background:var(--card)
+      border-radius:14px; padding:16px; margin:16px 0; background:var(--card);
     }
     label{font-size:.9rem;color:#cbd5e1;display:block;margin-bottom:6px}
     input,select,button{
@@ -68,10 +93,16 @@ html[data-theme="light"]{
     button{cursor:pointer}
     table{width:100%;border-collapse:collapse}
     th,td{padding:.6rem;border-top:1px solid var(--border);text-align:left;vertical-align:top}
+
+    /* Table responsive (scroll horizontal si petit écran) */
+    .table-wrap{ width:100%; overflow-x:auto; border-radius:12px; }
+    .table-wrap table{ min-width:680px; }
+
+    /* Grilles */
     .row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
     .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
     .muted{color:var(--muted);font-size:.92rem}
-    .right{display:flex;justify-content:flex-end;gap:.6rem}
+    .right{display:flex;justify-content:flex-end;gap:.6rem;align-items:center}
     .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--border);font-size:.8rem;color:var(--muted)}
     .hide{display:none}
     .tabs{display:flex;gap:8px;margin-bottom:12px}
@@ -79,180 +110,202 @@ html[data-theme="light"]{
     .tab.active{border-color:var(--primary);color:var(--primary)}
     .btn-primary{border-color:var(--primary);color:var(--primary)}
     .msg-ok{color:var(--ok)} .msg-err{color:var(--err)}
+
+    /* ===== Mobile ===== */
+    @media (max-width: 760px){
+      .container{ padding:12px; }
+      .topbar .wrap{ padding:8px 12px; }
+      .topbar h1{ font-size:1.1rem; }
+      .row, .row3{ grid-template-columns:1fr; }
+      .right{ justify-content:flex-start; gap:.5rem; flex-wrap:wrap; }
+      th, td{ padding:.5rem; }
+    }
   </style>
 </head>
+
 <body>
-  <h1>Garden Harvests – Data base</h1>
-
-  <!-- Auth -->
-  <div id="auth" class="card">
-    <h2>Connexion</h2>
-    <div class="tabs">
-      <button id="tab-pass" class="tab">Email + mot de passe</button>
-      <button id="tab-magic" class="tab active">Magic link</button>
+  <!-- Header sticky -->
+  <header class="topbar">
+    <div class="wrap">
+      <h1>Garden Harvests – Data base</h1>
+      <button id="theme-toggle" aria-label="Changer de thème" title="Changer de thème"></button>
     </div>
+  </header>
 
-    <!-- Magic link -->
-    <div id="pane-magic">
-      <p class="muted">Entre ton email pour recevoir un lien magique.</p>
-      <div class="row">
-        <input id="email-magic" type="email" placeholder="toi@example.com" />
-        <button id="send-link" class="btn-primary">Envoyer le lien</button>
+  <main class="container">
+    <!-- Auth -->
+    <div id="auth" class="card">
+      <h2>Connexion</h2>
+      <div class="tabs">
+        <button id="tab-pass" class="tab">Email + mot de passe</button>
+        <button id="tab-magic" class="tab active">Magic link</button>
       </div>
-      <p id="auth-msg-magic" class="muted"></p>
-    </div>
 
-    <!-- Email + password -->
-    <div id="pane-pass" class="hide">
-      <div class="row">
-        <div>
-          <label>Email</label>
-          <input id="email-pass" type="email" placeholder="toi@example.com" />
+      <!-- Magic link -->
+      <div id="pane-magic">
+        <p class="muted">Entre ton email pour recevoir un lien magique.</p>
+        <div class="row">
+          <input id="email-magic" type="email" placeholder="toi@example.com" />
+          <button id="send-link" class="btn-primary">Envoyer le lien</button>
         </div>
-        <div>
-          <label>Mot de passe</label>
-          <input id="pwd-pass" type="password" placeholder="******" />
-        </div>
+        <p id="auth-msg-magic" class="muted"></p>
       </div>
-      <div class="right" style="margin-top:12px">
-        <button id="btn-signin" class="btn-primary">Se connecter</button>
-        <button id="btn-signup">Créer un compte</button>
-      </div>
-      <p class="muted" style="margin-top:8px">Après inscription il peut être nécessaire de confirmer l’email selon tes paramètres Supabase.</p>
-      <p id="auth-msg-pass" class="muted"></p>
-    </div>
-  </div>
 
-  <!-- App -->
-  <div id="app" class="hide">
-    <div class="card" id="whoami">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
-        <div>
-          Connecté : <span id="who"></span>
-          <span class="pill">RLS actif</span>
+      <!-- Email + password -->
+      <div id="pane-pass" class="hide">
+        <div class="row">
+          <div>
+            <label>Email</label>
+            <input id="email-pass" type="email" placeholder="toi@example.com" />
+          </div>
+          <div>
+            <label>Mot de passe</label>
+            <input id="pwd-pass" type="password" placeholder="******" />
+          </div>
         </div>
-        <div class="right">
-          <button id="reload">Rafraîchir</button>
-          <button id="signout">Se déconnecter</button>
+        <div class="right" style="margin-top:12px">
+          <button id="btn-signin" class="btn-primary">Se connecter</button>
+          <button id="btn-signup">Créer un compte</button>
         </div>
+        <p class="muted" style="margin-top:8px">Après inscription il peut être nécessaire de confirmer l’email selon tes paramètres Supabase.</p>
+        <p id="auth-msg-pass" class="muted"></p>
       </div>
     </div>
 
-    <div class="card">
-      <h2>Ajouter une récolte</h2>
-      <div class="row3">
-        <div>
-          <label>Produit</label>
-          <select id="product"></select>
-        </div>
-        <div>
-          <label>Lieu (optionnel)</label>
-          <select id="location"></select>
-        </div>
-        <div>
-          <label>Date</label>
-          <input id="date" type="date" />
+    <!-- App -->
+    <div id="app" class="hide">
+      <div class="card" id="whoami">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+          <div>
+            Connecté : <span id="who"></span>
+            <span class="pill">RLS actif</span>
+          </div>
+          <div class="right">
+            <button id="reload">Rafraîchir</button>
+            <button id="signout">Se déconnecter</button>
+          </div>
         </div>
       </div>
-      <div class="row3" style="margin-top:1rem">
-        <div>
-          <label>Quantité (<span id="unit">–</span>)</label>
-          <input id="qty" type="number" step="0.01" min="0" />
-        </div>
-        <div>
-          <label>Note</label>
-          <input id="note" placeholder="rang, commentaire…" />
-        </div>
-        <div style="align-self:end">
-          <button id="add" class="btn-primary">Ajouter</button>
-        </div>
-      </div>
-      <p id="add-msg" class="muted"></p>
-    </div>
 
-    <div class="card">
-      <h2>Dernières entrées</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Par</th>
-            <th>Produit</th>
-            <th>Variété</th>
-            <th>Qté</th>
-            <th>Unité</th>
-            <th>Lieu</th>
-            <th>Note</th>
-          </tr>
-        </thead>
-        <tbody id="rows"></tbody>
-      </table>
-      <p id="rows-msg" class="muted"></p>
+      <div class="card">
+        <h2>Ajouter une récolte</h2>
+        <div class="row3">
+          <div>
+            <label>Produit</label>
+            <select id="product"></select>
+          </div>
+          <div>
+            <label>Lieu (optionnel)</label>
+            <select id="location"></select>
+          </div>
+          <div>
+            <label>Date</label>
+            <input id="date" type="date" />
+          </div>
+        </div>
+        <div class="row3" style="margin-top:1rem">
+          <div>
+            <label>Quantité (<span id="unit">–</span>)</label>
+            <input id="qty" type="number" step="0.01" min="0" />
+          </div>
+          <div>
+            <label>Note</label>
+            <input id="note" placeholder="rang, commentaire…" />
+          </div>
+          <div style="align-self:end">
+            <button id="add" class="btn-primary">Ajouter</button>
+          </div>
+        </div>
+        <p id="add-msg" class="muted"></p>
+      </div>
+
+      <div class="card">
+        <h2>Dernières entrées</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Par</th>
+                <th>Produit</th>
+                <th>Variété</th>
+                <th>Qté</th>
+                <th>Unité</th>
+                <th>Lieu</th>
+                <th>Note</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <p id="rows-msg" class="muted"></p>
+      </div>
     </div>
-  </div>
+  </main>
 
   <script type="module">
     // === THEME ===
-const THEME_KEY = 'gh_theme'; // 'light' | 'dark' ; absent => auto (par heure)
+    const THEME_KEY = 'gh_theme'; // 'light' | 'dark' ; absent => auto (par heure)
 
-const sunSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <circle cx="12" cy="12" r="4"></circle>
-  <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
-</svg>`;
-const moonSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M21 12.79A9 9 0 1111.21 3
-           7 7 0 0021 12.79z"/>
-</svg>`;
+    const sunSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="4"></circle>
+      <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+    </svg>`;
+    const moonSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12.79A9 9 0 1111.21 3
+               7 7 0 0021 12.79z"/>
+    </svg>`;
 
-function themeByHour(d = new Date()){
-  const h = d.getHours();
-  // clair de 7h à 19h, sombre sinon (ajuste si tu veux)
-  return (h >= 7 && h < 19) ? 'light' : 'dark';
-}
+    function themeByHour(d = new Date()){
+      const h = d.getHours();
+      // clair de 7h à 19h, sombre sinon
+      return (h >= 7 && h < 19) ? 'light' : 'dark';
+    }
 
-function applyTheme(t){
-  document.documentElement.setAttribute('data-theme', t);
-  const btn = document.getElementById('theme-toggle');
-  if (btn) btn.innerHTML = (t === 'dark') ? moonSVG : sunSVG;
-}
+    function applyTheme(t){
+      document.documentElement.setAttribute('data-theme', t);
+      const btn = document.getElementById('theme-toggle');
+      if (btn) btn.innerHTML = (t === 'dark') ? moonSVG : sunSVG;
+    }
 
-function scheduleAuto(){
-  const now = new Date();
-  const h = now.getHours();
-  const next = (h < 7)
-    ? new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 0, 0)
-    : (h < 19)
-      ? new Date(now.getFullYear(), now.getMonth(), now.getDate(), 19, 0, 0)
-      : new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 7, 0, 0);
-  setTimeout(() => { applyTheme(themeByHour()); scheduleAuto(); }, Math.max(60_000, next - now));
-}
+    function scheduleAuto(){
+      const now = new Date();
+      const h = now.getHours();
+      const next = (h < 7)
+        ? new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 0, 0)
+        : (h < 19)
+          ? new Date(now.getFullYear(), now.getMonth(), now.getDate(), 19, 0, 0)
+          : new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 7, 0, 0);
+      setTimeout(() => { applyTheme(themeByHour()); scheduleAuto(); }, Math.max(60_000, next - now));
+    }
 
-function initTheme(){
-  const saved = localStorage.getItem(THEME_KEY); // 'light' | 'dark' | null
-  const t = saved || themeByHour();
-  applyTheme(t);
-  if (!saved) scheduleAuto(); // en mode auto si pas de préférence sauvegardée
-}
+    function initTheme(){
+      const saved = localStorage.getItem(THEME_KEY); // 'light' | 'dark' | null
+      const t = saved || themeByHour();
+      applyTheme(t);
+      if (!saved) scheduleAuto(); // mode auto si pas de préférence sauvegardée
+    }
 
-initTheme();
+    initTheme();
 
-const themeBtn = document.getElementById('theme-toggle');
-themeBtn.addEventListener('click', () => {
-  const cur = document.documentElement.getAttribute('data-theme');
-  const next = (cur === 'dark') ? 'light' : 'dark';
-  localStorage.setItem(THEME_KEY, next);
-  applyTheme(next);
-});
-// Astuce: clic droit pour revenir au mode auto (selon l’heure)
-themeBtn.addEventListener('contextmenu', (e) => {
-  e.preventDefault();
-  localStorage.removeItem(THEME_KEY);
-  applyTheme(themeByHour());
-  scheduleAuto();
-});
-    
+    const themeBtn = document.getElementById('theme-toggle');
+    themeBtn.addEventListener('click', () => {
+      const cur = document.documentElement.getAttribute('data-theme');
+      const next = (cur === 'dark') ? 'light' : 'dark';
+      localStorage.setItem(THEME_KEY, next);
+      applyTheme(next);
+    });
+    // Clic droit: retour au mode auto (selon l’heure)
+    themeBtn.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      localStorage.removeItem(THEME_KEY);
+      applyTheme(themeByHour());
+      scheduleAuto();
+    });
+
+    // === SUPABASE APP ===
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
     // ==== Projet Supabase (fixé) ====
@@ -441,5 +494,4 @@ themeBtn.addEventListener('contextmenu', (e) => {
     }
   </script>
 </body>
-<button id="theme-toggle" aria-label="Changer de thème" title="Changer de thème"></button>
 </html>
