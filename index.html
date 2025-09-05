@@ -146,12 +146,10 @@
   .row, .row3{ grid-template-columns:1fr; }
   .right{ justify-content:flex-start; gap:.5rem; flex-wrap:wrap; }
   th, td{ padding:.6rem; }
-
-  /* ↓ AJOUT ICI */
   .topbar #theme-toggle{
-    padding: .35rem;      /* au lieu de 1rem */
-    min-width: auto;      /* garde l'override */
-    line-height: 0;       /* retire la hauteur inutile du texte */
+    padding: .35rem;      
+    min-width: auto;      
+    line-height: 0;       
     border-radius: 999px;
   }
   .topbar #theme-toggle svg{
@@ -231,11 +229,11 @@
         <div class="row3">
           <div>
             <label>Produit</label>
-            <select id="product"></select>
+            <select id="product" required></select>
           </div>
           <div>
-            <label>Lieu (optionnel)</label>
-            <select id="location"></select>
+            <label>Lieu</label>
+            <select id="location" required></select>
           </div>
           <div>
             <label>Date</label>
@@ -245,7 +243,7 @@
         <div class="row3" style="margin-top:1rem">
           <div>
             <label>Quantité (<span id="unit">–</span>)</label>
-            <input id="qty" type="number" step="0.01" min="0" />
+            <input id="qty" type="number" step="0.01" min="0" required/>
           </div>
           <div>
             <label>Note</label>
@@ -516,14 +514,20 @@
 
     async function onAdd(){
       addMsg.textContent = '';
-      const productId = selProduct.value ? Number(selProduct.value) : null;
+      const productId  = selProduct.value ? Number(selProduct.value) : null;
       if (!productId){ addMsg.textContent = 'Choisis un produit.'; return; }
+      const locationId = selLoc.value ? Number(selLoc.value) : null;
+      if (!locationId){ addMsg.textContent = 'Choisis un lieu.'; return; }
+      const dateVal = dateInp.value;
+      if (!dateVal){ addMsg.textContent = 'Choisis une date.'; return; }
+      const qty = (qtyInp.value === '' ? NaN : Number(qtyInp.value));
+      if (!(qty >= 0)){ addMsg.textContent = 'Entre une quantité.'; return; }
       const payload = {
-        product_id: productId,
-        harvest_date: dateInp.value || null,
-        quantity: Number(qtyInp.value || 0),
-        note: noteInp.value || null,
-        location_id: selLoc.value ? Number(selLoc.value) : null,
+        product_id:  productId,
+        location_id: locationId,
+        harvest_date: dateVal,
+        quantity:    qty,
+        note:        noteInp.value || null,
       };
       const { error } = await db.from('harvests').insert(payload);
       if (error){ addMsg.className='muted msg-err'; addMsg.textContent = error.message; return; }
