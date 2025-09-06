@@ -696,7 +696,7 @@ function makeUsername(user) {
 }
 
       // Toggle + upsert to DB (no UI text change yet, only DB)
-      if (langBtn) {
+if (langBtn) {
   langBtn.onclick = async () => {
     try {
       const next = (curLang === 'fr') ? 'en' : 'fr';
@@ -705,28 +705,36 @@ function makeUsername(user) {
       const { data: { user } } = await sb.auth.getUser();
       if (!user) return alert('Not signed in');
 
-      // Profil minimal à insérer si la ligne n’existe pas encore
-      const profile = {
-        user_id: user.id,
-        language: next,
-        username: makeUsername(user) // <- IMPORTANT : pour satisfaire NOT NULL
-      };
-
-      // upsert sur user_id : s’il existe déjà, on mettra juste à jour language
-      let { error } = await db
+      // 1) Le profil existe ?
+      const { data: existing, error: selErr } = await db
         .from('profiles')
-        .upsert(profile, { onConflict: 'user_id' });
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (selErr) throw selErr;
 
-      // Si conflit unique sur username (quelqu’un a le même local-part), on retente avec un suffixe
-      if (error && /duplicate key value.*username/i.test(error.message)) {
-        profile.username = profile.username + '_' + Math.random().toString(36).slice(2, 6);
-        ({ error } = await db.from('profiles').upsert(profile, { onConflict: 'user_id' }));
+      if (existing) {
+        // 2a) Il existe → on met à jour UNIQUEMENT la langue
+        const { error: updErr } = await db
+          .from('profiles')
+          .update({ language: next })
+          .eq('user_id', user.id);
+        if (updErr) throw updErr;
+      } else {
+        // 2b) N’existe pas → on insère (avec username pour respecter NOT NULL)
+        let profile = { user_id: user.id, language: next, username: makeUsername(user) };
+        let { error: insErr } = await db.from('profiles').insert(profile);
+        if (insErr && /duplicate key value.*username/i.test(insErr.message)) {
+          profile.username = profile.username + '_' + Math.random().toString(36).slice(2, 6);
+          ({ error: insErr } = await db.from('profiles').insert(profile));
+        }
+        if (insErr) throw insErr;
       }
-      if (error) throw error;
 
       curLang = next;
-      renderLangBtn();   // met à jour l’icône immédiatement
-      applyI18n();       // applique la nouvelle langue immédiatement
+      renderLangBtn();
+      applyI18n();
+      await refreshAll();
     } catch (e) {
       alert('Error saving language: ' + (e.message || e));
       console.error(e);
