@@ -256,40 +256,40 @@
         </div>
       </div>
 
-      <div class="card">
-        <h2>Ajouter une récolte</h2>
-        <div class="row3">
-          <div>
-            <label>Produit</label>
-            <select id="product" required></select>
-          </div>
-          <div>
-            <label>Lieu</label>
-            <select id="location" required></select>
-          </div>
-          <div>
-            <label>Date</label>
-            <input id="date" type="date" />
-          </div>
+      <div class="card" id="add-card">
+  <h2 id="add-card-title">Ajouter une récolte</h2>
+      <div class="row3">
+        <div>
+          <label id="label-product">Produit</label>
+          <select id="product" required></select>
         </div>
-        <div class="row3" style="margin-top:1rem">
-          <div>
-            <label>Quantité (<span id="unit">–</span>)</label>
-            <input id="qty" type="number" step="0.01" min="0" required/>
-          </div>
-          <div>
-            <label>Note</label>
-            <input id="note" placeholder="rang, commentaire…" />
-          </div>
-          <div style="align-self:end">
-            <button id="add" class="btn-primary">Ajouter</button>
-          </div>
+        <div>
+          <label id="label-location">Lieu</label>
+          <select id="location" required></select>
         </div>
-        <p id="add-msg" class="muted"></p>
+        <div>
+          <label id="label-date">Date</label>
+          <input id="date" type="date" />
+        </div>
       </div>
+      <div class="row3" style="margin-top:1rem">
+        <div>
+          <label id="label-qty">Quantité (<span id="unit">–</span>)</label>
+          <input id="qty" type="number" step="0.01" min="0" required/>
+        </div>
+        <div>
+          <label id="label-note">Note</label>
+          <input id="note" placeholder="rang, commentaire…" />
+        </div>
+        <div style="align-self:end">
+          <button id="add" class="btn-primary">Ajouter</button>
+        </div>
+      </div>
+      <p id="add-msg" class="muted"></p>
+    </div>
 
       <div class="card">
-        <h2>Dernières entrées</h2>
+        <h2 id="last-h2">Dernières entrées</h2>
         <div class="table-wrap">
           <table>
             <thead>
@@ -316,7 +316,7 @@
 // ==== i18n UI statique ====
 const I18N = {
   fr: {
-    app_title: "Garden Harvests – Base de données",
+    app_title: "Récolte au jardin – Base de données",
     auth_title: "Connexion",
     tab_pass: "Email + mot de passe",
     tab_magic: "Magic link",
@@ -356,7 +356,15 @@ const I18N = {
     enter_qty_err: "Entre une quantité.",
     added_ok: "Récolte ajoutée.",
     rows_empty: "Aucune ligne pour le moment.",
-    products_err_hint: 'Erreur produits : '
+    products_err_hint: 'Erreur produits : ',
+    addTitle: 'Ajouter une récolte',
+    product: 'Produit',
+    location: 'Lieu',
+    date: 'Date',
+    quantity: 'Quantité',
+    note: 'Note',
+    addBtn: 'Ajouter',
+    notePlaceholder: 'rang, commentaire…'
   },
   en: {
     app_title: "Garden Harvests – Database",
@@ -399,7 +407,15 @@ const I18N = {
     enter_qty_err: "Enter a quantity.",
     added_ok: "Harvest added.",
     rows_empty: "No rows yet.",
-    products_err_hint: 'Products error: '
+    products_err_hint: 'Products error: ',
+    addTitle: 'Add a harvest',
+    product: 'Product',
+    location: 'Location',
+    date: 'Date',
+    quantity: 'Quantity',
+    note: 'Note',
+    addBtn: 'Add',
+    notePlaceholder: 'row, comment…'
   }
 };
 
@@ -421,6 +437,9 @@ function applyI18n(){
   setTxt('#pane-pass .muted', t.signup_hint);
   setTxt('#pane-magic .muted', t.magic_hint);
   setTxt('#send-link', t.magic_send);
+  setTxt('#label-product',  t.product_label);
+  setTxt('#label-location', t.location_label);
+  setTxt('#label-date',     t.date_label);
 
   // whoami line parts
   const whoPrefix = document.querySelector('#whoami .card div div:first-child');
@@ -429,6 +448,17 @@ function applyI18n(){
     whoPrefix.childNodes[0].nodeValue = t.connected; // remplace le texte fixe avant <span id="who">
     const rls = whoPrefix.querySelector('.pill'); if (rls) rls.textContent = t.rls;
   }
+  const lblQty = document.getElementById('label-qty');
+    if (lblQty) {
+      // on suppose la structure "Texte ( <span id=unit>…</span> )"
+      if (lblQty.firstChild && lblQty.firstChild.nodeType === Node.TEXT_NODE) {
+        lblQty.firstChild.nodeValue = t.qty_label + ' (';
+      } else {
+        // fallback si la structure a changé
+        lblQty.innerHTML = `${t.qty_label} (<span id="unit">–</span>)`;
+      }
+    }
+
   setTxt('#reload', t.refresh);
   setTxt('#signout', t.signout);
 
@@ -757,68 +787,78 @@ if (langBtn) {
     }
 
     async function loadProducts(){
-      const { data, error } = await db.from('products').select('id,name,variety,unit_harvest').order('name');
+      const { data, error } = await db.from('products')
+        .select('id,name,name_fr,variety,variety_fr,unit_harvest,unit_harvest_fr')
+        .order('name');
       if (error){
-        rowsMsg.textContent = 'Erreur produits : ' + error.message + ' — Vérifie "Exposed Schemas" (Settings → API) contient "garden".';
+        rowsMsg.textContent = (window.__i18n_products_err_hint||'Erreur produits : ') + error.message +
+          ' — Vérifie "Exposed Schemas" contient "garden".';
         return;
       }
-      selProduct.innerHTML = '<option value="">— choisir —</option>' +
-        data.map(p => `<option value="${p.id}" data-unit="${p.unit_harvest}">${p.name}${p.variety?` — ${p.variety}`:''}</option>`).join('');
+      const isFr = (curLang === 'fr');
+      selProduct.innerHTML = `<option value="">${window.__i18n_choose_product||'— choisir —'}</option>` +
+        data.map(p => {
+          const n = isFr ? (p.name_fr || p.name) : p.name;
+          const v = isFr ? (p.variety_fr || p.variety) : p.variety;
+          const u = isFr ? (p.unit_harvest_fr || p.unit_harvest) : p.unit_harvest;
+          return `<option value="${p.id}" data-unit="${u}">${n}${v?` — ${v}`:''}</option>`;
+        }).join('');
       unitSpan.textContent = '–';
     }
 
     async function loadLocations(){
-      const { data, error } = await db.from('locations').select('id,name').order('name');
-      if (error){
-        // pas bloquant pour l'ajout sans lieu
-        return;
-      }
-      selLoc.innerHTML = '<option value="">— aucun —</option>' +
-        data.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+      const { data, error } = await db.from('locations')
+        .select('id,name,name_fr').order('name');
+      if (error){ return; }
+      const isFr = (curLang === 'fr');
+      selLoc.innerHTML = `<option value="">${window.__i18n_choose_none||'— aucun —'}</option>` +
+        data.map(l => `<option value="${l.id}">${isFr ? (l.name_fr||l.name) : l.name}</option>`).join('');
     }
 
     async function refreshRows(){
-      const { data, error } = await db.from('harvests_view').select('*').limit(100);
+      const { data, error } = await db.from('harvests_view')
+        .select('*').limit(100);
       if (error){
         rowsMsg.textContent = 'Erreur lecture : ' + error.message;
         rowsBody.innerHTML = '';
         return;
       }
+      const isFr = (curLang === 'fr');
       rowsBody.innerHTML = data.map(r => `
         <tr>
           <td>${r.harvest_date ?? ''}</td>
           <td>${r.created_by_name ?? ''}</td>
-          <td>${r.product_name ?? ''}</td>
-          <td>${r.variety ?? ''}</td>
+          <td>${isFr ? (r.product_name_fr || r.product_name) : r.product_name}</td>
+          <td>${isFr ? (r.variety_fr || r.variety) : r.variety}</td>
           <td>${r.quantity ?? ''}</td>
-          <td>${r.harvest_unit ?? ''}</td>
-          <td>${r.location_name ?? ''}</td>
+          <td>${isFr ? (r.harvest_unit_fr || r.harvest_unit) : r.harvest_unit}</td>
+          <td>${isFr ? (r.location_name_fr || r.location_name) : r.location_name}</td>
           <td>${r.note ?? ''}</td>
         </tr>
       `).join('');
-      rowsMsg.textContent = data.length ? '' : 'Aucune ligne pour le moment.';
+      rowsMsg.textContent = data.length ? '' : (window.__i18n_rows_empty || 'Aucune ligne pour le moment.');
     }
 
     async function onAdd(){
       addMsg.textContent = '';
+      const t = I18N[curLang] || I18N.fr;
+
       const productId  = selProduct.value ? Number(selProduct.value) : null;
-      if (!productId){ addMsg.textContent = 'Choisis un produit.'; return; }
+      if (!productId){ addMsg.textContent = t.choose_product_err; return; }
+
       const locationId = selLoc.value ? Number(selLoc.value) : null;
-      if (!locationId){ addMsg.textContent = 'Choisis un lieu.'; return; }
+      if (!locationId){ addMsg.textContent = t.choose_loc_err; return; }
+
       const dateVal = dateInp.value;
-      if (!dateVal){ addMsg.textContent = 'Choisis une date.'; return; }
+      if (!dateVal){ addMsg.textContent = t.choose_date_err; return; }
+
       const qty = (qtyInp.value === '' ? NaN : Number(qtyInp.value));
-      if (!(qty >= 0)){ addMsg.textContent = 'Entre une quantité.'; return; }
-      const payload = {
-        product_id:  productId,
-        location_id: locationId,
-        harvest_date: dateVal,
-        quantity:    qty,
-        note:        noteInp.value || null,
-      };
+      if (!(qty >= 0)){ addMsg.textContent = t.enter_qty_err; return; }
+
+      const payload = { product_id: productId, location_id: locationId, harvest_date: dateVal, quantity: qty, note: noteInp.value || null };
       const { error } = await db.from('harvests').insert(payload);
       if (error){ addMsg.className='muted msg-err'; addMsg.textContent = error.message; return; }
-      addMsg.className='muted msg-ok'; addMsg.textContent = 'Récolte ajoutée.';
+      addMsg.className='muted msg-ok'; addMsg.textContent = t.added_ok;
       qtyInp.value=''; noteInp.value='';
       await refreshRows();
     }
