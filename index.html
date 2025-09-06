@@ -96,6 +96,37 @@
         width:16px; height:16px;
         display:block;
       }
+      /* Mobile : même compact que le bouton thème */
+            @media (max-width: 760px){
+              .topbar #lang-toggle{
+                padding: .35rem;
+              }
+            }
+
+      /* Bouton langue : même style que #theme-toggle */
+      .topbar #lang-toggle{
+      width: 44px;              /* fixe largeur = hauteur */
+      height: 44px;
+      padding: 0;               /* enlève le padding interne */
+      border: 1px solid var(--border);
+      border-radius: 999px;     /* cercle parfait */
+      background: var(--card);
+      color: var(--fg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;          /* taille de l’emoji */
+      line-height: 1;
+    }
+    @media (max-width: 760px){
+      .topbar #lang-toggle{
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+      }
+    }
+
+      
 
       /* (déjà conseillé) pour le titre qui prend la place et coupe en … si trop long */
       .topbar .wrap > * { min-width: 0; }
@@ -166,6 +197,7 @@
     <div class="wrap">
       <h1>Garden Harvests – Data base</h1>
       <button id="theme-toggle" aria-label="Changer de thème" title="Changer de thème"></button>
+      <button id="lang-toggle" class="btn" title="Language">🌐</button>
     </div>
   </header>
 
@@ -281,6 +313,166 @@
   </main>
 
   <script type="module">
+// ==== i18n UI statique ====
+const I18N = {
+  fr: {
+    app_title: "Garden Harvests – Base de données",
+    auth_title: "Connexion",
+    tab_pass: "Email + mot de passe",
+    tab_magic: "Magic link",
+    email_label: "Email",
+    pwd_label: "Mot de passe",
+    signin: "Se connecter",
+    signup: "Créer un compte",
+    signup_hint: "Après inscription il peut être nécessaire de confirmer l’email selon tes paramètres Supabase.",
+    magic_hint: "Entre ton email pour recevoir un lien magique.",
+    magic_send: "Envoyer le lien",
+    connected: "Connecté : ",
+    rls: "RLS actif",
+    refresh: "Rafraîchir",
+    signout: "Se déconnecter",
+    add_h2: "Ajouter une récolte",
+    product_label: "Produit",
+    location_label: "Lieu",
+    date_label: "Date",
+    qty_label: "Quantité",
+    note_label: "Note",
+    note_ph: "rang, commentaire…",
+    add_btn: "Ajouter",
+    last_h2: "Dernières entrées",
+    th_date: "Date",
+    th_by: "Par",
+    th_product: "Produit",
+    th_variety: "Variété",
+    th_qty: "Qté",
+    th_unit: "Unité",
+    th_loc: "Lieu",
+    th_note: "Note",
+    choose_product: "— choisir —",
+    choose_none: "— aucun —",
+    choose_product_err: "Choisis un produit.",
+    choose_loc_err: "Choisis un lieu.",
+    choose_date_err: "Choisis une date.",
+    enter_qty_err: "Entre une quantité.",
+    added_ok: "Récolte ajoutée.",
+    rows_empty: "Aucune ligne pour le moment.",
+    products_err_hint: 'Erreur produits : '
+  },
+  en: {
+    app_title: "Garden Harvests – Database",
+    auth_title: "Sign in",
+    tab_pass: "Email + password",
+    tab_magic: "Magic link",
+    email_label: "Email",
+    pwd_label: "Password",
+    signin: "Sign in",
+    signup: "Create account",
+    signup_hint: "After sign-up you may need to confirm your email depending on Supabase settings.",
+    magic_hint: "Enter your email to receive a magic link.",
+    magic_send: "Send link",
+    connected: "Signed in: ",
+    rls: "RLS on",
+    refresh: "Refresh",
+    signout: "Sign out",
+    add_h2: "Add a harvest",
+    product_label: "Product",
+    location_label: "Location",
+    date_label: "Date",
+    qty_label: "Quantity",
+    note_label: "Note",
+    note_ph: "row, comment…",
+    add_btn: "Add",
+    last_h2: "Latest entries",
+    th_date: "Date",
+    th_by: "By",
+    th_product: "Product",
+    th_variety: "Variety",
+    th_qty: "Qty",
+    th_unit: "Unit",
+    th_loc: "Location",
+    th_note: "Note",
+    choose_product: "— choose —",
+    choose_none: "— none —",
+    choose_product_err: "Pick a product.",
+    choose_loc_err: "Pick a location.",
+    choose_date_err: "Pick a date.",
+    enter_qty_err: "Enter a quantity.",
+    added_ok: "Harvest added.",
+    rows_empty: "No rows yet.",
+    products_err_hint: 'Products error: '
+  }
+};
+
+function applyI18n(){
+  const t = I18N[curLang] || I18N.fr;
+
+  // titres / labels / boutons
+  document.title = t.app_title;
+  const h1 = document.querySelector('.topbar h1'); if (h1) h1.textContent = t.app_title;
+
+  const setTxt = (sel, val) => { const el = document.querySelector(sel); if (el) el.textContent = val; };
+  setTxt('#auth h2', t.auth_title);
+  setTxt('#tab-pass', t.tab_pass);
+  setTxt('#tab-magic', t.tab_magic);
+  setTxt('label[for="email-pass"]', t.email_label);
+  setTxt('label[for="pwd-pass"]', t.pwd_label);
+  setTxt('#btn-signin', t.signin);
+  setTxt('#btn-signup', t.signup);
+  setTxt('#pane-pass .muted', t.signup_hint);
+  setTxt('#pane-magic .muted', t.magic_hint);
+  setTxt('#send-link', t.magic_send);
+
+  // whoami line parts
+  const whoPrefix = document.querySelector('#whoami .card div div:first-child');
+  if (whoPrefix) {
+    const whoSpan = document.getElementById('who');
+    whoPrefix.childNodes[0].nodeValue = t.connected; // remplace le texte fixe avant <span id="who">
+    const rls = whoPrefix.querySelector('.pill'); if (rls) rls.textContent = t.rls;
+  }
+  setTxt('#reload', t.refresh);
+  setTxt('#signout', t.signout);
+
+  setTxt('h2:nth-of-type(2)', t.add_h2); // le 2e <h2> dans la page (section ajout)
+  // labels du formulaire
+  document.querySelectorAll('label').forEach(lbl => {
+    const htmlFor = lbl.getAttribute('for');
+    if (htmlFor === 'product') lbl.textContent = t.product_label;
+    if (htmlFor === 'location') lbl.textContent = t.location_label;
+    if (htmlFor === 'date') lbl.textContent = t.date_label;
+    if (htmlFor === 'qty') lbl.innerHTML = `${t.qty_label} (<span id="unit">–</span>)`;
+    if (htmlFor === 'note') lbl.textContent = t.note_label;
+  });
+  const note = document.getElementById('note'); if (note) note.placeholder = t.note_ph;
+  setTxt('#add', t.add_btn);
+
+  // bloc "Dernières entrées"
+  const lastH2 = document.querySelectorAll('h2')[2]; if (lastH2) lastH2.textContent = t.last_h2;
+  const th = document.querySelectorAll('thead th');
+  if (th.length >= 8){
+    th[0].textContent = t.th_date;
+    th[1].textContent = t.th_by;
+    th[2].textContent = t.th_product;
+    th[3].textContent = t.th_variety;
+    th[4].textContent = t.th_qty;
+    th[5].textContent = t.th_unit;
+    th[6].textContent = t.th_loc;
+    th[7].textContent = t.th_note;
+  }
+
+  // placeholders des selects (seront utilisés dans loadProducts/loadLocations)
+  window.__i18n_choose_product = t.choose_product;
+  window.__i18n_choose_none = t.choose_none;
+
+  // messages
+  window.__i18n_err_pick_product = t.choose_product_err;
+  window.__i18n_err_pick_loc = t.choose_loc_err;
+  window.__i18n_err_pick_date = t.choose_date_err;
+  window.__i18n_err_enter_qty = t.enter_qty_err;
+  window.__i18n_added_ok = t.added_ok;
+  window.__i18n_rows_empty = t.rows_empty;
+  window.__i18n_products_err_hint = t.products_err_hint;
+}
+
     // === THEME ===
     const THEME_KEY = 'gh_theme'; // 'light' | 'dark' ; absent => auto (par heure)
 
@@ -423,7 +615,10 @@
 
     // Session
     sb.auth.getSession().then(({ data }) => toggleUI(!!data.session));
-    sb.auth.onAuthStateChange((_e, s) => toggleUI(!!s));
+    sb.auth.onAuthStateChange((_e, s) => {
+  toggleUI(!!s);
+  if (s?.user) loadLanguageAndRenderBtn();   // ← charge le drapeau après connexion
+});
 
     function toggleUI(signedIn){
       if (signedIn){
@@ -439,6 +634,8 @@
     async function afterAuth(){
       const { data: { user } } = await sb.auth.getUser();
       whoSpan.textContent = user?.email || '(session)';
+      await loadLanguageAndRenderBtn();   // ← add this line
+      applyI18n();  
       await refreshAll();
     }
 
@@ -456,6 +653,88 @@
     const addMsg    = document.getElementById('add-msg');
     const rowsBody  = document.getElementById('rows');
     const rowsMsg   = document.getElementById('rows-msg');
+
+    // === Single language toggle button → only updates DB (garden.profiles.language) ===
+    const langBtn = document.getElementById('lang-toggle');
+    let curLang = 'fr'; // default if none in DB
+
+    function renderLangBtn() {
+      if (!langBtn) return;
+      if (curLang === 'fr') {
+        langBtn.textContent = '🇫🇷';
+        langBtn.title = 'Français — cliquer pour passer en anglais';
+        langBtn.setAttribute('aria-label', 'Switch language to English');
+      } else {
+        langBtn.textContent = '🇬🇧';
+        langBtn.title = 'English — click to switch to French';
+        langBtn.setAttribute('aria-label', 'Passer la langue en français');
+      }
+    }
+      // Read from DB then render the button
+      async function loadLanguageAndRenderBtn() {
+  if (!langBtn) return;
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) { langBtn.classList.add('hide'); return; }
+  langBtn.classList.remove('hide');
+
+  const { data, error } = await db
+    .from('profiles')
+    .select('language')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (error) console.warn('profiles select error:', error);
+  curLang = (data?.language === 'en' || data?.language === 'fr') ? data.language : 'fr';
+  renderLangBtn();
+}
+
+function makeUsername(user) {
+  // Essaie: username saisi (si un jour tu l'ajoutes), sinon local-part de l'email, sinon début de l’uid
+  const fromEmail = (user?.email || '').split('@')[0].replace(/[^a-z0-9._-]/gi, '').slice(0, 24);
+  if (fromEmail) return fromEmail;
+  return ('user_' + (user?.id || '').replace(/-/g, '').slice(0, 12) || ('user_' + Math.random().toString(36).slice(2, 10)));
+}
+
+      // Toggle + upsert to DB (no UI text change yet, only DB)
+      if (langBtn) {
+  langBtn.onclick = async () => {
+    try {
+      const next = (curLang === 'fr') ? 'en' : 'fr';
+      langBtn.disabled = true;
+
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) return alert('Not signed in');
+
+      // Profil minimal à insérer si la ligne n’existe pas encore
+      const profile = {
+        user_id: user.id,
+        language: next,
+        username: makeUsername(user) // <- IMPORTANT : pour satisfaire NOT NULL
+      };
+
+      // upsert sur user_id : s’il existe déjà, on mettra juste à jour language
+      let { error } = await db
+        .from('profiles')
+        .upsert(profile, { onConflict: 'user_id' });
+
+      // Si conflit unique sur username (quelqu’un a le même local-part), on retente avec un suffixe
+      if (error && /duplicate key value.*username/i.test(error.message)) {
+        profile.username = profile.username + '_' + Math.random().toString(36).slice(2, 6);
+        ({ error } = await db.from('profiles').upsert(profile, { onConflict: 'user_id' }));
+      }
+      if (error) throw error;
+
+      curLang = next;
+      renderLangBtn();   // met à jour l’icône immédiatement
+      applyI18n();       // applique la nouvelle langue immédiatement
+    } catch (e) {
+      alert('Error saving language: ' + (e.message || e));
+      console.error(e);
+    } finally {
+      langBtn.disabled = false;
+    }
+  };
+}
 
     // App logic
     async function refreshAll(){
