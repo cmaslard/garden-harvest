@@ -462,7 +462,7 @@ function applyI18n(){
   setTxt('#reload', t.refresh);
   setTxt('#signout', t.signout);
 
-  setTxt('h2:nth-of-type(2)', t.add_h2); // le 2e <h2> dans la page (section ajout)
+ setTxt('#add-card-title', t.add_h2); 
   // labels du formulaire
   document.querySelectorAll('label').forEach(lbl => {
     const htmlFor = lbl.getAttribute('for');
@@ -476,7 +476,7 @@ function applyI18n(){
   setTxt('#add', t.add_btn);
 
   // bloc "Dernières entrées"
-  const lastH2 = document.querySelectorAll('h2')[2]; if (lastH2) lastH2.textContent = t.last_h2;
+  setTxt('#last-h2', t.last_h2);
   const th = document.querySelectorAll('thead th');
   if (th.length >= 8){
     th[0].textContent = t.th_date;
