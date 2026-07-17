@@ -260,6 +260,7 @@
       <nav class="tabs" id="main-nav">
         <button type="button" class="tab active" id="nav-harvests" data-view="harvests">Récolte au jardin – Base de données</button>
         <button type="button" class="tab" id="nav-products" data-view="products">Produits</button>
+        <button type="button" class="tab" id="nav-locations" data-view="locations">Lieux</button>
         <button type="button" class="tab" id="nav-prices" data-view="prices">Prix</button>
         <button type="button" class="tab" id="nav-profile" data-view="profile">Profil</button>
       </nav>
@@ -407,6 +408,55 @@
         </div>
       </div>
 
+      <div id="view-locations" class="hide">
+        <div class="card" id="location-form-card">
+          <h2 id="location-form-title">Ajouter un lieu</h2>
+          <div class="row3">
+            <div>
+              <label id="label-loc-name">Nom (EN)</label>
+              <input id="loc-name" required />
+            </div>
+            <div>
+              <label id="label-loc-name-fr">Nom (FR)</label>
+              <input id="loc-name-fr" />
+            </div>
+            <div>
+              <label id="label-loc-area">Surface (m²)</label>
+              <input id="loc-area" type="number" step="0.01" min="0" />
+            </div>
+          </div>
+          <div class="row" style="margin-top:1rem">
+            <div>
+              <label id="label-loc-description">Description</label>
+              <input id="loc-description" />
+            </div>
+            <div style="align-self:end; display:flex; gap:.5rem">
+              <button id="loc-save" class="btn-primary">Ajouter</button>
+              <button id="loc-cancel-edit" type="button" class="hide">Annuler</button>
+            </div>
+          </div>
+          <p id="location-msg" class="muted"></p>
+        </div>
+
+        <div class="card">
+          <h2 id="locations-list-h2">Lieux</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th id="th-loc-name-col">Nom</th>
+                  <th id="th-loc-area-col">Surface</th>
+                  <th id="th-loc-description-col">Description</th>
+                  <th id="th-loc-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="locations-rows"></tbody>
+            </table>
+          </div>
+          <p id="locations-list-msg" class="muted"></p>
+        </div>
+      </div>
+
       <div id="view-prices" class="hide">
         <div class="card">
           <h2 id="prices-h2">Suivi des prix bio</h2>
@@ -484,10 +534,32 @@
       <div id="view-profile" class="hide">
         <div class="card">
           <h2 id="profile-h2">Mon profil</h2>
-          <div class="row">
+          <div class="row3">
             <div>
               <label id="label-username">Nom d'utilisateur</label>
               <input id="profile-username" />
+            </div>
+            <div>
+              <label id="label-favorite-language">Langue favorite</label>
+              <select id="profile-language">
+                <option value="fr">Français</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+            <div>
+              <label id="label-favorite-location">Lieu favori</label>
+              <select id="profile-favorite-location"></select>
+            </div>
+          </div>
+          <div class="row" style="margin-top:1rem">
+            <div>
+              <label id="label-favorite-currency">Devise favorite</label>
+              <select id="profile-favorite-currency">
+                <option value="">—</option>
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
+                <option value="CHF">CHF</option>
+              </select>
             </div>
             <div style="align-self:end">
               <button id="profile-save" class="btn-primary">Enregistrer</button>
@@ -569,8 +641,18 @@ const I18N = {
     name_en_label: 'Nom (EN)',
     name_fr_label: 'Nom (FR)',
     type_label: 'Type',
-    type_fruit: 'Fruit',
     type_vegetable: 'Légume',
+    type_fruit: 'Fruit',
+    type_fruit_tree: 'Arbre fruitier',
+    type_tree_shrub: 'Arbre / Arbuste',
+    type_herb: 'Herbe aromatique',
+    type_condiment: 'Condiment',
+    type_medicinal: 'Plante médicinale',
+    type_peruvian: 'Plante du Pérou',
+    type_flower: 'Fleur',
+    type_houseplant: 'Plante verte',
+    type_vine: 'Liane',
+    type_grain: 'Céréale / féculent',
     variety_en_label: 'Variété (EN)',
     variety_fr_label: 'Variété (FR)',
     unit_en_label: 'Unité (EN)',
@@ -616,7 +698,26 @@ const I18N = {
     th_price_store: 'Magasin',
     th_price_amount: 'Prix',
     th_price_by: 'Par',
-    th_price_actions: 'Actions'
+    th_price_actions: 'Actions',
+    nav_locations: 'Lieux',
+    locations_h2: 'Ajouter un lieu',
+    locations_edit_h2: 'Modifier le lieu',
+    locations_list_h2: 'Lieux',
+    loc_name_en_label: 'Nom (EN)',
+    loc_name_fr_label: 'Nom (FR)',
+    loc_area_label: 'Surface (m²)',
+    loc_description_label: 'Description',
+    choose_loc_name_err: 'Entre un nom.',
+    location_added_ok: 'Lieu ajouté.',
+    location_updated_ok: 'Lieu modifié.',
+    locations_empty: 'Aucun lieu.',
+    locations_err_hint: 'Erreur lieux : ',
+    th_loc_name: 'Nom',
+    th_loc_area: 'Surface',
+    th_loc_description: 'Description',
+    favorite_location_label: 'Lieu favori',
+    favorite_currency_label: 'Devise favorite',
+    favorite_language_label: 'Langue favorite'
   },
   en: {
     app_title: "Garden Harvests – Database",
@@ -684,8 +785,18 @@ const I18N = {
     name_en_label: 'Name (EN)',
     name_fr_label: 'Name (FR)',
     type_label: 'Type',
-    type_fruit: 'Fruit',
     type_vegetable: 'Vegetable',
+    type_fruit: 'Fruit',
+    type_fruit_tree: 'Fruit tree',
+    type_tree_shrub: 'Tree / Shrub',
+    type_herb: 'Herb',
+    type_condiment: 'Condiment',
+    type_medicinal: 'Medicinal plant',
+    type_peruvian: 'Peruvian plant',
+    type_flower: 'Flower',
+    type_houseplant: 'Houseplant',
+    type_vine: 'Vine',
+    type_grain: 'Grain',
     variety_en_label: 'Variety (EN)',
     variety_fr_label: 'Variety (FR)',
     unit_en_label: 'Unit (EN)',
@@ -731,7 +842,26 @@ const I18N = {
     th_price_store: 'Store',
     th_price_amount: 'Price',
     th_price_by: 'By',
-    th_price_actions: 'Actions'
+    th_price_actions: 'Actions',
+    nav_locations: 'Locations',
+    locations_h2: 'Add a location',
+    locations_edit_h2: 'Edit location',
+    locations_list_h2: 'Locations',
+    loc_name_en_label: 'Name (EN)',
+    loc_name_fr_label: 'Name (FR)',
+    loc_area_label: 'Area (m²)',
+    loc_description_label: 'Description',
+    choose_loc_name_err: 'Enter a name.',
+    location_added_ok: 'Location added.',
+    location_updated_ok: 'Location updated.',
+    locations_empty: 'No locations yet.',
+    locations_err_hint: 'Locations error: ',
+    th_loc_name: 'Name',
+    th_loc_area: 'Area',
+    th_loc_description: 'Description',
+    favorite_location_label: 'Favorite location',
+    favorite_currency_label: 'Favorite currency',
+    favorite_language_label: 'Favorite language'
   }
 };
 
@@ -828,11 +958,35 @@ function applyI18n(){
   renderProductTypeOptions();
   renderProductFormMode();
 
+  // navigation (lieux)
+  setTxt('#nav-locations', t.nav_locations);
+
+  // vue Lieux
+  setTxt('#locations-list-h2', t.locations_list_h2);
+  setTxt('#label-loc-name', t.loc_name_en_label);
+  setTxt('#label-loc-name-fr', t.loc_name_fr_label);
+  setTxt('#label-loc-area', t.loc_area_label);
+  setTxt('#label-loc-description', t.loc_description_label);
+  setTxt('#th-loc-name-col', t.th_loc_name);
+  setTxt('#th-loc-area-col', t.th_loc_area);
+  setTxt('#th-loc-description-col', t.th_loc_description);
+  setTxt('#loc-cancel-edit', t.product_cancel_btn);
+  renderLocationFormMode();
+
+  window.__i18n_choose_loc_name_err = t.choose_loc_name_err;
+  window.__i18n_location_added_ok = t.location_added_ok;
+  window.__i18n_location_updated_ok = t.location_updated_ok;
+  window.__i18n_locations_empty = t.locations_empty;
+  window.__i18n_locations_err_hint = t.locations_err_hint;
+
   // vue Profil
   setTxt('#profile-h2', t.profile_h2);
   setTxt('#label-username', t.username_label);
   setTxt('#username-hint', t.username_hint);
   setTxt('#profile-save', t.profile_save_btn);
+  setTxt('#label-favorite-language', t.favorite_language_label);
+  setTxt('#label-favorite-location', t.favorite_location_label);
+  setTxt('#label-favorite-currency', t.favorite_currency_label);
 
   // navigation (prix)
   setTxt('#nav-prices', t.nav_prices);
@@ -1058,7 +1212,8 @@ function applyI18n(){
       currentUserId = user?.id || null;
       whoSpan.textContent = user?.email || '(session)';
       await loadLanguageAndRenderBtn();   // ← add this line
-      applyI18n();  
+      applyI18n();
+      await loadFavorites();
       await refreshAll();
     }
 
@@ -1086,10 +1241,11 @@ function applyI18n(){
 
     // === Navigation (Récoltes / Produits / Profil) ===
     const views = {
-      harvests: document.getElementById('view-harvests'),
-      products: document.getElementById('view-products'),
-      prices:   document.getElementById('view-prices'),
-      profile:  document.getElementById('view-profile')
+      harvests:  document.getElementById('view-harvests'),
+      products:  document.getElementById('view-products'),
+      locations: document.getElementById('view-locations'),
+      prices:    document.getElementById('view-prices'),
+      profile:   document.getElementById('view-profile')
     };
     document.querySelectorAll('#main-nav .tab').forEach(btn => {
       btn.onclick = () => {
@@ -1097,6 +1253,7 @@ function applyI18n(){
         btn.classList.add('active');
         Object.entries(views).forEach(([k, el]) => el.classList.toggle('hide', k !== btn.dataset.view));
         if (btn.dataset.view === 'products') refreshProductsList();
+        if (btn.dataset.view === 'locations') refreshLocationsList();
         if (btn.dataset.view === 'prices') loadPriceProductOptions();
         if (btn.dataset.view === 'profile') loadProfile();
       };
@@ -1119,12 +1276,31 @@ function applyI18n(){
     let editingProductId = null;
     let lastProducts = [];
 
+    const PRODUCT_TYPES = [
+      ['Vegetable', 'type_vegetable'],
+      ['Fruit', 'type_fruit'],
+      ['Fruit tree', 'type_fruit_tree'],
+      ['Tree/shrub', 'type_tree_shrub'],
+      ['Herb', 'type_herb'],
+      ['Condiment', 'type_condiment'],
+      ['Medicinal plant', 'type_medicinal'],
+      ['Peruvian plant', 'type_peruvian'],
+      ['Flower', 'type_flower'],
+      ['Houseplant', 'type_houseplant'],
+      ['Vine', 'type_vine'],
+      ['Grain', 'type_grain'],
+    ];
+
+    function productTypeLabel(dbValue){
+      const t = I18N[curLang] || I18N.fr;
+      const entry = PRODUCT_TYPES.find(([v]) => v === dbValue);
+      return entry ? t[entry[1]] : dbValue;
+    }
+
     function renderProductTypeOptions(){
       const t = I18N[curLang] || I18N.fr;
       const cur = selPType.value;
-      selPType.innerHTML =
-        `<option value="Fruit">${t.type_fruit}</option>` +
-        `<option value="Vegetable">${t.type_vegetable}</option>`;
+      selPType.innerHTML = PRODUCT_TYPES.map(([v, key]) => `<option value="${v}">${t[key]}</option>`).join('');
       if (cur) selPType.value = cur;
     }
 
@@ -1204,7 +1380,7 @@ function applyI18n(){
         <tr>
           <td>${isFr ? (p.name_fr || p.name) : p.name}</td>
           <td>${isFr ? (p.variety_fr || p.variety) : p.variety || ''}</td>
-          <td>${p.type === 'Vegetable' ? t.type_vegetable : t.type_fruit}</td>
+          <td>${productTypeLabel(p.type)}</td>
           <td>${isFr ? (p.unit_harvest_fr || p.unit_harvest) : p.unit_harvest}</td>
           <td style="display:flex;gap:.4rem">
             <button type="button" class="p-edit-btn" data-id="${p.id}">${t.edit_btn}</button>
@@ -1256,6 +1432,115 @@ function applyI18n(){
       await Promise.all([refreshProductsList(), loadProducts()]);
     };
 
+    // === Vue Lieux ===
+    const locName        = document.getElementById('loc-name');
+    const locNameFr       = document.getElementById('loc-name-fr');
+    const locArea          = document.getElementById('loc-area');
+    const locDescription   = document.getElementById('loc-description');
+    const locSaveBtn       = document.getElementById('loc-save');
+    const locCancelEditBtn = document.getElementById('loc-cancel-edit');
+    const locMsg            = document.getElementById('location-msg');
+    const locationFormTitle = document.getElementById('location-form-title');
+    const locationsRowsBody = document.getElementById('locations-rows');
+    const locationsListMsg  = document.getElementById('locations-list-msg');
+    let editingLocationId = null;
+    let lastLocations = [];
+
+    function renderLocationFormMode(){
+      const t = I18N[curLang] || I18N.fr;
+      if (editingLocationId){
+        locationFormTitle.textContent = t.locations_edit_h2;
+        locSaveBtn.textContent = t.product_update_btn;
+        locCancelEditBtn.classList.remove('hide');
+      } else {
+        locationFormTitle.textContent = t.locations_h2;
+        locSaveBtn.textContent = t.product_save_btn;
+        locCancelEditBtn.classList.add('hide');
+      }
+    }
+
+    function startEditLocation(row){
+      editingLocationId = row.id;
+      locName.value = row.name || '';
+      locNameFr.value = row.name_fr || '';
+      locArea.value = row.area_m2 ?? '';
+      locDescription.value = row.description || '';
+      locMsg.textContent = '';
+      renderLocationFormMode();
+      document.getElementById('location-form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function cancelEditLocation(){
+      editingLocationId = null;
+      locName.value = ''; locNameFr.value = '';
+      locArea.value = ''; locDescription.value = '';
+      locMsg.textContent = '';
+      renderLocationFormMode();
+    }
+    locCancelEditBtn.onclick = cancelEditLocation;
+
+    locationsRowsBody.addEventListener('click', (e) => {
+      const btn = e.target.closest('.loc-edit-btn');
+      if (!btn) return;
+      const row = lastLocations.find(r => String(r.id) === btn.dataset.id);
+      if (row) startEditLocation(row);
+    });
+
+    async function refreshLocationsList(){
+      const { data, error } = await db.from('locations')
+        .select('id,name,name_fr,area_m2,description')
+        .order('name');
+      if (error){
+        locationsListMsg.textContent = (window.__i18n_locations_err_hint||'Erreur lieux : ') + error.message;
+        locationsRowsBody.innerHTML = '';
+        return;
+      }
+      lastLocations = data;
+      const isFr = (curLang === 'fr');
+      const t = I18N[curLang] || I18N.fr;
+      locationsRowsBody.innerHTML = data.map(l => `
+        <tr>
+          <td>${isFr ? (l.name_fr || l.name) : l.name}</td>
+          <td>${l.area_m2 ?? ''}</td>
+          <td>${l.description ?? ''}</td>
+          <td><button type="button" class="loc-edit-btn" data-id="${l.id}">${t.edit_btn}</button></td>
+        </tr>
+      `).join('');
+      locationsListMsg.textContent = data.length ? '' : (window.__i18n_locations_empty || t.locations_empty);
+    }
+
+    locSaveBtn.onclick = async () => {
+      locMsg.textContent = '';
+      const t = I18N[curLang] || I18N.fr;
+
+      const name = locName.value.trim();
+      if (!name){ locMsg.textContent = t.choose_loc_name_err; return; }
+
+      const payload = {
+        name,
+        name_fr: locNameFr.value.trim() || null,
+        area_m2: locArea.value === '' ? null : Number(locArea.value),
+        description: locDescription.value.trim() || null
+      };
+
+      const { error } = editingLocationId
+        ? await db.from('locations').update(payload).eq('id', editingLocationId)
+        : await db.from('locations').insert(payload);
+      if (error){ locMsg.className='muted msg-err'; locMsg.textContent = error.message; return; }
+
+      locMsg.className='muted msg-ok';
+      locMsg.textContent = editingLocationId
+        ? (window.__i18n_location_updated_ok || t.location_updated_ok)
+        : (window.__i18n_location_added_ok || t.location_added_ok);
+
+      const wasEditing = !!editingLocationId;
+      editingLocationId = null;
+      if (wasEditing) renderLocationFormMode();
+      else { locName.value=''; locNameFr.value=''; locArea.value=''; locDescription.value=''; }
+
+      await Promise.all([refreshLocationsList(), loadLocations()]);
+    };
+
     // === Vue Prix ===
     const priceProductSel = document.getElementById('price-product');
     const priceDateInp    = document.getElementById('price-date');
@@ -1299,6 +1584,7 @@ function applyI18n(){
 
     async function loadPriceProductOptions(){
       if (!priceDateInp.value) priceDateInp.valueAsDate = new Date();
+      if (!editingPriceId && favoriteCurrency) priceCurrencySel.value = favoriteCurrency;
       const { data, error } = await db.from('products')
         .select('id,name,name_fr,variety,variety_fr,unit_harvest,unit_harvest_fr')
         .order('name');
@@ -1358,7 +1644,7 @@ function applyI18n(){
       priceAmountInp.value = '';
       priceLocationInp.value = '';
       priceStoreInp.value = '';
-      priceCurrencySel.value = 'EUR';
+      priceCurrencySel.value = favoriteCurrency || 'EUR';
       priceDateInp.valueAsDate = new Date();
       priceMsg.textContent = '';
       renderPriceFormMode();
@@ -1451,28 +1737,63 @@ function applyI18n(){
     };
 
     // === Vue Profil ===
-    const profileUsername = document.getElementById('profile-username');
+    const profileUsername       = document.getElementById('profile-username');
+    const profileLanguageSel    = document.getElementById('profile-language');
+    const profileFavLocationSel = document.getElementById('profile-favorite-location');
+    const profileFavCurrencySel = document.getElementById('profile-favorite-currency');
     const profileSaveBtn  = document.getElementById('profile-save');
     const profileMsg      = document.getElementById('profile-msg');
+    let favoriteLocationId = null;
+    let favoriteCurrency = null;
+
+    async function loadFavorites(){
+      if (!currentUserId) return;
+      const { data } = await db.from('profiles')
+        .select('favorite_location_id,favorite_currency')
+        .eq('user_id', currentUserId)
+        .maybeSingle();
+      favoriteLocationId = data?.favorite_location_id ?? null;
+      favoriteCurrency = data?.favorite_currency || null;
+    }
 
     async function loadProfile(){
       profileMsg.textContent = '';
       const { data, error } = await db.from('profiles')
-        .select('username')
+        .select('username,language,favorite_location_id,favorite_currency')
         .eq('user_id', currentUserId)
         .maybeSingle();
       if (error){ profileMsg.className='muted msg-err'; profileMsg.textContent = error.message; return; }
       profileUsername.value = data?.username || '';
+      profileLanguageSel.value = data?.language || curLang;
+      favoriteLocationId = data?.favorite_location_id ?? null;
+      favoriteCurrency = data?.favorite_currency || null;
+
+      const isFr = (curLang === 'fr');
+      const { data: locs } = await db.from('locations').select('id,name,name_fr').order('name');
+      profileFavLocationSel.innerHTML = `<option value="">${window.__i18n_choose_none || '— aucun —'}</option>` +
+        (locs || []).map(l => `<option value="${l.id}">${isFr ? (l.name_fr || l.name) : l.name}</option>`).join('');
+      profileFavLocationSel.value = favoriteLocationId ? String(favoriteLocationId) : '';
+      profileFavCurrencySel.value = favoriteCurrency || '';
     }
+
+    profileLanguageSel.onchange = async () => {
+      try { await setLanguage(profileLanguageSel.value); }
+      catch (e) { alert('Error saving language: ' + (e.message || e)); }
+    };
 
     profileSaveBtn.onclick = async () => {
       const t = I18N[curLang] || I18N.fr;
       profileMsg.textContent = '';
       const username = profileUsername.value.trim();
-      const { error } = await db.from('profiles')
-        .update({ username })
-        .eq('user_id', currentUserId);
+      const payload = {
+        username,
+        favorite_location_id: profileFavLocationSel.value ? Number(profileFavLocationSel.value) : null,
+        favorite_currency: profileFavCurrencySel.value || null
+      };
+      const { error } = await db.from('profiles').update(payload).eq('user_id', currentUserId);
       if (error){ profileMsg.className='muted msg-err'; profileMsg.textContent = error.message; return; }
+      favoriteLocationId = payload.favorite_location_id;
+      favoriteCurrency = payload.favorite_currency;
       profileMsg.className='muted msg-ok';
       profileMsg.textContent = window.__i18n_profile_updated_ok || t.profile_updated_ok;
     };
@@ -1526,45 +1847,47 @@ function makeUsername(user) {
 }
 
       // Toggle + upsert to DB (no UI text change yet, only DB)
+async function setLanguage(next){
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return alert('Not signed in');
+
+  // 1) Le profil existe ?
+  const { data: existing, error: selErr } = await db
+    .from('profiles')
+    .select('user_id')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  if (selErr) throw selErr;
+
+  if (existing) {
+    // 2a) Il existe → on met à jour UNIQUEMENT la langue
+    const { error: updErr } = await db
+      .from('profiles')
+      .update({ language: next })
+      .eq('user_id', user.id);
+    if (updErr) throw updErr;
+  } else {
+    // 2b) N’existe pas → on insère (avec username pour respecter NOT NULL)
+    let profile = { user_id: user.id, language: next, username: makeUsername(user) };
+    let { error: insErr } = await db.from('profiles').insert(profile);
+    if (insErr && /duplicate key value.*username/i.test(insErr.message)) {
+      profile.username = profile.username + '_' + Math.random().toString(36).slice(2, 6);
+      ({ error: insErr } = await db.from('profiles').insert(profile));
+    }
+    if (insErr) throw insErr;
+  }
+
+  curLang = next;
+  renderLangBtn();
+  applyI18n();
+  await refreshAll();
+}
+
 if (langBtn) {
   langBtn.onclick = async () => {
     try {
-      const next = (curLang === 'fr') ? 'en' : 'fr';
       langBtn.disabled = true;
-
-      const { data: { user } } = await sb.auth.getUser();
-      if (!user) return alert('Not signed in');
-
-      // 1) Le profil existe ?
-      const { data: existing, error: selErr } = await db
-        .from('profiles')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (selErr) throw selErr;
-
-      if (existing) {
-        // 2a) Il existe → on met à jour UNIQUEMENT la langue
-        const { error: updErr } = await db
-          .from('profiles')
-          .update({ language: next })
-          .eq('user_id', user.id);
-        if (updErr) throw updErr;
-      } else {
-        // 2b) N’existe pas → on insère (avec username pour respecter NOT NULL)
-        let profile = { user_id: user.id, language: next, username: makeUsername(user) };
-        let { error: insErr } = await db.from('profiles').insert(profile);
-        if (insErr && /duplicate key value.*username/i.test(insErr.message)) {
-          profile.username = profile.username + '_' + Math.random().toString(36).slice(2, 6);
-          ({ error: insErr } = await db.from('profiles').insert(profile));
-        }
-        if (insErr) throw insErr;
-      }
-
-      curLang = next;
-      renderLangBtn();
-      applyI18n();
-      await refreshAll();
+      await setLanguage((curLang === 'fr') ? 'en' : 'fr');
     } catch (e) {
       alert('Error saving language: ' + (e.message || e));
       console.error(e);
@@ -1583,6 +1906,7 @@ if (langBtn) {
         unitSpan.textContent = opt?.dataset.unit || '–';
       };
       await Promise.all([loadProducts(), loadLocations(), refreshRows()]);
+      if (!editingId && !selLoc.value && favoriteLocationId) selLoc.value = String(favoriteLocationId);
       addBtn.onclick = onAdd;
       cancelEditBtn.onclick = cancelEdit;
     }
