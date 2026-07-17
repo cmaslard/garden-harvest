@@ -567,9 +567,9 @@ function applyI18n(){
     // === SUPABASE APP ===
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-    // ==== Projet Supabase (fixé) ====
-    const SUPABASE_URL = "https://xygczpwgowmmarfkwdbc.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5Z2N6cHdnb3dtbWFyZmt3ZGJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY0OTUwNDYsImV4cCI6MjA3MjA3MTA0Nn0.euY43Bd9gJW4y2qvxjwAZqrP6RPQXmGwcpD1H1Qx_pg";
+    // ==== Projet Supabase self-hosted (NAS) ====
+    const SUPABASE_URL = "https://supabase.cmaslard.xyz";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzg0MzA0ODcyLCJleHAiOjE5NDE5ODQ4NzJ9.Od8CPpgc4nKl3EpGKO1fjXdBbVNHjnW0pZNrbDaH7ms";
 
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     // IMPORTANT : on cible le schéma 'garden' (ajoute-le dans Settings → API → Exposed Schemas)
