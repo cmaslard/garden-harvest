@@ -140,7 +140,7 @@ Sur votre machine (pas le NAS), dans ce repo :
 - [ ] Tester en prod : login, lecture, écriture test (puis suppression).
 - [ ] Prévenir les utilisateurs existants qu'une reconnexion sera nécessaire (nouveau `JWT_SECRET` → sessions cloud invalidées, mais mots de passe inchangés).
 - [ ] Garder le projet Supabase Cloud actif quelques jours/semaines comme rollback (revert du commit `index.html` suffit).
-- [ ] Mettre en place une sauvegarde planifiée (DSM → Planificateur de tâches) qui exécute un `pg_dump` régulier du conteneur `db` vers un autre volume/hors NAS — Supabase Cloud le faisait automatiquement, ce n'est plus le cas.
+- [x] Sauvegarde : couverte par Hyper Backup existant sur `volume2` (Btrfs, snapshots — cohérent pour la donnée Postgres vivante dans `volumes/db/data`, équivalent à une coupure de courant propre pour Postgres au redémarrage). Pas de job `pg_dump` séparé nécessaire.
 
 ---
 
