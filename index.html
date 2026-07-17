@@ -281,8 +281,9 @@
           <label id="label-note">Note</label>
           <input id="note" placeholder="rang, commentaire…" />
         </div>
-        <div style="align-self:end">
+        <div style="align-self:end; display:flex; gap:.5rem">
           <button id="add" class="btn-primary">Ajouter</button>
+          <button id="cancel-edit" type="button" class="hide">Annuler</button>
         </div>
       </div>
       <p id="add-msg" class="muted"></p>
@@ -302,6 +303,7 @@
                 <th>Unité</th>
                 <th>Lieu</th>
                 <th>Note</th>
+                <th id="th-actions">Actions</th>
               </tr>
             </thead>
             <tbody id="rows"></tbody>
@@ -364,7 +366,13 @@ const I18N = {
     quantity: 'Quantité',
     note: 'Note',
     addBtn: 'Ajouter',
-    notePlaceholder: 'rang, commentaire…'
+    notePlaceholder: 'rang, commentaire…',
+    edit_btn: 'Modifier',
+    save_btn: 'Enregistrer',
+    cancel_btn: 'Annuler',
+    edit_h2: 'Modifier la récolte',
+    updated_ok: 'Récolte modifiée.',
+    th_actions: 'Actions'
   },
   en: {
     app_title: "Garden Harvests – Database",
@@ -415,7 +423,13 @@ const I18N = {
     quantity: 'Quantity',
     note: 'Note',
     addBtn: 'Add',
-    notePlaceholder: 'row, comment…'
+    notePlaceholder: 'row, comment…',
+    edit_btn: 'Edit',
+    save_btn: 'Save',
+    cancel_btn: 'Cancel',
+    edit_h2: 'Edit harvest',
+    updated_ok: 'Harvest updated.',
+    th_actions: 'Actions'
   }
 };
 
@@ -488,6 +502,8 @@ function applyI18n(){
     th[6].textContent = t.th_loc;
     th[7].textContent = t.th_note;
   }
+  setTxt('#th-actions', t.th_actions);
+  setTxt('#cancel-edit', t.cancel_btn);
 
   // placeholders des selects (seront utilisés dans loadProducts/loadLocations)
   window.__i18n_choose_product = t.choose_product;
@@ -499,8 +515,11 @@ function applyI18n(){
   window.__i18n_err_pick_date = t.choose_date_err;
   window.__i18n_err_enter_qty = t.enter_qty_err;
   window.__i18n_added_ok = t.added_ok;
+  window.__i18n_updated_ok = t.updated_ok;
   window.__i18n_rows_empty = t.rows_empty;
   window.__i18n_products_err_hint = t.products_err_hint;
+
+  renderFormMode();
 }
 
     // === THEME ===
@@ -663,6 +682,7 @@ function applyI18n(){
 
     async function afterAuth(){
       const { data: { user } } = await sb.auth.getUser();
+      currentUserId = user?.id || null;
       whoSpan.textContent = user?.email || '(session)';
       await loadLanguageAndRenderBtn();   // ← add this line
       applyI18n();  
@@ -684,9 +704,23 @@ function applyI18n(){
     const rowsBody  = document.getElementById('rows');
     const rowsMsg   = document.getElementById('rows-msg');
 
+    rowsBody.addEventListener('click', (e) => {
+      const btn = e.target.closest('.edit-btn');
+      if (!btn) return;
+      const row = lastRows.find(r => String(r.id) === btn.dataset.id);
+      if (row) startEdit(row);
+    });
+
     // === Single language toggle button → only updates DB (garden.profiles.language) ===
     const langBtn = document.getElementById('lang-toggle');
     let curLang = 'fr'; // default if none in DB
+
+    // === Édition d'une récolte existante ===
+    const cancelEditBtn = document.getElementById('cancel-edit');
+    const addCardTitle  = document.getElementById('add-card-title');
+    let editingId = null;
+    let currentUserId = null;
+    let lastRows = [];
 
     function renderLangBtn() {
       if (!langBtn) return;
@@ -784,6 +818,46 @@ if (langBtn) {
       };
       await Promise.all([loadProducts(), loadLocations(), refreshRows()]);
       addBtn.onclick = onAdd;
+      cancelEditBtn.onclick = cancelEdit;
+    }
+
+    function renderFormMode(){
+      const t = I18N[curLang] || I18N.fr;
+      if (editingId){
+        if (addCardTitle) addCardTitle.textContent = t.edit_h2;
+        addBtn.textContent = t.save_btn;
+        cancelEditBtn.classList.remove('hide');
+      } else {
+        if (addCardTitle) addCardTitle.textContent = t.add_h2;
+        addBtn.textContent = t.add_btn;
+        cancelEditBtn.classList.add('hide');
+      }
+    }
+
+    function startEdit(row){
+      editingId = row.id;
+      selProduct.value = String(row.product_id ?? '');
+      const opt = selProduct.selectedOptions[0];
+      unitSpan.textContent = opt?.dataset.unit || '–';
+      selLoc.value = String(row.location_id ?? '');
+      dateInp.value = row.harvest_date || '';
+      qtyInp.value = row.quantity ?? '';
+      noteInp.value = row.note || '';
+      addMsg.textContent = '';
+      renderFormMode();
+      document.getElementById('add-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function cancelEdit(){
+      editingId = null;
+      selProduct.value = '';
+      unitSpan.textContent = '–';
+      selLoc.value = '';
+      dateInp.valueAsDate = new Date();
+      qtyInp.value = '';
+      noteInp.value = '';
+      addMsg.textContent = '';
+      renderFormMode();
     }
 
     async function loadProducts(){
@@ -823,7 +897,9 @@ if (langBtn) {
         rowsBody.innerHTML = '';
         return;
       }
+      lastRows = data;
       const isFr = (curLang === 'fr');
+      const t = I18N[curLang] || I18N.fr;
       rowsBody.innerHTML = data.map(r => `
         <tr>
           <td>${r.harvest_date ?? ''}</td>
@@ -834,6 +910,7 @@ if (langBtn) {
           <td>${isFr ? (r.harvest_unit_fr || r.harvest_unit) : r.harvest_unit}</td>
           <td>${isFr ? (r.location_name_fr || r.location_name) : r.location_name}</td>
           <td>${r.note ?? ''}</td>
+          <td>${r.created_by === currentUserId ? `<button type="button" class="edit-btn" data-id="${r.id}">${t.edit_btn}</button>` : ''}</td>
         </tr>
       `).join('');
       rowsMsg.textContent = data.length ? '' : (window.__i18n_rows_empty || 'Aucune ligne pour le moment.');
@@ -856,9 +933,19 @@ if (langBtn) {
       if (!(qty >= 0)){ addMsg.textContent = t.enter_qty_err; return; }
 
       const payload = { product_id: productId, location_id: locationId, harvest_date: dateVal, quantity: qty, note: noteInp.value || null };
-      const { error } = await db.from('harvests').insert(payload);
+
+      const { error } = editingId
+        ? await db.from('harvests').update(payload).eq('id', editingId)
+        : await db.from('harvests').insert(payload);
       if (error){ addMsg.className='muted msg-err'; addMsg.textContent = error.message; return; }
-      addMsg.className='muted msg-ok'; addMsg.textContent = t.added_ok;
+
+      addMsg.className='muted msg-ok';
+      addMsg.textContent = editingId ? (window.__i18n_updated_ok || t.updated_ok) : t.added_ok;
+
+      if (editingId){
+        editingId = null;
+        renderFormMode();
+      }
       qtyInp.value=''; noteInp.value='';
       await refreshRows();
     }
