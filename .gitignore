@@ -1,3 +1,4 @@
 self-host/.env
 self-host/dumps/
+self-host/notifier/state/
 *.accdb

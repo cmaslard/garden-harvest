@@ -261,5 +261,23 @@ services:
     # run psql from a throwaway container attached to this same compose network
     # (`docker run --rm --network supabase_default ...`) instead of exposing 5432.
 
+  # Optional: emails ADMIN_EMAIL whenever a new auth.users row appears (polls every
+  # 15 min). DSM's Task Scheduler has no scriptable CLI to create tasks over SSH, so
+  # this lives as a plain container instead — same lifecycle as the rest of the stack.
+  # Requires real SMTP_* values in .env (not the dev placeholders) to actually send.
+  notifier:
+    container_name: garden-harvest-notifier
+    image: alpine:3.20
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./notifier/check.sh:/app/check.sh:ro
+      - ./notifier/state:/app/state
+    entrypoint: ["/bin/sh", "-c", "apk add --no-cache postgresql16-client curl >/dev/null 2>&1 && while true; do sh /app/check.sh; sleep 900; done"]
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   db-config:
