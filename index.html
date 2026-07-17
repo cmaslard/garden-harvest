@@ -164,7 +164,9 @@
     .right button{width:auto;flex:1 1 auto;white-space:nowrap;}
     .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--border);font-size:.8rem;color:var(--muted)}
     .hide{display:none}
-    .tabs{display:flex;gap:8px;margin-bottom:12px}
+    .tabs{display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+    .tabs .tab{flex:0 0 auto;white-space:nowrap;width:auto}
+    .mobile-nav-select{display:none;margin-bottom:12px}
     .tab{padding:.35rem .8rem;border:1px solid var(--border);border-radius:999px;background:transparent}
     .tab.active{border-color:var(--primary);color:var(--primary)}
     .btn-primary{border-color:var(--primary);color:var(--primary)}
@@ -178,6 +180,8 @@
   .row, .row3{ grid-template-columns:1fr; }
   .right{ justify-content:flex-start; gap:.5rem; }
   th, td{ padding:.6rem; }
+  #main-nav{ display:none; }
+  .mobile-nav-select{ display:block; }
   .topbar #theme-toggle{
     padding: .35rem;      
     min-width: auto;      
@@ -262,9 +266,19 @@
         <button type="button" class="tab" id="nav-products" data-view="products">Produits</button>
         <button type="button" class="tab" id="nav-prices" data-view="prices">Prix</button>
         <button type="button" class="tab" id="nav-stats" data-view="stats">Stats</button>
+        <button type="button" class="tab" id="nav-food-independence" data-view="food-independence">Vers l'autonomie alimentaire</button>
         <button type="button" class="tab" id="nav-locations" data-view="locations">Lieux</button>
         <button type="button" class="tab" id="nav-profile" data-view="profile">Profil</button>
       </nav>
+      <select class="mobile-nav-select" id="main-nav-mobile">
+        <option value="harvests">Récolte</option>
+        <option value="products">Produits</option>
+        <option value="prices">Prix</option>
+        <option value="stats">Stats</option>
+        <option value="food-independence">Vers l'autonomie alimentaire</option>
+        <option value="locations">Lieux</option>
+        <option value="profile">Profil</option>
+      </select>
 
       <div id="view-harvests">
         <div class="card" id="add-card">
@@ -622,6 +636,13 @@
         </div>
       </div>
 
+      <div id="view-food-independence" class="hide">
+        <div class="card">
+          <h2 id="food-independence-h2">Vers l'autonomie alimentaire</h2>
+          <p id="food-independence-placeholder" class="muted">À venir.</p>
+        </div>
+      </div>
+
       <div id="view-profile" class="hide">
         <div class="card">
           <h2 id="profile-h2">Mon profil</h2>
@@ -805,6 +826,9 @@ const I18N = {
     nav_stats: 'Stats',
     stats_h2: 'Statistiques',
     stats_placeholder: 'À venir.',
+    nav_food_independence: "Vers l'autonomie alimentaire",
+    food_independence_h2: "Vers l'autonomie alimentaire",
+    food_independence_placeholder: 'À venir.',
     nav_locations: 'Lieux',
     locations_h2: 'Ajouter un lieu',
     locations_edit_h2: 'Modifier le lieu',
@@ -964,6 +988,9 @@ const I18N = {
     nav_stats: 'Stats',
     stats_h2: 'Statistics',
     stats_placeholder: 'Coming soon.',
+    nav_food_independence: 'Toward food self-sufficiency',
+    food_independence_h2: 'Toward food self-sufficiency',
+    food_independence_placeholder: 'Coming soon.',
     nav_locations: 'Locations',
     locations_h2: 'Add a location',
     locations_edit_h2: 'Edit location',
@@ -1092,6 +1119,9 @@ function applyI18n(){
   setTxt('#nav-stats', t.nav_stats);
   setTxt('#stats-h2', t.stats_h2);
   setTxt('#stats-placeholder', t.stats_placeholder);
+  setTxt('#nav-food-independence', t.nav_food_independence);
+  setTxt('#food-independence-h2', t.food_independence_h2);
+  setTxt('#food-independence-placeholder', t.food_independence_placeholder);
 
   // vue Lieux
   setTxt('#locations-list-h2', t.locations_list_h2);
@@ -1194,6 +1224,15 @@ function applyI18n(){
   window.__i18n_products_err_hint = t.products_err_hint;
 
   renderFormMode();
+
+  // sync le <select> de nav mobile avec les libellés des onglets (déjà traduits ci-dessus)
+  const mobileNavSel = document.getElementById('main-nav-mobile');
+  if (mobileNavSel){
+    document.querySelectorAll('#main-nav .tab').forEach(btn => {
+      const opt = mobileNavSel.querySelector(`option[value="${btn.dataset.view}"]`);
+      if (opt) opt.textContent = btn.textContent;
+    });
+  }
 }
 
     // === THEME ===
@@ -1386,13 +1425,14 @@ function applyI18n(){
       if (row) startEdit(row);
     });
 
-    // === Navigation (Récoltes / Produits / Profil) ===
+    // === Navigation (Récoltes / Produits / Prix / Stats / Autonomie / Lieux / Profil) ===
     const views = {
       harvests:  document.getElementById('view-harvests'),
       products:  document.getElementById('view-products'),
       locations: document.getElementById('view-locations'),
       prices:    document.getElementById('view-prices'),
       stats:     document.getElementById('view-stats'),
+      'food-independence': document.getElementById('view-food-independence'),
       profile:   document.getElementById('view-profile')
     };
     function refreshViewByName(view){
@@ -1407,14 +1447,19 @@ function applyI18n(){
       if (activeBtn) refreshViewByName(activeBtn.dataset.view);
     }
 
+    const mobileNavSelect = document.getElementById('main-nav-mobile');
+
+    function switchToView(view){
+      document.querySelectorAll('#main-nav .tab').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+      if (mobileNavSelect) mobileNavSelect.value = view;
+      Object.entries(views).forEach(([k, el]) => el.classList.toggle('hide', k !== view));
+      refreshViewByName(view);
+    }
+
     document.querySelectorAll('#main-nav .tab').forEach(btn => {
-      btn.onclick = () => {
-        document.querySelectorAll('#main-nav .tab').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        Object.entries(views).forEach(([k, el]) => el.classList.toggle('hide', k !== btn.dataset.view));
-        refreshViewByName(btn.dataset.view);
-      };
+      btn.onclick = () => switchToView(btn.dataset.view);
     });
+    if (mobileNavSelect) mobileNavSelect.onchange = () => switchToView(mobileNavSelect.value);
 
     // === Vue Produits ===
     const selPType      = document.getElementById('p-type');
