@@ -293,6 +293,7 @@
           </div>
           <div style="align-self:end; display:flex; gap:.5rem">
             <button id="add" class="btn-primary">Ajouter</button>
+            <button id="delete-harvest" type="button" class="hide">Supprimer</button>
             <button id="cancel-edit" type="button" class="hide">Annuler</button>
           </div>
         </div>
@@ -445,6 +446,7 @@
             </div>
             <div style="align-self:end; display:flex; gap:.5rem">
               <button id="loc-save" class="btn-primary">Ajouter</button>
+              <button id="delete-location" type="button" class="hide">Supprimer</button>
               <button id="loc-cancel-edit" type="button" class="hide">Annuler</button>
             </div>
           </div>
@@ -514,6 +516,7 @@
           </div>
           <div class="right" style="margin-top:1rem">
             <button id="price-save" class="btn-primary">Ajouter</button>
+            <button id="delete-price" type="button" class="hide">Supprimer</button>
             <button id="price-cancel-edit" type="button" class="hide">Annuler</button>
           </div>
           <p id="price-msg" class="muted"></p>
@@ -712,6 +715,11 @@ const I18N = {
     edit_btn: 'Modifier',
     save_btn: 'Enregistrer',
     cancel_btn: 'Annuler',
+    delete_btn: 'Supprimer',
+    confirm_delete_harvest: 'Supprimer cette récolte ?',
+    confirm_delete_price: 'Supprimer ce prix ?',
+    confirm_delete_location: 'Supprimer ce lieu ?',
+    deleted_ok: 'Supprimé.',
     edit_h2: 'Modifier la récolte',
     updated_ok: 'Récolte modifiée.',
     th_actions: 'Actions',
@@ -864,6 +872,11 @@ const I18N = {
     edit_btn: 'Edit',
     save_btn: 'Save',
     cancel_btn: 'Cancel',
+    delete_btn: 'Delete',
+    confirm_delete_harvest: 'Delete this harvest?',
+    confirm_delete_price: 'Delete this price?',
+    confirm_delete_location: 'Delete this location?',
+    deleted_ok: 'Deleted.',
     edit_h2: 'Edit harvest',
     updated_ok: 'Harvest updated.',
     th_actions: 'Actions',
@@ -1030,6 +1043,9 @@ function applyI18n(){
   setTxt('#th-note', t.th_note);
   setTxt('#th-actions', t.th_actions);
   setTxt('#cancel-edit', t.cancel_btn);
+  setTxt('#delete-harvest', t.delete_btn);
+  setTxt('#delete-price', t.delete_btn);
+  setTxt('#delete-location', t.delete_btn);
   ['filter-by','filter-product','filter-variety','filter-loc','filter-note',
    'filter-p-name','filter-p-variety','filter-p-latin','filter-p-type','filter-p-unit',
    'filter-price-loc','filter-price-store','filter-price-note','filter-price-by',
@@ -1158,6 +1174,7 @@ function applyI18n(){
   window.__i18n_err_pick_date = t.choose_date_err;
   window.__i18n_err_enter_qty = t.enter_qty_err;
   window.__i18n_added_ok = t.added_ok;
+  window.__i18n_deleted_ok = t.deleted_ok;
   window.__i18n_updated_ok = t.updated_ok;
   window.__i18n_rows_empty = t.rows_empty;
   window.__i18n_rows_no_match = t.rows_no_match;
@@ -1605,18 +1622,34 @@ function applyI18n(){
     let editingLocationId = null;
     let lastLocations = [];
 
+    const deleteLocationBtn = document.getElementById('delete-location');
+
     function renderLocationFormMode(){
       const t = I18N[curLang] || I18N.fr;
       if (editingLocationId){
         locationFormTitle.textContent = t.locations_edit_h2;
         locSaveBtn.textContent = t.product_update_btn;
         locCancelEditBtn.classList.remove('hide');
+        deleteLocationBtn.classList.remove('hide');
       } else {
         locationFormTitle.textContent = t.locations_h2;
         locSaveBtn.textContent = t.product_save_btn;
         locCancelEditBtn.classList.add('hide');
+        deleteLocationBtn.classList.add('hide');
       }
     }
+
+    deleteLocationBtn.onclick = async () => {
+      if (!editingLocationId) return;
+      const t = I18N[curLang] || I18N.fr;
+      if (!confirm(t.confirm_delete_location)) return;
+      const { error } = await db.from('locations').delete().eq('id', editingLocationId);
+      if (error){ locMsg.className='muted msg-err'; locMsg.textContent = error.message; return; }
+      cancelEditLocation();
+      locMsg.className='muted msg-ok';
+      locMsg.textContent = window.__i18n_deleted_ok || t.deleted_ok;
+      await Promise.all([refreshLocationsList(), loadLocations()]);
+    };
 
     function startEditLocation(row){
       editingLocationId = row.id;
@@ -1774,16 +1807,32 @@ function applyI18n(){
       refreshPricesList();
     };
 
+    const deletePriceBtn = document.getElementById('delete-price');
+
     function renderPriceFormMode(){
       const t = I18N[curLang] || I18N.fr;
       if (editingPriceId){
         priceSaveBtn.textContent = t.save_btn;
         priceCancelBtn.classList.remove('hide');
+        deletePriceBtn.classList.remove('hide');
       } else {
         priceSaveBtn.textContent = t.add_btn;
         priceCancelBtn.classList.add('hide');
+        deletePriceBtn.classList.add('hide');
       }
     }
+
+    deletePriceBtn.onclick = async () => {
+      if (!editingPriceId) return;
+      const t = I18N[curLang] || I18N.fr;
+      if (!confirm(t.confirm_delete_price)) return;
+      const { error } = await db.from('prices').delete().eq('id', editingPriceId);
+      if (error){ priceMsg.className='muted msg-err'; priceMsg.textContent = error.message; return; }
+      cancelEditPrice();
+      priceMsg.className='muted msg-ok';
+      priceMsg.textContent = window.__i18n_deleted_ok || t.deleted_ok;
+      await Promise.all([refreshPricesList(), refreshRecentPrices()]);
+    };
 
     function startEditPrice(row){
       editingPriceId = row.id;
@@ -2110,6 +2159,7 @@ function applyI18n(){
 
     // === Édition d'une récolte existante ===
     const cancelEditBtn = document.getElementById('cancel-edit');
+    const deleteHarvestBtn = document.getElementById('delete-harvest');
     const addCardTitle  = document.getElementById('add-card-title');
     let editingId = null;
     let currentUserId = null;
@@ -2224,12 +2274,26 @@ if (langBtn) {
         if (addCardTitle) addCardTitle.textContent = t.edit_h2;
         addBtn.textContent = t.save_btn;
         cancelEditBtn.classList.remove('hide');
+        deleteHarvestBtn.classList.remove('hide');
       } else {
         if (addCardTitle) addCardTitle.textContent = t.add_h2;
         addBtn.textContent = t.add_btn;
         cancelEditBtn.classList.add('hide');
+        deleteHarvestBtn.classList.add('hide');
       }
     }
+
+    deleteHarvestBtn.onclick = async () => {
+      if (!editingId) return;
+      const t = I18N[curLang] || I18N.fr;
+      if (!confirm(t.confirm_delete_harvest)) return;
+      const { error } = await db.from('harvests').delete().eq('id', editingId);
+      if (error){ addMsg.className='muted msg-err'; addMsg.textContent = error.message; return; }
+      cancelEdit();
+      addMsg.className='muted msg-ok';
+      addMsg.textContent = window.__i18n_deleted_ok || t.deleted_ok;
+      await refreshRows();
+    };
 
     function startEdit(row){
       editingId = row.id;
