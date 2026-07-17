@@ -1381,7 +1381,7 @@ function applyI18n(){
         return;
       }
       const { data, error } = await db.from('prices_view')
-        .select('*').eq('product_id', productId).limit(200);
+        .select('*').eq('product_id', productId).limit(5000);
       if (error){
         pricesListMsg.textContent = 'Erreur : ' + error.message;
         pricesRowsBody.innerHTML = '';
@@ -1657,7 +1657,7 @@ if (langBtn) {
 
     async function refreshRows(){
       const { data, error } = await db.from('harvests_view')
-        .select('*').limit(100);
+        .select('*').limit(5000);
       if (error){
         rowsMsg.textContent = 'Erreur lecture : ' + error.message;
         rowsBody.innerHTML = '';
