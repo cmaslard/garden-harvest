@@ -258,9 +258,10 @@
       </div>
 
       <nav class="tabs" id="main-nav">
-        <button type="button" class="tab active" id="nav-harvests" data-view="harvests">Base de données</button>
+        <button type="button" class="tab active" id="nav-harvests" data-view="harvests">Récolte</button>
         <button type="button" class="tab" id="nav-products" data-view="products">Produits</button>
         <button type="button" class="tab" id="nav-prices" data-view="prices">Prix</button>
+        <button type="button" class="tab" id="nav-stats" data-view="stats">Stats</button>
         <button type="button" class="tab" id="nav-locations" data-view="locations">Lieux</button>
         <button type="button" class="tab" id="nav-profile" data-view="profile">Profil</button>
       </nav>
@@ -446,7 +447,6 @@
             </div>
             <div style="align-self:end; display:flex; gap:.5rem">
               <button id="loc-save" class="btn-primary">Ajouter</button>
-              <button id="delete-location" type="button" class="hide">Supprimer</button>
               <button id="loc-cancel-edit" type="button" class="hide">Annuler</button>
             </div>
           </div>
@@ -615,6 +615,13 @@
         </div>
       </div>
 
+      <div id="view-stats" class="hide">
+        <div class="card">
+          <h2 id="stats-h2">Statistiques</h2>
+          <p id="stats-placeholder" class="muted">À venir.</p>
+        </div>
+      </div>
+
       <div id="view-profile" class="hide">
         <div class="card">
           <h2 id="profile-h2">Mon profil</h2>
@@ -661,7 +668,7 @@
 const I18N = {
   fr: {
     app_title: "Récolte au jardin – Base de données",
-    nav_harvests_label: "Base de données",
+    nav_harvests_label: "Récolte",
     auth_title: "Connexion",
     tab_pass: "Email + mot de passe",
     tab_magic: "Magic link",
@@ -718,7 +725,6 @@ const I18N = {
     delete_btn: 'Supprimer',
     confirm_delete_harvest: 'Supprimer cette récolte ?',
     confirm_delete_price: 'Supprimer ce prix ?',
-    confirm_delete_location: 'Supprimer ce lieu ?',
     deleted_ok: 'Supprimé.',
     edit_h2: 'Modifier la récolte',
     updated_ok: 'Récolte modifiée.',
@@ -796,6 +802,9 @@ const I18N = {
     th_price_actions: 'Actions',
     recent_prices_h3: 'Derniers prix ajoutés',
     recent_prices_none: 'Aucun prix ajouté récemment.',
+    nav_stats: 'Stats',
+    stats_h2: 'Statistiques',
+    stats_placeholder: 'À venir.',
     nav_locations: 'Lieux',
     locations_h2: 'Ajouter un lieu',
     locations_edit_h2: 'Modifier le lieu',
@@ -818,7 +827,7 @@ const I18N = {
   },
   en: {
     app_title: "Garden Harvests – Database",
-    nav_harvests_label: "Database",
+    nav_harvests_label: "Harvest",
     auth_title: "Sign in",
     tab_pass: "Email + password",
     tab_magic: "Magic link",
@@ -875,7 +884,6 @@ const I18N = {
     delete_btn: 'Delete',
     confirm_delete_harvest: 'Delete this harvest?',
     confirm_delete_price: 'Delete this price?',
-    confirm_delete_location: 'Delete this location?',
     deleted_ok: 'Deleted.',
     edit_h2: 'Edit harvest',
     updated_ok: 'Harvest updated.',
@@ -953,6 +961,9 @@ const I18N = {
     th_price_actions: 'Actions',
     recent_prices_h3: 'Recently added prices',
     recent_prices_none: 'No prices added recently.',
+    nav_stats: 'Stats',
+    stats_h2: 'Statistics',
+    stats_placeholder: 'Coming soon.',
     nav_locations: 'Locations',
     locations_h2: 'Add a location',
     locations_edit_h2: 'Edit location',
@@ -1045,7 +1056,6 @@ function applyI18n(){
   setTxt('#cancel-edit', t.cancel_btn);
   setTxt('#delete-harvest', t.delete_btn);
   setTxt('#delete-price', t.delete_btn);
-  setTxt('#delete-location', t.delete_btn);
   ['filter-by','filter-product','filter-variety','filter-loc','filter-note',
    'filter-p-name','filter-p-variety','filter-p-latin','filter-p-type','filter-p-unit',
    'filter-price-loc','filter-price-store','filter-price-note','filter-price-by',
@@ -1079,6 +1089,9 @@ function applyI18n(){
 
   // navigation (lieux)
   setTxt('#nav-locations', t.nav_locations);
+  setTxt('#nav-stats', t.nav_stats);
+  setTxt('#stats-h2', t.stats_h2);
+  setTxt('#stats-placeholder', t.stats_placeholder);
 
   // vue Lieux
   setTxt('#locations-list-h2', t.locations_list_h2);
@@ -1379,6 +1392,7 @@ function applyI18n(){
       products:  document.getElementById('view-products'),
       locations: document.getElementById('view-locations'),
       prices:    document.getElementById('view-prices'),
+      stats:     document.getElementById('view-stats'),
       profile:   document.getElementById('view-profile')
     };
     function refreshViewByName(view){
@@ -1622,34 +1636,18 @@ function applyI18n(){
     let editingLocationId = null;
     let lastLocations = [];
 
-    const deleteLocationBtn = document.getElementById('delete-location');
-
     function renderLocationFormMode(){
       const t = I18N[curLang] || I18N.fr;
       if (editingLocationId){
         locationFormTitle.textContent = t.locations_edit_h2;
         locSaveBtn.textContent = t.product_update_btn;
         locCancelEditBtn.classList.remove('hide');
-        deleteLocationBtn.classList.remove('hide');
       } else {
         locationFormTitle.textContent = t.locations_h2;
         locSaveBtn.textContent = t.product_save_btn;
         locCancelEditBtn.classList.add('hide');
-        deleteLocationBtn.classList.add('hide');
       }
     }
-
-    deleteLocationBtn.onclick = async () => {
-      if (!editingLocationId) return;
-      const t = I18N[curLang] || I18N.fr;
-      if (!confirm(t.confirm_delete_location)) return;
-      const { error } = await db.from('locations').delete().eq('id', editingLocationId);
-      if (error){ locMsg.className='muted msg-err'; locMsg.textContent = error.message; return; }
-      cancelEditLocation();
-      locMsg.className='muted msg-ok';
-      locMsg.textContent = window.__i18n_deleted_ok || t.deleted_ok;
-      await Promise.all([refreshLocationsList(), loadLocations()]);
-    };
 
     function startEditLocation(row){
       editingLocationId = row.id;
@@ -1784,8 +1782,15 @@ function applyI18n(){
       if (error){ return; }
       const isFr = (curLang === 'fr');
       const keep = priceProductSel.value;
+      const sorted = [...data].sort((a, b) => {
+        const an = isFr ? (a.name_fr || a.name) : a.name;
+        const bn = isFr ? (b.name_fr || b.name) : b.name;
+        const av = isFr ? (a.variety_fr || a.variety) : a.variety;
+        const bv = isFr ? (b.variety_fr || b.variety) : b.variety;
+        return an.localeCompare(bn, isFr ? 'fr' : 'en') || (av || '').localeCompare(bv || '', isFr ? 'fr' : 'en');
+      });
       priceProductSel.innerHTML = `<option value="">${window.__i18n_choose_product||'— choisir —'}</option>` +
-        data.map(p => {
+        sorted.map(p => {
           const n = isFr ? (p.name_fr || p.name) : p.name;
           const v = isFr ? (p.variety_fr || p.variety) : p.variety;
           const u = isFr ? (p.unit_harvest_fr || p.unit_harvest) : p.unit_harvest;
@@ -2003,7 +2008,7 @@ function applyI18n(){
     async function refreshRecentPrices(){
       if (!recentPricesRowsBody) return;
       const isFr = (curLang === 'fr');
-      const { data, error } = await db.from('prices_view').select('*').order('created_at', { ascending: false }).limit(5);
+      const { data, error } = await db.from('prices_view').select('*').order('created_at', { ascending: false }).limit(50);
       if (error || !data){
         lastRecentPrices = [];
         applyRecentPriceFilters();
@@ -2331,8 +2336,15 @@ if (langBtn) {
         return;
       }
       const isFr = (curLang === 'fr');
+      const sorted = [...data].sort((a, b) => {
+        const an = isFr ? (a.name_fr || a.name) : a.name;
+        const bn = isFr ? (b.name_fr || b.name) : b.name;
+        const av = isFr ? (a.variety_fr || a.variety) : a.variety;
+        const bv = isFr ? (b.variety_fr || b.variety) : b.variety;
+        return an.localeCompare(bn, isFr ? 'fr' : 'en') || (av || '').localeCompare(bv || '', isFr ? 'fr' : 'en');
+      });
       selProduct.innerHTML = `<option value="">${window.__i18n_choose_product||'— choisir —'}</option>` +
-        data.map(p => {
+        sorted.map(p => {
           const n = isFr ? (p.name_fr || p.name) : p.name;
           const v = isFr ? (p.variety_fr || p.variety) : p.variety;
           const u = isFr ? (p.unit_harvest_fr || p.unit_harvest) : p.unit_harvest;
