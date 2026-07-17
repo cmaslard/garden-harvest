@@ -258,10 +258,10 @@
       </div>
 
       <nav class="tabs" id="main-nav">
-        <button type="button" class="tab active" id="nav-harvests" data-view="harvests">Récolte au jardin – Base de données</button>
+        <button type="button" class="tab active" id="nav-harvests" data-view="harvests">Base de données</button>
         <button type="button" class="tab" id="nav-products" data-view="products">Produits</button>
-        <button type="button" class="tab" id="nav-locations" data-view="locations">Lieux</button>
         <button type="button" class="tab" id="nav-prices" data-view="prices">Prix</button>
+        <button type="button" class="tab" id="nav-locations" data-view="locations">Lieux</button>
         <button type="button" class="tab" id="nav-profile" data-view="profile">Profil</button>
       </nav>
 
@@ -375,7 +375,11 @@
               <input id="p-unit" required />
             </div>
           </div>
-          <div class="row" style="margin-top:1rem">
+          <div class="row3" style="margin-top:1rem">
+            <div>
+              <label id="label-p-latin">Nom latin</label>
+              <input id="p-latin" style="font-style:italic" />
+            </div>
             <div>
               <label id="label-p-unit-fr">Unité (FR)</label>
               <input id="p-unit-fr" />
@@ -396,9 +400,18 @@
                 <tr>
                   <th id="th-p-name">Nom</th>
                   <th id="th-p-variety">Variété</th>
+                  <th id="th-p-latin">Nom latin</th>
                   <th id="th-p-type">Type</th>
                   <th id="th-p-unit">Unité</th>
                   <th id="th-p-actions">Actions</th>
+                </tr>
+                <tr>
+                  <th><input id="filter-p-name" type="text" /></th>
+                  <th><input id="filter-p-variety" type="text" /></th>
+                  <th><input id="filter-p-latin" type="text" /></th>
+                  <th><input id="filter-p-type" type="text" /></th>
+                  <th><input id="filter-p-unit" type="text" /></th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody id="products-rows"></tbody>
@@ -493,6 +506,12 @@
               <input id="price-store" placeholder="ex. Migros, Coop, marché…" />
             </div>
           </div>
+          <div class="row" style="margin-top:1rem">
+            <div>
+              <label id="label-price-note">Note</label>
+              <input id="price-note" placeholder="commentaire…" />
+            </div>
+          </div>
           <div class="right" style="margin-top:1rem">
             <button id="price-save" class="btn-primary">Ajouter</button>
             <button id="price-cancel-edit" type="button" class="hide">Annuler</button>
@@ -516,18 +535,80 @@
             <table>
               <thead>
                 <tr>
-                  <th id="th-price-date">Date</th>
+                  <th id="th-price-date" style="cursor:pointer"><span id="th-price-date-label">Date</span> <span id="sort-icon-price-date"></span></th>
                   <th id="th-price-location">Emplacement</th>
                   <th id="th-price-store">Magasin</th>
-                  <th id="th-price-amount">Prix</th>
+                  <th id="th-price-amount" style="cursor:pointer"><span id="th-price-amount-label">Prix</span> <span id="sort-icon-price-amount"></span></th>
+                  <th id="th-price-note">Note</th>
                   <th id="th-price-by">Par</th>
                   <th id="th-price-actions">Actions</th>
+                </tr>
+                <tr>
+                  <th>
+                    <div style="display:flex;gap:.25rem">
+                      <input id="filter-price-date-from" type="date" style="width:auto" />
+                      <input id="filter-price-date-to" type="date" style="width:auto" />
+                    </div>
+                  </th>
+                  <th><input id="filter-price-loc" type="text" /></th>
+                  <th><input id="filter-price-store" type="text" /></th>
+                  <th>
+                    <div style="display:flex;gap:.25rem">
+                      <input id="filter-price-min" type="number" step="0.01" placeholder="min" style="width:3.5rem;padding:.4rem" />
+                      <input id="filter-price-max" type="number" step="0.01" placeholder="max" style="width:3.5rem;padding:.4rem" />
+                    </div>
+                  </th>
+                  <th><input id="filter-price-note" type="text" /></th>
+                  <th><input id="filter-price-by" type="text" /></th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody id="prices-rows"></tbody>
             </table>
           </div>
           <p id="prices-list-msg" class="muted"></p>
+        </div>
+
+        <div class="card" id="recent-prices-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+            <h2 id="recent-prices-h3" style="margin:0">Derniers prix ajoutés</h2>
+            <div style="display:flex;align-items:center;gap:.4rem">
+              <label id="label-recent-currency" class="muted" style="margin:0">Devise</label>
+              <select id="recent-currency" style="width:auto">
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
+                <option value="CHF">CHF</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th id="th-recent-date">Date</th>
+                  <th id="th-recent-product">Produit</th>
+                  <th id="th-recent-location">Emplacement</th>
+                  <th id="th-recent-store">Magasin</th>
+                  <th id="th-recent-amount">Prix</th>
+                  <th id="th-recent-note">Note</th>
+                  <th id="th-recent-by">Par</th>
+                  <th id="th-recent-actions">Actions</th>
+                </tr>
+                <tr>
+                  <th><input id="filter-recent-date" type="text" /></th>
+                  <th><input id="filter-recent-product" type="text" /></th>
+                  <th><input id="filter-recent-location" type="text" /></th>
+                  <th><input id="filter-recent-store" type="text" /></th>
+                  <th><input id="filter-recent-amount" type="text" /></th>
+                  <th><input id="filter-recent-note" type="text" /></th>
+                  <th><input id="filter-recent-by" type="text" /></th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="recent-prices-rows"></tbody>
+            </table>
+          </div>
+          <p id="recent-prices-msg" class="muted"></p>
         </div>
       </div>
 
@@ -577,6 +658,7 @@
 const I18N = {
   fr: {
     app_title: "Récolte au jardin – Base de données",
+    nav_harvests_label: "Base de données",
     auth_title: "Connexion",
     tab_pass: "Email + mot de passe",
     tab_magic: "Magic link",
@@ -640,6 +722,8 @@ const I18N = {
     products_list_h2: 'Produits',
     name_en_label: 'Nom (EN)',
     name_fr_label: 'Nom (FR)',
+    latin_name_label: 'Nom latin',
+    th_p_latin: 'Nom latin',
     type_label: 'Type',
     type_vegetable: 'Légume',
     type_fruit: 'Fruit',
@@ -687,6 +771,9 @@ const I18N = {
     price_location_ph: 'ex. Bulle, Enney…',
     store_label: 'Magasin',
     store_ph: 'ex. Migros, Coop, marché…',
+    price_note_label: 'Note',
+    price_note_ph: 'commentaire…',
+    th_price_note: 'Note',
     th_price_location: 'Emplacement',
     choose_product_first: 'Choisis d’abord un produit.',
     enter_price_err: 'Entre un prix.',
@@ -699,6 +786,8 @@ const I18N = {
     th_price_amount: 'Prix',
     th_price_by: 'Par',
     th_price_actions: 'Actions',
+    recent_prices_h3: 'Derniers prix ajoutés',
+    recent_prices_none: 'Aucun prix ajouté récemment.',
     nav_locations: 'Lieux',
     locations_h2: 'Ajouter un lieu',
     locations_edit_h2: 'Modifier le lieu',
@@ -721,6 +810,7 @@ const I18N = {
   },
   en: {
     app_title: "Garden Harvests – Database",
+    nav_harvests_label: "Database",
     auth_title: "Sign in",
     tab_pass: "Email + password",
     tab_magic: "Magic link",
@@ -784,6 +874,8 @@ const I18N = {
     products_list_h2: 'Products',
     name_en_label: 'Name (EN)',
     name_fr_label: 'Name (FR)',
+    latin_name_label: 'Latin name',
+    th_p_latin: 'Latin name',
     type_label: 'Type',
     type_vegetable: 'Vegetable',
     type_fruit: 'Fruit',
@@ -831,6 +923,9 @@ const I18N = {
     price_location_ph: 'e.g. Bulle, Enney…',
     store_label: 'Store',
     store_ph: 'e.g. Migros, Coop, farmers market…',
+    price_note_label: 'Note',
+    price_note_ph: 'comment…',
+    th_price_note: 'Note',
     th_price_location: 'Location',
     choose_product_first: 'Pick a product first.',
     enter_price_err: 'Enter a price.',
@@ -843,6 +938,8 @@ const I18N = {
     th_price_amount: 'Price',
     th_price_by: 'By',
     th_price_actions: 'Actions',
+    recent_prices_h3: 'Recently added prices',
+    recent_prices_none: 'No prices added recently.',
     nav_locations: 'Locations',
     locations_h2: 'Add a location',
     locations_edit_h2: 'Edit location',
@@ -933,11 +1030,15 @@ function applyI18n(){
   setTxt('#th-note', t.th_note);
   setTxt('#th-actions', t.th_actions);
   setTxt('#cancel-edit', t.cancel_btn);
-  ['filter-by','filter-product','filter-variety','filter-loc','filter-note']
+  ['filter-by','filter-product','filter-variety','filter-loc','filter-note',
+   'filter-p-name','filter-p-variety','filter-p-latin','filter-p-type','filter-p-unit',
+   'filter-price-loc','filter-price-store','filter-price-note','filter-price-by',
+   'filter-recent-date','filter-recent-product','filter-recent-location','filter-recent-store',
+   'filter-recent-amount','filter-recent-note','filter-recent-by']
     .forEach(id => { const el = document.getElementById(id); if (el) el.placeholder = t.filter_ph; });
 
   // navigation
-  setTxt('#nav-harvests', t.app_title);
+  setTxt('#nav-harvests', t.nav_harvests_label);
   setTxt('#nav-products', t.nav_products);
   setTxt('#nav-profile', t.nav_profile);
 
@@ -950,8 +1051,10 @@ function applyI18n(){
   setTxt('#label-p-variety-fr', t.variety_fr_label);
   setTxt('#label-p-unit', t.unit_en_label);
   setTxt('#label-p-unit-fr', t.unit_fr_label);
+  setTxt('#label-p-latin', t.latin_name_label);
   setTxt('#th-p-name', t.th_p_name);
   setTxt('#th-p-variety', t.th_p_variety);
+  setTxt('#th-p-latin', t.th_p_latin);
   setTxt('#th-p-type', t.th_p_type);
   setTxt('#th-p-unit', t.th_p_unit);
   setTxt('#p-cancel-edit', t.product_cancel_btn);
@@ -1001,15 +1104,28 @@ function applyI18n(){
   setTxt('#label-currency', t.currency_label);
   setTxt('#label-price-location', t.price_location_label);
   setTxt('#label-store', t.store_label);
+  setTxt('#label-price-note', t.price_note_label);
   setTxt('#price-cancel-edit', t.cancel_btn);
-  setTxt('#th-price-date', t.th_price_date);
+  setTxt('#th-price-date-label', t.th_price_date);
   setTxt('#th-price-location', t.th_price_location);
   setTxt('#th-price-store', t.th_price_store);
-  setTxt('#th-price-amount', t.th_price_amount);
+  setTxt('#th-price-amount-label', t.th_price_amount);
+  setTxt('#th-price-note', t.th_price_note);
   setTxt('#th-price-by', t.th_price_by);
   setTxt('#th-price-actions', t.th_price_actions);
+  setTxt('#recent-prices-h3', t.recent_prices_h3);
+  setTxt('#th-recent-date', t.th_price_date);
+  setTxt('#th-recent-product', t.product_label);
+  setTxt('#th-recent-location', t.th_price_location);
+  setTxt('#th-recent-store', t.th_price_store);
+  setTxt('#th-recent-amount', t.th_price_amount);
+  setTxt('#th-recent-note', t.th_price_note);
+  setTxt('#th-recent-by', t.th_price_by);
+  setTxt('#th-recent-actions', t.th_price_actions);
+  setTxt('#label-recent-currency', t.currency_label);
   const priceStore = document.getElementById('price-store'); if (priceStore) priceStore.placeholder = t.store_ph;
   const priceLocation = document.getElementById('price-location'); if (priceLocation) priceLocation.placeholder = t.price_location_ph;
+  const priceNoteInp = document.getElementById('price-note'); if (priceNoteInp) priceNoteInp.placeholder = t.price_note_ph;
   const lblPrice = document.getElementById('label-price');
   if (lblPrice && lblPrice.firstChild && lblPrice.firstChild.nodeType === Node.TEXT_NODE) {
     lblPrice.firstChild.nodeValue = t.price_label + ' (';
@@ -1030,6 +1146,7 @@ function applyI18n(){
   window.__i18n_price_added_ok = t.price_added_ok;
   window.__i18n_price_updated_ok = t.price_updated_ok;
   window.__i18n_prices_empty = t.prices_empty;
+  window.__i18n_recent_prices_none = t.recent_prices_none;
 
   // placeholders des selects (seront utilisés dans loadProducts/loadLocations)
   window.__i18n_choose_product = t.choose_product;
@@ -1247,15 +1364,24 @@ function applyI18n(){
       prices:    document.getElementById('view-prices'),
       profile:   document.getElementById('view-profile')
     };
+    function refreshViewByName(view){
+      if (view === 'products') refreshProductsList();
+      if (view === 'locations') refreshLocationsList();
+      if (view === 'prices') loadPriceProductOptions();
+      if (view === 'profile') loadProfile();
+    }
+
+    function refreshActiveView(){
+      const activeBtn = document.querySelector('#main-nav .tab.active');
+      if (activeBtn) refreshViewByName(activeBtn.dataset.view);
+    }
+
     document.querySelectorAll('#main-nav .tab').forEach(btn => {
       btn.onclick = () => {
         document.querySelectorAll('#main-nav .tab').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         Object.entries(views).forEach(([k, el]) => el.classList.toggle('hide', k !== btn.dataset.view));
-        if (btn.dataset.view === 'products') refreshProductsList();
-        if (btn.dataset.view === 'locations') refreshLocationsList();
-        if (btn.dataset.view === 'prices') loadPriceProductOptions();
-        if (btn.dataset.view === 'profile') loadProfile();
+        refreshViewByName(btn.dataset.view);
       };
     });
 
@@ -1267,6 +1393,7 @@ function applyI18n(){
     const pVarietyFr     = document.getElementById('p-variety-fr');
     const pUnit          = document.getElementById('p-unit');
     const pUnitFr        = document.getElementById('p-unit-fr');
+    const pLatin         = document.getElementById('p-latin');
     const pSaveBtn       = document.getElementById('p-save');
     const pCancelEditBtn = document.getElementById('p-cancel-edit');
     const pMsg           = document.getElementById('product-msg');
@@ -1326,6 +1453,7 @@ function applyI18n(){
       pVarietyFr.value = row.variety_fr || '';
       pUnit.value = row.unit_harvest || '';
       pUnitFr.value = row.unit_harvest_fr || '';
+      pLatin.value = row.latin_name || '';
       pMsg.textContent = '';
       renderProductFormMode();
       document.getElementById('product-form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1336,6 +1464,7 @@ function applyI18n(){
       pName.value = ''; pNameFr.value = '';
       pVariety.value = ''; pVarietyFr.value = '';
       pUnit.value = ''; pUnitFr.value = '';
+      pLatin.value = '';
       selPType.value = 'Fruit';
       pMsg.textContent = '';
       renderProductFormMode();
@@ -1366,7 +1495,7 @@ function applyI18n(){
 
     async function refreshProductsList(){
       const { data, error } = await db.from('products')
-        .select('id,name,name_fr,type,variety,variety_fr,unit_harvest,unit_harvest_fr')
+        .select('id,name,name_fr,type,variety,variety_fr,unit_harvest,unit_harvest_fr,latin_name')
         .order('name');
       if (error){
         productsListMsg.textContent = (window.__i18n_products_err_hint2||'Erreur produits : ') + error.message;
@@ -1374,12 +1503,17 @@ function applyI18n(){
         return;
       }
       lastProducts = data;
+      applyProductFilters();
+    }
+
+    function renderProductsTable(data, filtersActive){
       const isFr = (curLang === 'fr');
       const t = I18N[curLang] || I18N.fr;
       productsRowsBody.innerHTML = data.map(p => `
         <tr>
           <td>${isFr ? (p.name_fr || p.name) : p.name}</td>
           <td>${isFr ? (p.variety_fr || p.variety) : p.variety || ''}</td>
+          <td><em>${p.latin_name ?? ''}</em></td>
           <td>${productTypeLabel(p.type)}</td>
           <td>${isFr ? (p.unit_harvest_fr || p.unit_harvest) : p.unit_harvest}</td>
           <td style="display:flex;gap:.4rem">
@@ -1388,8 +1522,32 @@ function applyI18n(){
           </td>
         </tr>
       `).join('');
-      productsListMsg.textContent = data.length ? '' : (window.__i18n_products_empty || t.products_empty);
+      productsListMsg.textContent = data.length
+        ? ''
+        : (filtersActive ? (window.__i18n_rows_no_match || (I18N[curLang]||I18N.fr).rows_no_match) : (window.__i18n_products_empty || (I18N[curLang]||I18N.fr).products_empty));
     }
+
+    const productFilterIds = ['filter-p-name','filter-p-variety','filter-p-latin','filter-p-type','filter-p-unit'];
+    const productFilterFields = document.getElementById('filter-p-name') ? productFilterIds.map(id => document.getElementById(id)) : [];
+
+    function applyProductFilters(){
+      const isFr = (curLang === 'fr');
+      const [fName, fVariety, fLatin, fType, fUnit] = productFilterFields.map(el => (el?.value || '').trim().toLowerCase());
+      const anyActive = [fName, fVariety, fLatin, fType, fUnit].some(v => v);
+      const filtered = !anyActive ? lastProducts : lastProducts.filter(p => {
+        const name = isFr ? (p.name_fr || p.name) : p.name;
+        const variety = isFr ? (p.variety_fr || p.variety) : p.variety;
+        const typeLabel = productTypeLabel(p.type);
+        const unit = isFr ? (p.unit_harvest_fr || p.unit_harvest) : p.unit_harvest;
+        return (!fName || String(name ?? '').toLowerCase().includes(fName))
+          && (!fVariety || String(variety ?? '').toLowerCase().includes(fVariety))
+          && (!fLatin || String(p.latin_name ?? '').toLowerCase().includes(fLatin))
+          && (!fType || String(typeLabel ?? '').toLowerCase().includes(fType))
+          && (!fUnit || String(unit ?? '').toLowerCase().includes(fUnit));
+      });
+      renderProductsTable(filtered, anyActive);
+    }
+    productFilterFields.forEach(el => el && el.addEventListener('input', applyProductFilters));
 
     pSaveBtn.onclick = async () => {
       pMsg.textContent = '';
@@ -1411,7 +1569,8 @@ function applyI18n(){
         variety: pVariety.value.trim() || '',
         variety_fr: pVarietyFr.value.trim() || null,
         unit_harvest: unit,
-        unit_harvest_fr: pUnitFr.value.trim() || null
+        unit_harvest_fr: pUnitFr.value.trim() || null,
+        latin_name: pLatin.value.trim() || null
       };
 
       const { error } = editingProductId
@@ -1427,7 +1586,7 @@ function applyI18n(){
       const wasEditing = !!editingProductId;
       editingProductId = null;
       if (wasEditing) renderProductFormMode();
-      else { pName.value=''; pNameFr.value=''; pVariety.value=''; pVarietyFr.value=''; pUnit.value=''; pUnitFr.value=''; }
+      else { pName.value=''; pNameFr.value=''; pVariety.value=''; pVarietyFr.value=''; pUnit.value=''; pUnitFr.value=''; pLatin.value=''; }
 
       await Promise.all([refreshProductsList(), loadProducts()]);
     };
@@ -1549,6 +1708,7 @@ function applyI18n(){
     const priceCurrencySel= document.getElementById('price-currency');
     const priceLocationInp= document.getElementById('price-location');
     const priceStoreInp   = document.getElementById('price-store');
+    const priceNoteInput  = document.getElementById('price-note');
     const priceSaveBtn    = document.getElementById('price-save');
     const priceCancelBtn  = document.getElementById('price-cancel-edit');
     const priceMsg        = document.getElementById('price-msg');
@@ -1600,7 +1760,7 @@ function applyI18n(){
         }).join('');
       if (keep) priceProductSel.value = keep;
       updatePriceUnit();
-      await refreshPricesList();
+      await Promise.all([refreshPricesList(), refreshRecentPrices()]);
     }
 
     function updatePriceUnit(){
@@ -1634,6 +1794,7 @@ function applyI18n(){
       priceCurrencySel.value = row.currency || 'EUR';
       priceLocationInp.value = row.location || '';
       priceStoreInp.value = row.store || '';
+      priceNoteInput.value = row.note || '';
       priceMsg.textContent = '';
       renderPriceFormMode();
       document.getElementById('view-prices').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1644,6 +1805,7 @@ function applyI18n(){
       priceAmountInp.value = '';
       priceLocationInp.value = '';
       priceStoreInp.value = '';
+      priceNoteInput.value = '';
       priceCurrencySel.value = favoriteCurrency || 'EUR';
       priceDateInp.valueAsDate = new Date();
       priceMsg.textContent = '';
@@ -1658,10 +1820,165 @@ function applyI18n(){
       if (row) startEditPrice(row);
     });
 
+    let lastPricesEnriched = [];
+    let priceSortField = null; // 'price_date' | 'amount'
+    let priceSortDir = 'asc';
+
+    function updatePriceSortIcons(){
+      const dateIcon = document.getElementById('sort-icon-price-date');
+      const amountIcon = document.getElementById('sort-icon-price-amount');
+      if (dateIcon) dateIcon.textContent = priceSortField === 'price_date' ? (priceSortDir === 'asc' ? '▲' : '▼') : '';
+      if (amountIcon) amountIcon.textContent = priceSortField === 'amount' ? (priceSortDir === 'asc' ? '▲' : '▼') : '';
+    }
+    function setPriceSort(field){
+      priceSortDir = (priceSortField === field) ? (priceSortDir === 'asc' ? 'desc' : 'asc') : 'asc';
+      priceSortField = field;
+      updatePriceSortIcons();
+      applyPriceFilters();
+    }
+    document.getElementById('th-price-date').addEventListener('click', () => setPriceSort('price_date'));
+    document.getElementById('th-price-amount').addEventListener('click', () => setPriceSort('amount'));
+
+    const priceTextFilterIds = ['filter-price-loc','filter-price-store','filter-price-note','filter-price-by'];
+    const priceTextFilterFields = document.getElementById('filter-price-loc') ? priceTextFilterIds.map(id => document.getElementById(id)) : [];
+    const filterPriceDateFrom = document.getElementById('filter-price-date-from');
+    const filterPriceDateTo   = document.getElementById('filter-price-date-to');
+    const filterPriceMin = document.getElementById('filter-price-min');
+    const filterPriceMax = document.getElementById('filter-price-max');
+
+    function renderPricesTable(data, filtersActive){
+      const t = I18N[curLang] || I18N.fr;
+      pricesRowsBody.innerHTML = data.map(r => `
+        <tr>
+          <td>${r.price_date ?? ''}</td>
+          <td>${r.location ?? ''}</td>
+          <td>${r.store ?? ''}</td>
+          <td>${r.priceStr}</td>
+          <td>${r.note ?? ''}</td>
+          <td>${r.created_by_name ?? ''}</td>
+          <td>${r.created_by === currentUserId ? `<button type="button" class="price-edit-btn" data-id="${r.id}">${t.edit_btn}</button>` : ''}</td>
+        </tr>
+      `).join('');
+      pricesListMsg.textContent = data.length
+        ? ''
+        : (filtersActive ? (window.__i18n_rows_no_match || t.rows_no_match) : (window.__i18n_prices_empty || t.prices_empty));
+    }
+
+    function applyPriceFilters(){
+      const [fLoc, fStore, fNote, fBy] = priceTextFilterFields.map(el => (el?.value || '').trim().toLowerCase());
+      const dateFrom = filterPriceDateFrom?.value || '';
+      const dateTo   = filterPriceDateTo?.value || '';
+      const min = (filterPriceMin?.value === '' || filterPriceMin == null) ? null : Number(filterPriceMin.value);
+      const max = (filterPriceMax?.value === '' || filterPriceMax == null) ? null : Number(filterPriceMax.value);
+      const anyActive = [fLoc, fStore, fNote, fBy].some(v => v) || dateFrom || dateTo || min !== null || max !== null;
+
+      let filtered = !anyActive ? lastPricesEnriched : lastPricesEnriched.filter(r => {
+        return (!fLoc || String(r.location ?? '').toLowerCase().includes(fLoc))
+          && (!fStore || String(r.store ?? '').toLowerCase().includes(fStore))
+          && (!fNote || String(r.note ?? '').toLowerCase().includes(fNote))
+          && (!fBy || String(r.created_by_name ?? '').toLowerCase().includes(fBy))
+          && (!dateFrom || (r.price_date ?? '') >= dateFrom)
+          && (!dateTo || (r.price_date ?? '') <= dateTo)
+          && (min === null || r.convertedAmount >= min)
+          && (max === null || r.convertedAmount <= max);
+      });
+
+      if (priceSortField){
+        filtered = [...filtered].sort((a, b) => {
+          const va = priceSortField === 'amount' ? a.convertedAmount : a.price_date;
+          const vb = priceSortField === 'amount' ? b.convertedAmount : b.price_date;
+          if (va == null && vb == null) return 0;
+          if (va == null) return -1;
+          if (vb == null) return 1;
+          if (va < vb) return priceSortDir === 'asc' ? -1 : 1;
+          if (va > vb) return priceSortDir === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+      renderPricesTable(filtered, anyActive);
+    }
+
+    [...priceTextFilterFields, filterPriceDateFrom, filterPriceDateTo, filterPriceMin, filterPriceMax]
+      .forEach(el => el && el.addEventListener('input', applyPriceFilters));
+
+    let lastRecentPrices = [];
+    const recentCurrencySel = document.getElementById('recent-currency');
+    const recentFilterIds = ['filter-recent-date','filter-recent-product','filter-recent-location','filter-recent-store','filter-recent-amount','filter-recent-note','filter-recent-by'];
+    const recentFilterFields = document.getElementById('filter-recent-date') ? recentFilterIds.map(id => document.getElementById(id)) : [];
+    const recentPricesRowsBody = document.getElementById('recent-prices-rows');
+
+    function renderRecentPricesTable(data, filtersActive){
+      const msg = document.getElementById('recent-prices-msg');
+      if (!recentPricesRowsBody) return;
+      const t = I18N[curLang] || I18N.fr;
+      recentPricesRowsBody.innerHTML = data.map(r => `
+        <tr>
+          <td>${r.price_date ?? ''}</td>
+          <td>${r.name}</td>
+          <td>${r.location ?? ''}</td>
+          <td>${r.store ?? ''}</td>
+          <td>${r.amountStr}</td>
+          <td>${r.note ?? ''}</td>
+          <td>${r.created_by_name ?? ''}</td>
+          <td>${r.created_by === currentUserId ? `<button type="button" class="recent-price-edit-btn" data-id="${r.id}">${t.edit_btn}</button>` : ''}</td>
+        </tr>
+      `).join('');
+      msg.textContent = data.length
+        ? ''
+        : (filtersActive ? (window.__i18n_rows_no_match || t.rows_no_match) : (window.__i18n_recent_prices_none || t.recent_prices_none));
+    }
+
+    function applyRecentPriceFilters(){
+      const [fDate, fProduct, fLoc, fStore, fAmount, fNote, fBy] = recentFilterFields.map(el => (el?.value || '').trim().toLowerCase());
+      const anyActive = [fDate, fProduct, fLoc, fStore, fAmount, fNote, fBy].some(v => v);
+      const filtered = !anyActive ? lastRecentPrices : lastRecentPrices.filter(r =>
+        (!fDate || String(r.price_date ?? '').toLowerCase().includes(fDate))
+        && (!fProduct || String(r.name ?? '').toLowerCase().includes(fProduct))
+        && (!fLoc || String(r.location ?? '').toLowerCase().includes(fLoc))
+        && (!fStore || String(r.store ?? '').toLowerCase().includes(fStore))
+        && (!fAmount || String(r.amountStr ?? '').toLowerCase().includes(fAmount))
+        && (!fNote || String(r.note ?? '').toLowerCase().includes(fNote))
+        && (!fBy || String(r.created_by_name ?? '').toLowerCase().includes(fBy))
+      );
+      renderRecentPricesTable(filtered, anyActive);
+    }
+    recentFilterFields.forEach(el => el && el.addEventListener('input', applyRecentPriceFilters));
+    if (recentCurrencySel) recentCurrencySel.onchange = () => refreshRecentPrices();
+    if (recentPricesRowsBody) recentPricesRowsBody.addEventListener('click', (e) => {
+      const btn = e.target.closest('.recent-price-edit-btn');
+      if (!btn) return;
+      const row = lastRecentPrices.find(r => String(r.id) === btn.dataset.id);
+      if (row) startEditPrice(row);
+    });
+
+    async function refreshRecentPrices(){
+      if (!recentPricesRowsBody) return;
+      const isFr = (curLang === 'fr');
+      const { data, error } = await db.from('prices_view').select('*').order('created_at', { ascending: false }).limit(5);
+      if (error || !data){
+        lastRecentPrices = [];
+        applyRecentPriceFilters();
+        return;
+      }
+      const targetCcy = recentCurrencySel ? recentCurrencySel.value : 'EUR';
+      const rates = await getFxRates();
+      const numFmt = new Intl.NumberFormat(isFr ? 'fr-FR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      lastRecentPrices = data.map(r => {
+        const productName = isFr ? (r.product_name_fr || r.product_name) : r.product_name;
+        const variety = isFr ? (r.variety_fr || r.variety) : r.variety;
+        const name = productName + (variety ? ` — ${variety}` : '');
+        const converted = convertPrice(Number(r.price), r.currency, targetCcy, rates);
+        const amount = converted === null ? Number(r.price) : converted;
+        const ccyLabel = converted === null ? r.currency : targetCcy;
+        return { ...r, name, amountStr: `${numFmt.format(amount)} ${ccyLabel}` };
+      });
+      applyRecentPriceFilters();
+    }
+
     async function refreshPricesList(){
       const productId = priceProductSel.value ? Number(priceProductSel.value) : null;
       if (!productId){
-        lastPrices = [];
+        lastPrices = []; lastPricesEnriched = [];
         pricesRowsBody.innerHTML = '';
         pricesListMsg.textContent = window.__i18n_choose_product_first || (I18N[curLang]||I18N.fr).choose_product_first;
         return;
@@ -1674,30 +1991,19 @@ function applyI18n(){
         return;
       }
       lastPrices = data;
-      const t = I18N[curLang] || I18N.fr;
       const isFr = (curLang === 'fr');
       const targetCcy = viewCurrencySel.value;
       const rates = await getFxRates();
       const numFmt = new Intl.NumberFormat(isFr ? 'fr-FR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-      pricesRowsBody.innerHTML = data.map(r => {
+      lastPricesEnriched = data.map(r => {
         const unit = isFr ? (r.unit_harvest_fr || r.unit_harvest) : r.unit_harvest;
         const converted = convertPrice(Number(r.price), r.currency, targetCcy, rates);
-        const priceStr = (converted === null)
-          ? `${numFmt.format(r.price)} ${r.currency} / ${unit}`
-          : `${numFmt.format(converted)} ${targetCcy} / ${unit}`;
-        return `
-        <tr>
-          <td>${r.price_date ?? ''}</td>
-          <td>${r.location ?? ''}</td>
-          <td>${r.store ?? ''}</td>
-          <td>${priceStr}</td>
-          <td>${r.created_by_name ?? ''}</td>
-          <td>${r.created_by === currentUserId ? `<button type="button" class="price-edit-btn" data-id="${r.id}">${t.edit_btn}</button>` : ''}</td>
-        </tr>
-      `;
-      }).join('');
-      pricesListMsg.textContent = data.length ? '' : (window.__i18n_prices_empty || t.prices_empty);
+        const amount = converted === null ? Number(r.price) : converted;
+        const ccyLabel = converted === null ? r.currency : targetCcy;
+        return { ...r, convertedAmount: amount, priceStr: `${numFmt.format(amount)} ${ccyLabel} / ${unit}` };
+      });
+      applyPriceFilters();
     }
 
     priceSaveBtn.onclick = async () => {
@@ -1716,7 +2022,7 @@ function applyI18n(){
       const store = priceStoreInp.value.trim();
       if (!store){ priceMsg.textContent = t.choose_store_err; return; }
 
-      const payload = { product_id: productId, price_date: dateVal, price: amount, currency: priceCurrencySel.value, location: priceLocationInp.value.trim() || null, store };
+      const payload = { product_id: productId, price_date: dateVal, price: amount, currency: priceCurrencySel.value, location: priceLocationInp.value.trim() || null, store, note: priceNoteInput.value.trim() || null };
 
       const { error } = editingPriceId
         ? await db.from('prices').update(payload).eq('id', editingPriceId)
@@ -1731,9 +2037,9 @@ function applyI18n(){
       const wasEditing = !!editingPriceId;
       editingPriceId = null;
       if (wasEditing) renderPriceFormMode();
-      else { priceAmountInp.value=''; priceLocationInp.value=''; priceStoreInp.value=''; }
+      else { priceAmountInp.value=''; priceLocationInp.value=''; priceStoreInp.value=''; priceNoteInput.value=''; }
 
-      await refreshPricesList();
+      await Promise.all([refreshPricesList(), refreshRecentPrices()]);
     };
 
     // === Vue Profil ===
@@ -1881,6 +2187,7 @@ async function setLanguage(next){
   renderLangBtn();
   applyI18n();
   await refreshAll();
+  await refreshActiveView();
 }
 
 if (langBtn) {
