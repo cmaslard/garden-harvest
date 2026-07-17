@@ -257,60 +257,149 @@
         </div>
       </div>
 
-      <div class="card" id="add-card">
-  <h2 id="add-card-title">Ajouter une récolte</h2>
-      <div class="row3">
-        <div>
-          <label id="label-product">Produit</label>
-          <select id="product" required></select>
-        </div>
-        <div>
-          <label id="label-location">Lieu</label>
-          <select id="location" required></select>
-        </div>
-        <div>
-          <label id="label-date">Date</label>
-          <input id="date" type="date" />
-        </div>
-      </div>
-      <div class="row3" style="margin-top:1rem">
-        <div>
-          <label id="label-qty">Quantité (<span id="unit">–</span>)</label>
-          <input id="qty" type="number" step="0.01" min="0" required/>
-        </div>
-        <div>
-          <label id="label-note">Note</label>
-          <input id="note" placeholder="rang, commentaire…" />
-        </div>
-        <div style="align-self:end; display:flex; gap:.5rem">
-          <button id="add" class="btn-primary">Ajouter</button>
-          <button id="cancel-edit" type="button" class="hide">Annuler</button>
-        </div>
-      </div>
-      <p id="add-msg" class="muted"></p>
-    </div>
+      <nav class="tabs" id="main-nav">
+        <button type="button" class="tab active" id="nav-harvests" data-view="harvests">Récolte au jardin – Base de données</button>
+        <button type="button" class="tab" id="nav-products" data-view="products">Produits</button>
+        <button type="button" class="tab" id="nav-profile" data-view="profile">Profil</button>
+      </nav>
 
-      <div class="card">
-        <h2 id="last-h2">Dernières entrées</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Par</th>
-                <th>Produit</th>
-                <th>Variété</th>
-                <th>Qté</th>
-                <th>Unité</th>
-                <th>Lieu</th>
-                <th>Note</th>
-                <th id="th-actions">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="rows"></tbody>
-          </table>
+      <div id="view-harvests">
+        <div class="card" id="add-card">
+    <h2 id="add-card-title">Ajouter une récolte</h2>
+        <div class="row3">
+          <div>
+            <label id="label-product">Produit</label>
+            <select id="product" required></select>
+          </div>
+          <div>
+            <label id="label-location">Lieu</label>
+            <select id="location" required></select>
+          </div>
+          <div>
+            <label id="label-date">Date</label>
+            <input id="date" type="date" />
+          </div>
         </div>
-        <p id="rows-msg" class="muted"></p>
+        <div class="row3" style="margin-top:1rem">
+          <div>
+            <label id="label-qty">Quantité (<span id="unit">–</span>)</label>
+            <input id="qty" type="number" step="0.01" min="0" required/>
+          </div>
+          <div>
+            <label id="label-note">Note</label>
+            <input id="note" placeholder="rang, commentaire…" />
+          </div>
+          <div style="align-self:end; display:flex; gap:.5rem">
+            <button id="add" class="btn-primary">Ajouter</button>
+            <button id="cancel-edit" type="button" class="hide">Annuler</button>
+          </div>
+        </div>
+        <p id="add-msg" class="muted"></p>
+      </div>
+
+        <div class="card">
+          <h2 id="last-h2">Dernières entrées</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Par</th>
+                  <th>Produit</th>
+                  <th>Variété</th>
+                  <th>Qté</th>
+                  <th>Unité</th>
+                  <th>Lieu</th>
+                  <th>Note</th>
+                  <th id="th-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+          <p id="rows-msg" class="muted"></p>
+        </div>
+      </div>
+
+      <div id="view-products" class="hide">
+        <div class="card" id="product-form-card">
+          <h2 id="product-form-title">Ajouter un produit</h2>
+          <div class="row3">
+            <div>
+              <label id="label-p-name">Nom (EN)</label>
+              <input id="p-name" required />
+            </div>
+            <div>
+              <label id="label-p-name-fr">Nom (FR)</label>
+              <input id="p-name-fr" />
+            </div>
+            <div>
+              <label id="label-p-type">Type</label>
+              <select id="p-type" required></select>
+            </div>
+          </div>
+          <div class="row3" style="margin-top:1rem">
+            <div>
+              <label id="label-p-variety">Variété (EN)</label>
+              <input id="p-variety" />
+            </div>
+            <div>
+              <label id="label-p-variety-fr">Variété (FR)</label>
+              <input id="p-variety-fr" />
+            </div>
+            <div>
+              <label id="label-p-unit">Unité (EN)</label>
+              <input id="p-unit" required />
+            </div>
+          </div>
+          <div class="row" style="margin-top:1rem">
+            <div>
+              <label id="label-p-unit-fr">Unité (FR)</label>
+              <input id="p-unit-fr" />
+            </div>
+            <div style="align-self:end; display:flex; gap:.5rem">
+              <button id="p-save" class="btn-primary">Ajouter</button>
+              <button id="p-cancel-edit" type="button" class="hide">Annuler</button>
+            </div>
+          </div>
+          <p id="product-msg" class="muted"></p>
+        </div>
+
+        <div class="card">
+          <h2 id="products-list-h2">Produits</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th id="th-p-name">Nom</th>
+                  <th id="th-p-variety">Variété</th>
+                  <th id="th-p-type">Type</th>
+                  <th id="th-p-unit">Unité</th>
+                  <th id="th-p-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="products-rows"></tbody>
+            </table>
+          </div>
+          <p id="products-list-msg" class="muted"></p>
+        </div>
+      </div>
+
+      <div id="view-profile" class="hide">
+        <div class="card">
+          <h2 id="profile-h2">Mon profil</h2>
+          <div class="row">
+            <div>
+              <label id="label-username">Nom d'utilisateur</label>
+              <input id="profile-username" />
+            </div>
+            <div style="align-self:end">
+              <button id="profile-save" class="btn-primary">Enregistrer</button>
+            </div>
+          </div>
+          <p id="username-hint" class="muted"></p>
+          <p id="profile-msg" class="muted"></p>
+        </div>
       </div>
     </div>
   </main>
@@ -373,7 +462,40 @@ const I18N = {
     cancel_btn: 'Annuler',
     edit_h2: 'Modifier la récolte',
     updated_ok: 'Récolte modifiée.',
-    th_actions: 'Actions'
+    th_actions: 'Actions',
+    nav_products: 'Produits',
+    nav_profile: 'Profil',
+    products_h2: 'Ajouter un produit',
+    products_edit_h2: 'Modifier le produit',
+    products_list_h2: 'Produits',
+    name_en_label: 'Nom (EN)',
+    name_fr_label: 'Nom (FR)',
+    type_label: 'Type',
+    type_fruit: 'Fruit',
+    type_vegetable: 'Légume',
+    variety_en_label: 'Variété (EN)',
+    variety_fr_label: 'Variété (FR)',
+    unit_en_label: 'Unité (EN)',
+    unit_fr_label: 'Unité (FR)',
+    product_save_btn: 'Ajouter',
+    product_update_btn: 'Enregistrer',
+    product_cancel_btn: 'Annuler',
+    choose_name_err: 'Entre un nom.',
+    choose_type_err: 'Choisis un type.',
+    choose_unit_err: 'Entre une unité.',
+    product_added_ok: 'Produit ajouté.',
+    product_updated_ok: 'Produit modifié.',
+    products_empty: 'Aucun produit.',
+    products_err_hint2: 'Erreur produits : ',
+    th_p_name: 'Nom',
+    th_p_variety: 'Variété',
+    th_p_type: 'Type',
+    th_p_unit: 'Unité',
+    profile_h2: 'Mon profil',
+    username_label: "Nom d'utilisateur",
+    username_hint: '3 à 32 caractères : lettres, chiffres, points, tirets, underscores.',
+    profile_save_btn: 'Enregistrer',
+    profile_updated_ok: 'Profil mis à jour.'
   },
   en: {
     app_title: "Garden Harvests – Database",
@@ -430,7 +552,40 @@ const I18N = {
     cancel_btn: 'Cancel',
     edit_h2: 'Edit harvest',
     updated_ok: 'Harvest updated.',
-    th_actions: 'Actions'
+    th_actions: 'Actions',
+    nav_products: 'Products',
+    nav_profile: 'Profile',
+    products_h2: 'Add a product',
+    products_edit_h2: 'Edit product',
+    products_list_h2: 'Products',
+    name_en_label: 'Name (EN)',
+    name_fr_label: 'Name (FR)',
+    type_label: 'Type',
+    type_fruit: 'Fruit',
+    type_vegetable: 'Vegetable',
+    variety_en_label: 'Variety (EN)',
+    variety_fr_label: 'Variety (FR)',
+    unit_en_label: 'Unit (EN)',
+    unit_fr_label: 'Unit (FR)',
+    product_save_btn: 'Add',
+    product_update_btn: 'Save',
+    product_cancel_btn: 'Cancel',
+    choose_name_err: 'Enter a name.',
+    choose_type_err: 'Pick a type.',
+    choose_unit_err: 'Enter a unit.',
+    product_added_ok: 'Product added.',
+    product_updated_ok: 'Product updated.',
+    products_empty: 'No products yet.',
+    products_err_hint2: 'Products error: ',
+    th_p_name: 'Name',
+    th_p_variety: 'Variety',
+    th_p_type: 'Type',
+    th_p_unit: 'Unit',
+    profile_h2: 'My profile',
+    username_label: 'Username',
+    username_hint: '3 to 32 characters: letters, numbers, dots, dashes, underscores.',
+    profile_save_btn: 'Save',
+    profile_updated_ok: 'Profile updated.'
   }
 };
 
@@ -505,6 +660,43 @@ function applyI18n(){
   }
   setTxt('#th-actions', t.th_actions);
   setTxt('#cancel-edit', t.cancel_btn);
+
+  // navigation
+  setTxt('#nav-harvests', t.app_title);
+  setTxt('#nav-products', t.nav_products);
+  setTxt('#nav-profile', t.nav_profile);
+
+  // vue Produits
+  setTxt('#products-list-h2', t.products_list_h2);
+  setTxt('#label-p-name', t.name_en_label);
+  setTxt('#label-p-name-fr', t.name_fr_label);
+  setTxt('#label-p-type', t.type_label);
+  setTxt('#label-p-variety', t.variety_en_label);
+  setTxt('#label-p-variety-fr', t.variety_fr_label);
+  setTxt('#label-p-unit', t.unit_en_label);
+  setTxt('#label-p-unit-fr', t.unit_fr_label);
+  setTxt('#th-p-name', t.th_p_name);
+  setTxt('#th-p-variety', t.th_p_variety);
+  setTxt('#th-p-type', t.th_p_type);
+  setTxt('#th-p-unit', t.th_p_unit);
+  setTxt('#p-cancel-edit', t.product_cancel_btn);
+  renderProductTypeOptions();
+  renderProductFormMode();
+
+  // vue Profil
+  setTxt('#profile-h2', t.profile_h2);
+  setTxt('#label-username', t.username_label);
+  setTxt('#username-hint', t.username_hint);
+  setTxt('#profile-save', t.profile_save_btn);
+
+  window.__i18n_choose_name_err = t.choose_name_err;
+  window.__i18n_choose_type_err = t.choose_type_err;
+  window.__i18n_choose_unit_err = t.choose_unit_err;
+  window.__i18n_product_added_ok = t.product_added_ok;
+  window.__i18n_product_updated_ok = t.product_updated_ok;
+  window.__i18n_products_empty = t.products_empty;
+  window.__i18n_products_err_hint2 = t.products_err_hint2;
+  window.__i18n_profile_updated_ok = t.profile_updated_ok;
 
   // placeholders des selects (seront utilisés dans loadProducts/loadLocations)
   window.__i18n_choose_product = t.choose_product;
@@ -711,6 +903,185 @@ function applyI18n(){
       const row = lastRows.find(r => String(r.id) === btn.dataset.id);
       if (row) startEdit(row);
     });
+
+    // === Navigation (Récoltes / Produits / Profil) ===
+    const views = {
+      harvests: document.getElementById('view-harvests'),
+      products: document.getElementById('view-products'),
+      profile:  document.getElementById('view-profile')
+    };
+    document.querySelectorAll('#main-nav .tab').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('#main-nav .tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        Object.entries(views).forEach(([k, el]) => el.classList.toggle('hide', k !== btn.dataset.view));
+        if (btn.dataset.view === 'products') refreshProductsList();
+        if (btn.dataset.view === 'profile') loadProfile();
+      };
+    });
+
+    // === Vue Produits ===
+    const selPType      = document.getElementById('p-type');
+    const pName          = document.getElementById('p-name');
+    const pNameFr        = document.getElementById('p-name-fr');
+    const pVariety       = document.getElementById('p-variety');
+    const pVarietyFr     = document.getElementById('p-variety-fr');
+    const pUnit          = document.getElementById('p-unit');
+    const pUnitFr        = document.getElementById('p-unit-fr');
+    const pSaveBtn       = document.getElementById('p-save');
+    const pCancelEditBtn = document.getElementById('p-cancel-edit');
+    const pMsg           = document.getElementById('product-msg');
+    const productFormTitle = document.getElementById('product-form-title');
+    const productsRowsBody = document.getElementById('products-rows');
+    const productsListMsg  = document.getElementById('products-list-msg');
+    let editingProductId = null;
+    let lastProducts = [];
+
+    function renderProductTypeOptions(){
+      const t = I18N[curLang] || I18N.fr;
+      const cur = selPType.value;
+      selPType.innerHTML =
+        `<option value="Fruit">${t.type_fruit}</option>` +
+        `<option value="Vegetable">${t.type_vegetable}</option>`;
+      if (cur) selPType.value = cur;
+    }
+
+    function renderProductFormMode(){
+      const t = I18N[curLang] || I18N.fr;
+      if (editingProductId){
+        productFormTitle.textContent = t.products_edit_h2;
+        pSaveBtn.textContent = t.product_update_btn;
+        pCancelEditBtn.classList.remove('hide');
+      } else {
+        productFormTitle.textContent = t.products_h2;
+        pSaveBtn.textContent = t.product_save_btn;
+        pCancelEditBtn.classList.add('hide');
+      }
+    }
+
+    function startEditProduct(row){
+      editingProductId = row.id;
+      pName.value = row.name || '';
+      pNameFr.value = row.name_fr || '';
+      selPType.value = row.type || 'Fruit';
+      pVariety.value = row.variety || '';
+      pVarietyFr.value = row.variety_fr || '';
+      pUnit.value = row.unit_harvest || '';
+      pUnitFr.value = row.unit_harvest_fr || '';
+      pMsg.textContent = '';
+      renderProductFormMode();
+      document.getElementById('product-form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function cancelEditProduct(){
+      editingProductId = null;
+      pName.value = ''; pNameFr.value = '';
+      pVariety.value = ''; pVarietyFr.value = '';
+      pUnit.value = ''; pUnitFr.value = '';
+      selPType.value = 'Fruit';
+      pMsg.textContent = '';
+      renderProductFormMode();
+    }
+    pCancelEditBtn.onclick = cancelEditProduct;
+
+    productsRowsBody.addEventListener('click', (e) => {
+      const btn = e.target.closest('.p-edit-btn');
+      if (!btn) return;
+      const row = lastProducts.find(r => String(r.id) === btn.dataset.id);
+      if (row) startEditProduct(row);
+    });
+
+    async function refreshProductsList(){
+      const { data, error } = await db.from('products')
+        .select('id,name,name_fr,type,variety,variety_fr,unit_harvest,unit_harvest_fr')
+        .order('name');
+      if (error){
+        productsListMsg.textContent = (window.__i18n_products_err_hint2||'Erreur produits : ') + error.message;
+        productsRowsBody.innerHTML = '';
+        return;
+      }
+      lastProducts = data;
+      const isFr = (curLang === 'fr');
+      const t = I18N[curLang] || I18N.fr;
+      productsRowsBody.innerHTML = data.map(p => `
+        <tr>
+          <td>${isFr ? (p.name_fr || p.name) : p.name}</td>
+          <td>${isFr ? (p.variety_fr || p.variety) : p.variety || ''}</td>
+          <td>${p.type === 'Vegetable' ? t.type_vegetable : t.type_fruit}</td>
+          <td>${isFr ? (p.unit_harvest_fr || p.unit_harvest) : p.unit_harvest}</td>
+          <td><button type="button" class="p-edit-btn" data-id="${p.id}">${t.edit_btn}</button></td>
+        </tr>
+      `).join('');
+      productsListMsg.textContent = data.length ? '' : (window.__i18n_products_empty || t.products_empty);
+    }
+
+    pSaveBtn.onclick = async () => {
+      pMsg.textContent = '';
+      const t = I18N[curLang] || I18N.fr;
+
+      const name = pName.value.trim();
+      if (!name){ pMsg.textContent = t.choose_name_err; return; }
+
+      const type = selPType.value;
+      if (!type){ pMsg.textContent = t.choose_type_err; return; }
+
+      const unit = pUnit.value.trim();
+      if (!unit){ pMsg.textContent = t.choose_unit_err; return; }
+
+      const payload = {
+        name,
+        name_fr: pNameFr.value.trim() || null,
+        type,
+        variety: pVariety.value.trim() || '',
+        variety_fr: pVarietyFr.value.trim() || null,
+        unit_harvest: unit,
+        unit_harvest_fr: pUnitFr.value.trim() || null
+      };
+
+      const { error } = editingProductId
+        ? await db.from('products').update(payload).eq('id', editingProductId)
+        : await db.from('products').insert(payload);
+      if (error){ pMsg.className='muted msg-err'; pMsg.textContent = error.message; return; }
+
+      pMsg.className='muted msg-ok';
+      pMsg.textContent = editingProductId
+        ? (window.__i18n_product_updated_ok || t.product_updated_ok)
+        : (window.__i18n_product_added_ok || t.product_added_ok);
+
+      const wasEditing = !!editingProductId;
+      editingProductId = null;
+      if (wasEditing) renderProductFormMode();
+      else { pName.value=''; pNameFr.value=''; pVariety.value=''; pVarietyFr.value=''; pUnit.value=''; pUnitFr.value=''; }
+
+      await Promise.all([refreshProductsList(), loadProducts()]);
+    };
+
+    // === Vue Profil ===
+    const profileUsername = document.getElementById('profile-username');
+    const profileSaveBtn  = document.getElementById('profile-save');
+    const profileMsg      = document.getElementById('profile-msg');
+
+    async function loadProfile(){
+      profileMsg.textContent = '';
+      const { data, error } = await db.from('profiles')
+        .select('username')
+        .eq('user_id', currentUserId)
+        .maybeSingle();
+      if (error){ profileMsg.className='muted msg-err'; profileMsg.textContent = error.message; return; }
+      profileUsername.value = data?.username || '';
+    }
+
+    profileSaveBtn.onclick = async () => {
+      const t = I18N[curLang] || I18N.fr;
+      profileMsg.textContent = '';
+      const username = profileUsername.value.trim();
+      const { error } = await db.from('profiles')
+        .update({ username })
+        .eq('user_id', currentUserId);
+      if (error){ profileMsg.className='muted msg-err'; profileMsg.textContent = error.message; return; }
+      profileMsg.className='muted msg-ok';
+      profileMsg.textContent = window.__i18n_profile_updated_ok || t.profile_updated_ok;
+    };
 
     // === Single language toggle button → only updates DB (garden.profiles.language) ===
     const langBtn = document.getElementById('lang-toggle');
