@@ -1338,7 +1338,7 @@ function applyI18n(){
       msgMagic.textContent = 'Envoi…';
       const { error } = await sb.auth.signInWithOtp({
         email: (emailMagic.value || '').trim(),
-        options: { emailRedirectTo: baseRedirect }
+        options: { emailRedirectTo: baseRedirect, shouldCreateUser: false }
       });
       msgMagic.className = 'muted ' + (error ? 'msg-err' : 'msg-ok');
       msgMagic.textContent = error ? ('Erreur : ' + error.message) : 'Lien envoyé ! Vérifie tes emails.';
