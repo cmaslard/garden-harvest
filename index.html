@@ -223,7 +223,7 @@
     .barchart-inner{ display:flex; align-items:stretch; gap:12px; min-width:min-content; }
     .barchart-yaxis{
       display:flex; flex-direction:column; justify-content:space-between;
-      flex:0 0 auto; padding-bottom:28px; padding-top:6px; padding-right:8px;
+      flex:0 0 auto; padding-bottom:28px; padding-top:54px; padding-right:8px;
       color:var(--muted); font-size:.72rem; text-align:right; min-width:44px;
       position:sticky; left:0; z-index:3;
       background:var(--card);
@@ -231,7 +231,7 @@
     }
     .barchart-plot{
       display:flex; align-items:flex-end; gap:6px;
-      padding-top:6px;
+      padding-top:54px;
       padding-bottom:28px;
       position:relative;
       flex:1 1 auto;
@@ -239,7 +239,7 @@
     }
     .barchart-plot::before{
       content:"";
-      position:absolute; left:0; right:0; top:6px; bottom:28px;
+      position:absolute; left:0; right:0; top:54px; bottom:28px;
       background-image: repeating-linear-gradient(to top, var(--border) 0, var(--border) 1px, transparent 1px, transparent 25%);
       opacity:.5;
       pointer-events:none;
