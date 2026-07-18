@@ -377,6 +377,7 @@
         <button type="button" class="tab" id="nav-prices" data-view="prices">Prix</button>
         <button type="button" class="tab" id="nav-stats" data-view="stats">Stats</button>
         <button type="button" class="tab" id="nav-food-independence" data-view="food-independence">Vers l'autonomie alimentaire</button>
+        <button type="button" class="tab" id="nav-crop-planning" data-view="crop-planning">Planification des cultures</button>
         <button type="button" class="tab" id="nav-locations" data-view="locations">Lieux</button>
         <button type="button" class="tab" id="nav-profile" data-view="profile">Profil</button>
       </nav>
@@ -386,6 +387,7 @@
         <option value="prices">Prix</option>
         <option value="stats">Stats</option>
         <option value="food-independence">Vers l'autonomie alimentaire</option>
+        <option value="crop-planning">Planification des cultures</option>
         <option value="locations">Lieux</option>
         <option value="profile">Profil</option>
       </select>
@@ -808,6 +810,13 @@
         </div>
       </div>
 
+      <div id="view-crop-planning" class="hide">
+        <div class="card">
+          <h2 id="crop-planning-h2">Planification des cultures</h2>
+          <p id="crop-planning-placeholder" class="muted">À venir.</p>
+        </div>
+      </div>
+
       <div id="view-profile" class="hide">
         <div class="card">
           <h2 id="profile-h2">Mon profil</h2>
@@ -1131,6 +1140,9 @@ const I18N = {
     nav_food_independence: "Vers l'autonomie alimentaire",
     food_independence_h2: "Vers l'autonomie alimentaire",
     food_independence_placeholder: 'À venir.',
+    nav_crop_planning: 'Planification des cultures',
+    crop_planning_h2: 'Planification des cultures',
+    crop_planning_placeholder: 'À venir.',
     nav_locations: 'Lieux',
     locations_h2: 'Ajouter un lieu',
     locations_edit_h2: 'Modifier le lieu',
@@ -1365,6 +1377,9 @@ const I18N = {
     nav_food_independence: 'Toward food self-sufficiency',
     food_independence_h2: 'Toward food self-sufficiency',
     food_independence_placeholder: 'Coming soon.',
+    nav_crop_planning: 'Crop planning',
+    crop_planning_h2: 'Crop planning',
+    crop_planning_placeholder: 'Coming soon.',
     nav_locations: 'Locations',
     locations_h2: 'Add a location',
     locations_edit_h2: 'Edit location',
@@ -1569,6 +1584,9 @@ function applyI18n(){
   setTxt('#nav-food-independence', t.nav_food_independence);
   setTxt('#food-independence-h2', t.food_independence_h2);
   setTxt('#food-independence-placeholder', t.food_independence_placeholder);
+  setTxt('#nav-crop-planning', t.nav_crop_planning);
+  setTxt('#crop-planning-h2', t.crop_planning_h2);
+  setTxt('#crop-planning-placeholder', t.crop_planning_placeholder);
 
   // vue Lieux
   setTxt('#locations-list-h2', t.locations_list_h2);
@@ -1948,6 +1966,7 @@ function applyI18n(){
       prices:    document.getElementById('view-prices'),
       stats:     document.getElementById('view-stats'),
       'food-independence': document.getElementById('view-food-independence'),
+      'crop-planning': document.getElementById('view-crop-planning'),
       profile:   document.getElementById('view-profile')
     };
     function refreshViewByName(view){
