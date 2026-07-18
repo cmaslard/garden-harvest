@@ -223,13 +223,16 @@
     .barchart-inner{ display:flex; align-items:stretch; gap:12px; min-width:min-content; }
     .barchart-yaxis{
       display:flex; flex-direction:column; justify-content:space-between;
-      flex:0 0 auto; padding-bottom:28px; padding-top:6px;
+      flex:0 0 auto; padding-bottom:28px; padding-top:6px; padding-right:8px;
       color:var(--muted); font-size:.72rem; text-align:right; min-width:44px;
+      position:sticky; left:0; z-index:3;
+      background:var(--card);
+      border-right:1px solid var(--border);
     }
     .barchart-plot{
       display:flex; align-items:flex-end; gap:6px;
-      border-left:1px solid var(--border);
       padding-top:6px;
+      padding-bottom:28px;
       position:relative;
       flex:1 1 auto;
       height:220px;
