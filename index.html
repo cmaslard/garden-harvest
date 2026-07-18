@@ -279,6 +279,12 @@
 
     .table-toggle-btn{ width:auto; padding:.4rem .8rem; font-size:.82rem; margin-top:10px; }
     .stats-table-wrap{ margin-top:10px; }
+    #stats-table-wrap th:first-child,
+    #stats-table-wrap td:first-child{
+      position:sticky; left:0; z-index:2;
+      background: color-mix(in srgb, var(--card) 92%, transparent);
+      border-right:1px solid var(--border);
+    }
   </style>
 </head>
 
@@ -782,8 +788,8 @@
                 <thead>
                   <tr>
                     <th id="th-stats-period">Période</th>
-                    <th id="th-stats-qty">Quantité récoltée</th>
                     <th id="th-stats-value">Valeur estimée</th>
+                    <th id="th-stats-qty">Quantité récoltée</th>
                   </tr>
                 </thead>
                 <tbody id="stats-table-rows"></tbody>
@@ -2638,8 +2644,12 @@ function applyI18n(){
           </div>
         </div>`;
 
+      // start scrolled to the most recent period, not the oldest
+      const outer = statsChartContainer.querySelector('.barchart-outer');
+      if (outer) outer.scrollLeft = outer.scrollWidth;
+
       statsTableRows.innerHTML = series.map(s =>
-        `<tr><td>${escapeHtml(s.label)}</td><td>${escapeHtml(statsQtyText(s, isFr))}</td><td>${escapeHtml(eurFmt.format(s.valueEUR))}</td></tr>`
+        `<tr><td>${escapeHtml(s.label)}</td><td>${escapeHtml(eurFmt.format(s.valueEUR))}</td><td>${escapeHtml(statsQtyText(s, isFr))}</td></tr>`
       ).join('');
     }
 
