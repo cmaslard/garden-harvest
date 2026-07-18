@@ -268,7 +268,7 @@
       opacity:0; pointer-events:none; transition:opacity .12s ease;
       z-index:5;
     }
-    .bar-col:hover .bar-tooltip, .bar-col:focus-within .bar-tooltip{ opacity:1; }
+    .bar-col:hover .bar-tooltip, .bar-col:focus-within .bar-tooltip, .bar-col.tapped .bar-tooltip{ opacity:1; }
     .bar-tooltip .tt-value{ font-weight:600; color:var(--fg); }
     .bar-tooltip .tt-label{ color:var(--muted); }
 
@@ -738,6 +738,13 @@
               <select id="stats-location"></select>
             </div>
             <div class="field">
+              <label id="label-stats-metric">Indicateur</label>
+              <div style="display:flex;gap:6px">
+                <button type="button" class="tab active" id="stats-metric-value" data-metric="value">Valeur (€)</button>
+                <button type="button" class="tab" id="stats-metric-qty" data-metric="qty">Quantité récoltée</button>
+              </div>
+            </div>
+            <div class="field">
               <label id="label-stats-granularity">Vue</label>
               <div style="display:flex;gap:6px">
                 <button type="button" class="tab active" id="stats-view-yearly" data-granularity="yearly">Par année</button>
@@ -772,6 +779,7 @@
                 <thead>
                   <tr>
                     <th id="th-stats-period">Période</th>
+                    <th id="th-stats-qty">Quantité récoltée</th>
                     <th id="th-stats-value">Valeur estimée</th>
                   </tr>
                 </thead>
@@ -980,6 +988,9 @@ const I18N = {
     stats_h2: 'Statistiques',
     stats_location_label: 'Lieu',
     stats_all_locations: 'Tous les lieux',
+    stats_metric_label: 'Indicateur',
+    stats_metric_value: 'Valeur (€)',
+    stats_metric_qty: 'Quantité récoltée',
     stats_granularity_label: 'Vue',
     stats_yearly_label: 'Par année',
     stats_monthly_label: 'Mensuel',
@@ -992,6 +1003,7 @@ const I18N = {
     stats_show_table: 'Voir en tableau',
     stats_hide_table: 'Masquer le tableau',
     stats_th_period: 'Période',
+    stats_th_qty: 'Quantité récoltée',
     stats_th_value: 'Valeur estimée',
     nav_food_independence: "Vers l'autonomie alimentaire",
     food_independence_h2: "Vers l'autonomie alimentaire",
@@ -1163,6 +1175,9 @@ const I18N = {
     stats_h2: 'Statistics',
     stats_location_label: 'Location',
     stats_all_locations: 'All locations',
+    stats_metric_label: 'Metric',
+    stats_metric_value: 'Value (€)',
+    stats_metric_qty: 'Harvested quantity',
     stats_granularity_label: 'View',
     stats_yearly_label: 'Yearly',
     stats_monthly_label: 'Monthly',
@@ -1175,6 +1190,7 @@ const I18N = {
     stats_show_table: 'View as table',
     stats_hide_table: 'Hide table',
     stats_th_period: 'Period',
+    stats_th_qty: 'Harvested quantity',
     stats_th_value: 'Estimated value',
     nav_food_independence: 'Toward food self-sufficiency',
     food_independence_h2: 'Toward food self-sufficiency',
@@ -1311,6 +1327,9 @@ function applyI18n(){
   setTxt('#nav-stats', t.nav_stats);
   setTxt('#stats-h2', t.stats_h2);
   setTxt('#label-stats-location', t.stats_location_label);
+  setTxt('#label-stats-metric', t.stats_metric_label);
+  setTxt('#stats-metric-value', t.stats_metric_value);
+  setTxt('#stats-metric-qty', t.stats_metric_qty);
   setTxt('#label-stats-granularity', t.stats_granularity_label);
   setTxt('#stats-view-yearly', t.stats_yearly_label);
   setTxt('#stats-view-monthly', t.stats_monthly_label);
@@ -1320,6 +1339,7 @@ function applyI18n(){
   setTxt('#stats-chart-title', t.stats_chart_title);
   setTxt('#stats-chart-subtitle', t.stats_chart_subtitle);
   setTxt('#th-stats-period', t.stats_th_period);
+  setTxt('#th-stats-qty', t.stats_th_qty);
   setTxt('#th-stats-value', t.stats_th_value);
   {
     const statsTableWrapEl = document.getElementById('stats-table-wrap');
@@ -2393,6 +2413,8 @@ function applyI18n(){
     }
 
     const statsLocationSel     = document.getElementById('stats-location');
+    const statsMetricValueBtn  = document.getElementById('stats-metric-value');
+    const statsMetricQtyBtn    = document.getElementById('stats-metric-qty');
     const statsViewYearlyBtn   = document.getElementById('stats-view-yearly');
     const statsViewMonthlyBtn  = document.getElementById('stats-view-monthly');
     const statsYearField       = document.getElementById('stats-year-field');
@@ -2407,6 +2429,7 @@ function applyI18n(){
     const statsTableRows       = document.getElementById('stats-table-rows');
 
     let statsGranularity = 'yearly';
+    let statsMetric = 'value'; // 'value' | 'qty'
     let statsHarvests = [];
     let statsPrices = [];
     let statsFxRates = null;
@@ -2452,23 +2475,43 @@ function applyI18n(){
       const eurPrices = statsLatestPricesEUR();
       const buckets = {};
 
+      function addTo(key, h){
+        if (!buckets[key]) buckets[key] = { valueEUR: 0, qtyByUnit: {} };
+        const b = buckets[key];
+        const qty = Number(h.quantity) || 0;
+        const price = eurPrices[h.product_id];
+        if (price != null) b.valueEUR += qty * price;
+        const unit = (isFr ? (h.harvest_unit_fr || h.harvest_unit) : h.harvest_unit) || '';
+        b.qtyByUnit[unit] = (b.qtyByUnit[unit] || 0) + qty;
+      }
+
       if (statsGranularity === 'yearly'){
         for (const h of statsFilteredHarvests(false)){
           const year = (h.harvest_date || '').slice(0, 4);
-          const price = eurPrices[h.product_id];
-          if (!year || price == null) continue;
-          buckets[year] = (buckets[year] || 0) + Number(h.quantity) * price;
+          if (!year) continue;
+          addTo(year, h);
         }
-        return Object.keys(buckets).sort().map(k => ({ key: k, label: k, value: buckets[k] }));
+        return Object.keys(buckets).sort().map(k => ({ key: k, label: k, ...buckets[k] }));
       }
 
       for (const h of statsFilteredHarvests(true)){
         const month = (h.harvest_date || '').slice(5, 7);
-        const price = eurPrices[h.product_id];
-        if (!month || price == null) continue;
-        buckets[month] = (buckets[month] || 0) + Number(h.quantity) * price;
+        if (!month) continue;
+        addTo(month, h);
       }
-      return Object.keys(buckets).sort().map(k => ({ key: k, label: monthShortLabel(k, isFr), value: buckets[k] }));
+      return Object.keys(buckets).sort().map(k => ({ key: k, label: monthShortLabel(k, isFr), ...buckets[k] }));
+    }
+
+    function statsQtyTotal(bucket){
+      return Object.values(bucket.qtyByUnit).reduce((a, b) => a + b, 0);
+    }
+
+    function statsQtyText(bucket, isFr){
+      const numFmt = new Intl.NumberFormat(isFr ? 'fr-FR' : 'en-US', { maximumFractionDigits: 2 });
+      const parts = Object.entries(bucket.qtyByUnit)
+        .filter(([, v]) => v)
+        .map(([unit, v]) => `${numFmt.format(v)}${unit ? ' ' + unit : ''}`);
+      return parts.length ? parts.join(', ') : numFmt.format(0);
     }
 
     function refreshStatsYearOptions(){
@@ -2499,8 +2542,17 @@ function applyI18n(){
         sortedLocs.map(l => `<option value="${l.id}">${escapeHtml(isFr ? (l.name_fr || l.name) : l.name)}</option>`).join('');
       statsLocationSel.value = keepLoc;
 
+      // Ordered by total harvested quantity (descending) so the most-harvested
+      // products (the ones actually worth looking at) sit at the top of the list.
+      const qtyByProduct = {};
+      for (const h of statsHarvests){
+        qtyByProduct[h.product_id] = (qtyByProduct[h.product_id] || 0) + (Number(h.quantity) || 0);
+      }
       const keepProd = statsProductSel.value;
       const sortedProds = [...(prods || [])].sort((a, b) => {
+        const qa = qtyByProduct[a.id] || 0;
+        const qb = qtyByProduct[b.id] || 0;
+        if (qa !== qb) return qb - qa;
         const an = isFr ? (a.name_fr || a.name) : a.name;
         const bn = isFr ? (b.name_fr || b.name) : b.name;
         const av = isFr ? (a.variety_fr || a.variety) : a.variety;
@@ -2530,10 +2582,25 @@ function applyI18n(){
       if (!statsDataLoaded) return;
       const isFr = (curLang === 'fr');
       const t = I18N[curLang] || I18N.fr;
-      const numFmt = new Intl.NumberFormat(isFr ? 'fr-FR' : 'en-US', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+      const eurFmt = new Intl.NumberFormat(isFr ? 'fr-FR' : 'en-US', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+      const qtyFmt = new Intl.NumberFormat(isFr ? 'fr-FR' : 'en-US', { maximumFractionDigits: 2 });
       const series = computeStatsSeries();
 
-      if (!series.length || series.every(s => s.value === 0)){
+      // unit used for the chart axis when the metric is "quantity" — only meaningful
+      // (a single consistent unit) when exactly one unit is present across the series
+      const chartUnits = new Set();
+      series.forEach(s => Object.entries(s.qtyByUnit).forEach(([u, v]) => { if (v) chartUnits.add(u); }));
+      const singleUnit = chartUnits.size === 1 ? [...chartUnits][0] : '';
+
+      const chartValue = (s) => statsMetric === 'value' ? s.valueEUR : statsQtyTotal(s);
+      const formatChartValue = (v) => statsMetric === 'value'
+        ? eurFmt.format(v)
+        : `${qtyFmt.format(v)}${singleUnit ? ' ' + singleUnit : ''}`;
+      const tooltipValueText = (s) => statsMetric === 'value'
+        ? eurFmt.format(s.valueEUR)
+        : statsQtyText(s, isFr);
+
+      if (!series.length || series.every(s => chartValue(s) === 0)){
         statsChartContainer.innerHTML = '';
         statsChartEmpty.textContent = t.stats_empty;
         statsChartEmpty.classList.remove('hide');
@@ -2542,18 +2609,19 @@ function applyI18n(){
       }
       statsChartEmpty.classList.add('hide');
 
-      const maxVal = Math.max(...series.map(s => s.value), 0);
+      const maxVal = Math.max(...series.map(chartValue), 0);
       const tickCount = 4;
       const ticks = [];
       for (let i = tickCount; i >= 0; i--) ticks.push(maxVal * i / tickCount);
-      const yaxisHtml = ticks.map(v => `<span>${numFmt.format(v)}</span>`).join('');
+      const yaxisHtml = ticks.map(v => `<span>${formatChartValue(v)}</span>`).join('');
 
       const barsHtml = series.map(s => {
-        const pct = maxVal > 0 ? (s.value / maxVal * 100) : 0;
+        const val = chartValue(s);
+        const pct = maxVal > 0 ? (val / maxVal * 100) : 0;
         const heightStyle = pct > 0 ? `height:${pct}%` : 'height:2px';
         return `
           <div class="bar-col" tabindex="0">
-            <div class="bar-tooltip"><span class="tt-value">${escapeHtml(numFmt.format(s.value))}</span><br/><span class="tt-label">${escapeHtml(s.label)}</span></div>
+            <div class="bar-tooltip"><span class="tt-value">${escapeHtml(tooltipValueText(s))}</span><br/><span class="tt-label">${escapeHtml(s.label)}</span></div>
             <div class="bar" style="${heightStyle}"></div>
             <span class="bar-x-label">${escapeHtml(s.label)}</span>
           </div>`;
@@ -2568,10 +2636,30 @@ function applyI18n(){
         </div>`;
 
       statsTableRows.innerHTML = series.map(s =>
-        `<tr><td>${escapeHtml(s.label)}</td><td>${escapeHtml(numFmt.format(s.value))}</td></tr>`
+        `<tr><td>${escapeHtml(s.label)}</td><td>${escapeHtml(statsQtyText(s, isFr))}</td><td>${escapeHtml(eurFmt.format(s.valueEUR))}</td></tr>`
       ).join('');
     }
 
+    // Tap-to-show tooltip (mobile — hover/focus-within alone isn't reliable on touch)
+    statsChartContainer.addEventListener('click', (e) => {
+      const col = e.target.closest('.bar-col');
+      const wasTapped = col && col.classList.contains('tapped');
+      statsChartContainer.querySelectorAll('.bar-col.tapped').forEach(c => c.classList.remove('tapped'));
+      if (col && !wasTapped) col.classList.add('tapped');
+    });
+
+    statsMetricValueBtn.onclick = () => {
+      statsMetric = 'value';
+      statsMetricValueBtn.classList.add('active');
+      statsMetricQtyBtn.classList.remove('active');
+      renderStats();
+    };
+    statsMetricQtyBtn.onclick = () => {
+      statsMetric = 'qty';
+      statsMetricQtyBtn.classList.add('active');
+      statsMetricValueBtn.classList.remove('active');
+      renderStats();
+    };
     statsViewYearlyBtn.onclick = () => {
       statsGranularity = 'yearly';
       statsViewYearlyBtn.classList.add('active');
@@ -2603,7 +2691,8 @@ function applyI18n(){
     };
 
     async function refreshStatsView(){
-      await Promise.all([loadStatsData(), populateStatsFilterOptions()]);
+      await loadStatsData();
+      await populateStatsFilterOptions();
       refreshStatsYearOptions();
       renderStats();
     }
