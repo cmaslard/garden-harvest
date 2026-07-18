@@ -845,6 +845,118 @@
           <p id="username-hint" class="muted"></p>
           <p id="profile-msg" class="muted"></p>
         </div>
+
+        <div class="card">
+          <h2 id="ss-h2">Profil d'autonomie alimentaire</h2>
+          <p id="ss-intro" class="muted">Ces informations serviront aux futurs calculs de l'onglet « Vers l'autonomie alimentaire ».</p>
+
+          <h2 id="ss-household-h2" style="font-size:1.1rem;margin:1.25rem 0 .75rem">Foyer</h2>
+          <div class="row3">
+            <div>
+              <label id="label-ss-adults">Adultes</label>
+              <input id="ss-adults" type="number" min="0" step="1" />
+            </div>
+            <div>
+              <label id="label-ss-children">Enfants</label>
+              <input id="ss-children" type="number" min="0" step="1" />
+            </div>
+            <div>
+              <label id="label-ss-meals">Repas pris à la maison / semaine</label>
+              <input id="ss-meals" type="number" min="0" step="1" />
+            </div>
+          </div>
+          <div class="row3" style="margin-top:1rem">
+            <div>
+              <label id="label-ss-diet">Régime alimentaire</label>
+              <select id="ss-diet"></select>
+            </div>
+            <div>
+              <label id="label-ss-goal">Objectif d'autonomie</label>
+              <select id="ss-goal">
+                <option value="">—</option>
+                <option value="25">25%</option>
+                <option value="50">50%</option>
+                <option value="75">75%</option>
+                <option value="100">100%</option>
+              </select>
+            </div>
+          </div>
+
+          <h2 id="ss-land-h2" style="font-size:1.1rem;margin:1.5rem 0 .75rem">Terrain</h2>
+          <div class="row3">
+            <div>
+              <label id="label-ss-area">Surface disponible (m²)</label>
+              <input id="ss-area" type="number" min="0" step="0.1" />
+            </div>
+            <div>
+              <label id="label-ss-soil">Type de sol</label>
+              <select id="ss-soil"></select>
+            </div>
+            <div>
+              <label id="label-ss-exposure">Exposition</label>
+              <select id="ss-exposure"></select>
+            </div>
+          </div>
+          <div class="row3" style="margin-top:1rem">
+            <div>
+              <label id="label-ss-slope">Pente</label>
+              <select id="ss-slope"></select>
+            </div>
+            <div class="stats-filter-toggle" style="align-self:end">
+              <input type="checkbox" id="ss-greenhouse" />
+              <label id="label-ss-greenhouse" for="ss-greenhouse" style="margin:0">Serre</label>
+            </div>
+            <div class="stats-filter-toggle" style="align-self:end">
+              <input type="checkbox" id="ss-cellar" />
+              <label id="label-ss-cellar" for="ss-cellar" style="margin:0">Cave</label>
+            </div>
+          </div>
+
+          <h2 id="ss-location-h2" style="font-size:1.1rem;margin:1.5rem 0 .75rem">Localisation</h2>
+          <div class="row3">
+            <div>
+              <label id="label-ss-country">Pays</label>
+              <input id="ss-country" />
+            </div>
+            <div>
+              <label id="label-ss-city">Ville</label>
+              <input id="ss-city" />
+            </div>
+            <div>
+              <label id="label-ss-altitude">Altitude (m, optionnel)</label>
+              <input id="ss-altitude" type="number" step="1" />
+            </div>
+          </div>
+
+          <h2 id="ss-time-h2" style="font-size:1.1rem;margin:1.5rem 0 .75rem">Temps &amp; niveau</h2>
+          <div class="row3">
+            <div>
+              <label id="label-ss-time">Heures disponibles / semaine</label>
+              <input id="ss-time" type="number" min="0" step="0.5" />
+            </div>
+            <div>
+              <label id="label-ss-experience">Niveau</label>
+              <select id="ss-experience"></select>
+            </div>
+          </div>
+
+          <h2 id="ss-equipment-h2" style="font-size:1.1rem;margin:1.5rem 0 .75rem">Équipement</h2>
+          <div class="row3">
+            <div class="stats-filter-toggle"><input type="checkbox" id="ss-eq-mulching" /><label id="label-ss-eq-mulching" for="ss-eq-mulching" style="margin:0">Paillage</label></div>
+            <div class="stats-filter-toggle"><input type="checkbox" id="ss-eq-irrigation" /><label id="label-ss-eq-irrigation" for="ss-eq-irrigation" style="margin:0">Irrigation</label></div>
+            <div class="stats-filter-toggle"><input type="checkbox" id="ss-eq-tiller" /><label id="label-ss-eq-tiller" for="ss-eq-tiller" style="margin:0">Motoculteur</label></div>
+          </div>
+          <div class="row3" style="margin-top:.75rem">
+            <div class="stats-filter-toggle"><input type="checkbox" id="ss-eq-compost" /><label id="label-ss-eq-compost" for="ss-eq-compost" style="margin:0">Compost</label></div>
+            <div class="stats-filter-toggle"><input type="checkbox" id="ss-eq-rainwater" /><label id="label-ss-eq-rainwater" for="ss-eq-rainwater" style="margin:0">Récupération d'eau</label></div>
+            <div class="stats-filter-toggle"><input type="checkbox" id="ss-eq-storage" /><label id="label-ss-eq-storage" for="ss-eq-storage" style="margin:0">Stockage / conservation</label></div>
+          </div>
+
+          <div style="margin-top:1.25rem">
+            <button id="ss-save" class="btn-primary">Enregistrer</button>
+          </div>
+          <p id="ss-msg" class="muted"></p>
+        </div>
       </div>
     </div>
   </main>
@@ -1037,7 +1149,54 @@ const I18N = {
     th_loc_description: 'Description',
     favorite_location_label: 'Lieu favori',
     favorite_currency_label: 'Devise favorite',
-    favorite_language_label: 'Langue favorite'
+    favorite_language_label: 'Langue favorite',
+    ss_h2: "Profil d'autonomie alimentaire",
+    ss_intro: "Ces informations serviront aux futurs calculs de l'onglet « Vers l'autonomie alimentaire ».",
+    ss_household_h2: 'Foyer',
+    ss_adults_label: 'Adultes',
+    ss_children_label: 'Enfants',
+    ss_meals_label: 'Repas pris à la maison / semaine',
+    ss_diet_label: 'Régime alimentaire',
+    ss_diet_omnivore: 'Omnivore',
+    ss_diet_vegetarian: 'Végétarien',
+    ss_diet_vegan: 'Végan',
+    ss_goal_label: "Objectif d'autonomie",
+    ss_land_h2: 'Terrain',
+    ss_area_label: 'Surface disponible (m²)',
+    ss_soil_label: 'Type de sol',
+    ss_soil_clay: 'Argileux',
+    ss_soil_sandy: 'Sableux',
+    ss_soil_loamy: 'Limoneux',
+    ss_soil_chalky: 'Calcaire',
+    ss_soil_silty: 'Limon fin',
+    ss_soil_unknown: 'Je ne sais pas',
+    ss_exposure_label: 'Exposition',
+    ss_exposure_full_sun: 'Plein soleil',
+    ss_exposure_partial_shade: 'Mi-ombre',
+    ss_exposure_shade: 'Ombre',
+    ss_slope_label: 'Pente',
+    ss_slope_flat: 'Plat',
+    ss_slope_gentle: 'Légère',
+    ss_slope_steep: 'Prononcée',
+    ss_greenhouse_label: 'Serre',
+    ss_cellar_label: 'Cave',
+    ss_location_h2: 'Localisation',
+    ss_country_label: 'Pays',
+    ss_city_label: 'Ville',
+    ss_altitude_label: 'Altitude (m, optionnel)',
+    ss_time_h2: 'Temps & niveau',
+    ss_time_label: 'Heures disponibles / semaine',
+    ss_experience_label: 'Niveau',
+    ss_experience_beginner: 'Débutant',
+    ss_experience_intermediate: 'Intermédiaire',
+    ss_experience_experienced: 'Expérimenté',
+    ss_equipment_h2: 'Équipement',
+    ss_eq_mulching_label: 'Paillage',
+    ss_eq_irrigation_label: 'Irrigation',
+    ss_eq_tiller_label: 'Motoculteur',
+    ss_eq_compost_label: 'Compost',
+    ss_eq_rainwater_label: "Récupération d'eau",
+    ss_eq_storage_label: 'Stockage / conservation'
   },
   en: {
     app_title: "Garden Harvests – Database",
@@ -1224,7 +1383,54 @@ const I18N = {
     th_loc_description: 'Description',
     favorite_location_label: 'Favorite location',
     favorite_currency_label: 'Favorite currency',
-    favorite_language_label: 'Favorite language'
+    favorite_language_label: 'Favorite language',
+    ss_h2: 'Food self-sufficiency profile',
+    ss_intro: 'This information will feed the future calculations in the "Toward food self-sufficiency" tab.',
+    ss_household_h2: 'Household',
+    ss_adults_label: 'Adults',
+    ss_children_label: 'Children',
+    ss_meals_label: 'Meals eaten at home / week',
+    ss_diet_label: 'Diet',
+    ss_diet_omnivore: 'Omnivore',
+    ss_diet_vegetarian: 'Vegetarian',
+    ss_diet_vegan: 'Vegan',
+    ss_goal_label: 'Self-sufficiency goal',
+    ss_land_h2: 'Land',
+    ss_area_label: 'Available area (m²)',
+    ss_soil_label: 'Soil type',
+    ss_soil_clay: 'Clay',
+    ss_soil_sandy: 'Sandy',
+    ss_soil_loamy: 'Loamy',
+    ss_soil_chalky: 'Chalky',
+    ss_soil_silty: 'Silty',
+    ss_soil_unknown: "I don't know",
+    ss_exposure_label: 'Sun exposure',
+    ss_exposure_full_sun: 'Full sun',
+    ss_exposure_partial_shade: 'Partial shade',
+    ss_exposure_shade: 'Shade',
+    ss_slope_label: 'Slope',
+    ss_slope_flat: 'Flat',
+    ss_slope_gentle: 'Gentle',
+    ss_slope_steep: 'Steep',
+    ss_greenhouse_label: 'Greenhouse',
+    ss_cellar_label: 'Cellar',
+    ss_location_h2: 'Location',
+    ss_country_label: 'Country',
+    ss_city_label: 'City',
+    ss_altitude_label: 'Altitude (m, optional)',
+    ss_time_h2: 'Time & level',
+    ss_time_label: 'Hours available / week',
+    ss_experience_label: 'Level',
+    ss_experience_beginner: 'Beginner',
+    ss_experience_intermediate: 'Intermediate',
+    ss_experience_experienced: 'Experienced',
+    ss_equipment_h2: 'Equipment',
+    ss_eq_mulching_label: 'Mulching',
+    ss_eq_irrigation_label: 'Irrigation',
+    ss_eq_tiller_label: 'Tiller',
+    ss_eq_compost_label: 'Compost',
+    ss_eq_rainwater_label: 'Rainwater harvesting',
+    ss_eq_storage_label: 'Storage / preservation'
   }
 };
 
@@ -1390,6 +1596,39 @@ function applyI18n(){
   setTxt('#label-favorite-language', t.favorite_language_label);
   setTxt('#label-favorite-location', t.favorite_location_label);
   setTxt('#label-favorite-currency', t.favorite_currency_label);
+
+  // vue Profil — autonomie alimentaire
+  setTxt('#ss-h2', t.ss_h2);
+  setTxt('#ss-intro', t.ss_intro);
+  setTxt('#ss-household-h2', t.ss_household_h2);
+  setTxt('#label-ss-adults', t.ss_adults_label);
+  setTxt('#label-ss-children', t.ss_children_label);
+  setTxt('#label-ss-meals', t.ss_meals_label);
+  setTxt('#label-ss-diet', t.ss_diet_label);
+  setTxt('#label-ss-goal', t.ss_goal_label);
+  setTxt('#ss-land-h2', t.ss_land_h2);
+  setTxt('#label-ss-area', t.ss_area_label);
+  setTxt('#label-ss-soil', t.ss_soil_label);
+  setTxt('#label-ss-exposure', t.ss_exposure_label);
+  setTxt('#label-ss-slope', t.ss_slope_label);
+  setTxt('#label-ss-greenhouse', t.ss_greenhouse_label);
+  setTxt('#label-ss-cellar', t.ss_cellar_label);
+  setTxt('#ss-location-h2', t.ss_location_h2);
+  setTxt('#label-ss-country', t.ss_country_label);
+  setTxt('#label-ss-city', t.ss_city_label);
+  setTxt('#label-ss-altitude', t.ss_altitude_label);
+  setTxt('#ss-time-h2', t.ss_time_h2);
+  setTxt('#label-ss-time', t.ss_time_label);
+  setTxt('#label-ss-experience', t.ss_experience_label);
+  setTxt('#ss-equipment-h2', t.ss_equipment_h2);
+  setTxt('#label-ss-eq-mulching', t.ss_eq_mulching_label);
+  setTxt('#label-ss-eq-irrigation', t.ss_eq_irrigation_label);
+  setTxt('#label-ss-eq-tiller', t.ss_eq_tiller_label);
+  setTxt('#label-ss-eq-compost', t.ss_eq_compost_label);
+  setTxt('#label-ss-eq-rainwater', t.ss_eq_rainwater_label);
+  setTxt('#label-ss-eq-storage', t.ss_eq_storage_label);
+  setTxt('#ss-save', t.profile_save_btn);
+  renderSelfSufficiencyOptions();
 
   // navigation (prix)
   setTxt('#nav-prices', t.nav_prices);
@@ -2722,6 +2961,118 @@ function applyI18n(){
     let favoriteLocationId = null;
     let favoriteCurrency = null;
 
+    // === Profil d'autonomie alimentaire ===
+    const ssFields = {
+      adults: document.getElementById('ss-adults'),
+      children: document.getElementById('ss-children'),
+      meals: document.getElementById('ss-meals'),
+      diet: document.getElementById('ss-diet'),
+      goal: document.getElementById('ss-goal'),
+      area: document.getElementById('ss-area'),
+      soil: document.getElementById('ss-soil'),
+      exposure: document.getElementById('ss-exposure'),
+      slope: document.getElementById('ss-slope'),
+      greenhouse: document.getElementById('ss-greenhouse'),
+      cellar: document.getElementById('ss-cellar'),
+      country: document.getElementById('ss-country'),
+      city: document.getElementById('ss-city'),
+      altitude: document.getElementById('ss-altitude'),
+      time: document.getElementById('ss-time'),
+      experience: document.getElementById('ss-experience'),
+      eqMulching: document.getElementById('ss-eq-mulching'),
+      eqIrrigation: document.getElementById('ss-eq-irrigation'),
+      eqTiller: document.getElementById('ss-eq-tiller'),
+      eqCompost: document.getElementById('ss-eq-compost'),
+      eqRainwater: document.getElementById('ss-eq-rainwater'),
+      eqStorage: document.getElementById('ss-eq-storage')
+    };
+    const ssSaveBtn = document.getElementById('ss-save');
+    const ssMsg = document.getElementById('ss-msg');
+
+    const SS_DIET_OPTIONS = [['omnivore','ss_diet_omnivore'],['vegetarian','ss_diet_vegetarian'],['vegan','ss_diet_vegan']];
+    const SS_SOIL_OPTIONS = [['clay','ss_soil_clay'],['sandy','ss_soil_sandy'],['loamy','ss_soil_loamy'],['chalky','ss_soil_chalky'],['silty','ss_soil_silty'],['unknown','ss_soil_unknown']];
+    const SS_EXPOSURE_OPTIONS = [['full_sun','ss_exposure_full_sun'],['partial_shade','ss_exposure_partial_shade'],['shade','ss_exposure_shade']];
+    const SS_SLOPE_OPTIONS = [['flat','ss_slope_flat'],['gentle','ss_slope_gentle'],['steep','ss_slope_steep']];
+    const SS_EXPERIENCE_OPTIONS = [['beginner','ss_experience_beginner'],['intermediate','ss_experience_intermediate'],['experienced','ss_experience_experienced']];
+
+    function renderSelfSufficiencyOptions(){
+      const t = I18N[curLang] || I18N.fr;
+      const renderSel = (sel, opts) => {
+        const cur = sel.value;
+        sel.innerHTML = `<option value="">—</option>` + opts.map(([v, key]) => `<option value="${v}">${t[key]}</option>`).join('');
+        if (cur) sel.value = cur;
+      };
+      renderSel(ssFields.diet, SS_DIET_OPTIONS);
+      renderSel(ssFields.soil, SS_SOIL_OPTIONS);
+      renderSel(ssFields.exposure, SS_EXPOSURE_OPTIONS);
+      renderSel(ssFields.slope, SS_SLOPE_OPTIONS);
+      renderSel(ssFields.experience, SS_EXPERIENCE_OPTIONS);
+    }
+
+    const SS_COLUMNS = 'household_adults,household_children,meals_at_home_per_week,diet,self_sufficiency_goal,' +
+      'land_area_m2,soil_type,sun_exposure,slope,has_greenhouse,has_cellar,country,city,altitude_m,' +
+      'time_per_week_hours,experience_level,equipment_mulching,equipment_irrigation,equipment_tiller,' +
+      'equipment_compost,equipment_rainwater,equipment_storage';
+
+    function loadSelfSufficiencyProfile(data){
+      ssFields.adults.value = data?.household_adults ?? '';
+      ssFields.children.value = data?.household_children ?? '';
+      ssFields.meals.value = data?.meals_at_home_per_week ?? '';
+      ssFields.diet.value = data?.diet || '';
+      ssFields.goal.value = data?.self_sufficiency_goal ?? '';
+      ssFields.area.value = data?.land_area_m2 ?? '';
+      ssFields.soil.value = data?.soil_type || '';
+      ssFields.exposure.value = data?.sun_exposure || '';
+      ssFields.slope.value = data?.slope || '';
+      ssFields.greenhouse.checked = !!data?.has_greenhouse;
+      ssFields.cellar.checked = !!data?.has_cellar;
+      ssFields.country.value = data?.country || '';
+      ssFields.city.value = data?.city || '';
+      ssFields.altitude.value = data?.altitude_m ?? '';
+      ssFields.time.value = data?.time_per_week_hours ?? '';
+      ssFields.experience.value = data?.experience_level || '';
+      ssFields.eqMulching.checked = !!data?.equipment_mulching;
+      ssFields.eqIrrigation.checked = !!data?.equipment_irrigation;
+      ssFields.eqTiller.checked = !!data?.equipment_tiller;
+      ssFields.eqCompost.checked = !!data?.equipment_compost;
+      ssFields.eqRainwater.checked = !!data?.equipment_rainwater;
+      ssFields.eqStorage.checked = !!data?.equipment_storage;
+    }
+
+    ssSaveBtn.onclick = async () => {
+      const t = I18N[curLang] || I18N.fr;
+      ssMsg.textContent = '';
+      const numOrNull = (v) => (v === '' || v == null) ? null : Number(v);
+      const payload = {
+        household_adults: numOrNull(ssFields.adults.value),
+        household_children: numOrNull(ssFields.children.value),
+        meals_at_home_per_week: numOrNull(ssFields.meals.value),
+        diet: ssFields.diet.value || null,
+        self_sufficiency_goal: numOrNull(ssFields.goal.value),
+        land_area_m2: numOrNull(ssFields.area.value),
+        soil_type: ssFields.soil.value || null,
+        sun_exposure: ssFields.exposure.value || null,
+        slope: ssFields.slope.value || null,
+        has_greenhouse: ssFields.greenhouse.checked,
+        has_cellar: ssFields.cellar.checked,
+        country: ssFields.country.value.trim() || null,
+        city: ssFields.city.value.trim() || null,
+        altitude_m: numOrNull(ssFields.altitude.value),
+        time_per_week_hours: numOrNull(ssFields.time.value),
+        experience_level: ssFields.experience.value || null,
+        equipment_mulching: ssFields.eqMulching.checked,
+        equipment_irrigation: ssFields.eqIrrigation.checked,
+        equipment_tiller: ssFields.eqTiller.checked,
+        equipment_compost: ssFields.eqCompost.checked,
+        equipment_rainwater: ssFields.eqRainwater.checked,
+        equipment_storage: ssFields.eqStorage.checked
+      };
+      const { error } = await db.from('profiles').update(payload).eq('user_id', currentUserId);
+      if (error){ ssMsg.className='muted msg-err'; ssMsg.textContent = error.message; return; }
+      ssMsg.className='muted msg-ok';
+      ssMsg.textContent = window.__i18n_profile_updated_ok || t.profile_updated_ok;
+    };
+
     async function loadFavorites(){
       if (!currentUserId) return;
       const { data } = await db.from('profiles')
@@ -2735,7 +3086,7 @@ function applyI18n(){
     async function loadProfile(){
       profileMsg.textContent = '';
       const { data, error } = await db.from('profiles')
-        .select('username,language,favorite_location_id,favorite_currency')
+        .select('username,language,favorite_location_id,favorite_currency,' + SS_COLUMNS)
         .eq('user_id', currentUserId)
         .maybeSingle();
       if (error){ profileMsg.className='muted msg-err'; profileMsg.textContent = error.message; return; }
@@ -2743,6 +3094,7 @@ function applyI18n(){
       profileLanguageSel.value = data?.language || curLang;
       favoriteLocationId = data?.favorite_location_id ?? null;
       favoriteCurrency = data?.favorite_currency || null;
+      loadSelfSufficiencyProfile(data);
 
       const isFr = (curLang === 'fr');
       const { data: locs } = await db.from('locations').select('id,name,name_fr').order('name');
