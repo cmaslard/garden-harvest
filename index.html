@@ -192,7 +192,90 @@
     width: 14px;
     height: 14px;
   }
-} 
+}
+
+    /* ===== Stats — bar chart ===== */
+    .stats-filters{ display:flex; flex-wrap:wrap; gap:.75rem; align-items:flex-end; margin-bottom:1rem; }
+    .stats-filters .field{ min-width:150px; }
+    .stats-filters .field label{ margin-bottom:4px; }
+    .stats-filters .field select, .stats-filters .field input{ width:auto; min-width:150px; }
+    .stats-filter-toggle{ display:flex; align-items:center; gap:.5rem; }
+    .stats-filter-toggle input[type="checkbox"]{ width:auto; }
+
+    .glass-card{
+      border:1px solid var(--border);
+      border-radius:20px;
+      padding:20px;
+      margin:16px 0;
+      background: color-mix(in srgb, var(--card) 72%, transparent);
+      backdrop-filter: blur(14px) saturate(140%);
+      -webkit-backdrop-filter: blur(14px) saturate(140%);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    html[data-theme="light"] .glass-card{
+      box-shadow: 0 8px 24px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+
+    .barchart-title{ font-size:1.05rem; font-weight:600; margin-bottom:2px; }
+    .barchart-subtitle{ color:var(--muted); font-size:.85rem; margin-bottom:14px; }
+
+    .barchart-outer{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .barchart-inner{ display:flex; align-items:stretch; gap:12px; min-width:min-content; }
+    .barchart-yaxis{
+      display:flex; flex-direction:column; justify-content:space-between;
+      flex:0 0 auto; padding-bottom:28px; padding-top:6px;
+      color:var(--muted); font-size:.72rem; text-align:right; min-width:44px;
+    }
+    .barchart-plot{
+      display:flex; align-items:flex-end; gap:6px;
+      border-left:1px solid var(--border);
+      padding-top:6px;
+      position:relative;
+      flex:1 1 auto;
+      height:220px;
+    }
+    .barchart-plot::before{
+      content:"";
+      position:absolute; left:0; right:0; top:6px; bottom:28px;
+      background-image: repeating-linear-gradient(to top, var(--border) 0, var(--border) 1px, transparent 1px, transparent 25%);
+      opacity:.5;
+      pointer-events:none;
+    }
+    .bar-col{
+      display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+      flex:0 0 auto; width:34px; height:100%; position:relative;
+    }
+    .bar-col .bar{
+      width:22px; max-width:24px;
+      background: var(--primary);
+      border-radius:6px 6px 2px 2px;
+      transition: filter .15s ease, transform .15s ease;
+      cursor:pointer;
+    }
+    .bar-col:hover .bar, .bar-col:focus-within .bar{
+      filter:brightness(1.12);
+      transform: scaleX(1.05);
+    }
+    .bar-col .bar-x-label{
+      position:absolute; bottom:-22px; left:50%; transform:translateX(-50%);
+      font-size:.68rem; color:var(--muted); white-space:nowrap;
+    }
+    .bar-tooltip{
+      position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
+      background:var(--card); border:1px solid var(--border); border-radius:10px;
+      padding:6px 10px; font-size:.78rem; white-space:nowrap;
+      box-shadow:0 6px 16px rgba(0,0,0,.18);
+      opacity:0; pointer-events:none; transition:opacity .12s ease;
+      z-index:5;
+    }
+    .bar-col:hover .bar-tooltip, .bar-col:focus-within .bar-tooltip{ opacity:1; }
+    .bar-tooltip .tt-value{ font-weight:600; color:var(--fg); }
+    .bar-tooltip .tt-label{ color:var(--muted); }
+
+    .stats-empty{ color:var(--muted); padding:2rem 0; text-align:center; }
+
+    .table-toggle-btn{ width:auto; padding:.4rem .8rem; font-size:.82rem; margin-top:10px; }
+    .stats-table-wrap{ margin-top:10px; }
   </style>
 </head>
 
@@ -232,8 +315,24 @@
           <button id="btn-signup">Créer un compte</button>
         </div>
         <p class="muted" style="margin-top:8px">Après inscription il peut être nécessaire de confirmer l’email selon tes paramètres Supabase.</p>
+        <p style="margin-top:4px"><button id="forgot-password" type="button" style="width:auto;background:transparent;border:none;text-decoration:underline;color:var(--muted);padding:0">Mot de passe oublié ?</button></p>
         <p id="auth-msg-pass" class="muted"></p>
       </div>
+    </div>
+
+    <!-- Réinitialisation de mot de passe -->
+    <div id="reset-password-card" class="card hide">
+      <h2 id="reset-password-h2">Nouveau mot de passe</h2>
+      <div class="row">
+        <div>
+          <label id="label-new-password">Nouveau mot de passe</label>
+          <input id="new-password" type="password" placeholder="******" />
+        </div>
+        <div style="align-self:end">
+          <button id="set-new-password-btn" class="btn-primary">Enregistrer</button>
+        </div>
+      </div>
+      <p id="reset-password-msg" class="muted"></p>
     </div>
     
     <!-- Magic link -->
@@ -632,7 +731,54 @@
       <div id="view-stats" class="hide">
         <div class="card">
           <h2 id="stats-h2">Statistiques</h2>
-          <p id="stats-placeholder" class="muted">À venir.</p>
+
+          <div class="stats-filters">
+            <div class="field">
+              <label id="label-stats-location">Lieu</label>
+              <select id="stats-location"></select>
+            </div>
+            <div class="field">
+              <label id="label-stats-granularity">Vue</label>
+              <div style="display:flex;gap:6px">
+                <button type="button" class="tab active" id="stats-view-yearly" data-granularity="yearly">Par année</button>
+                <button type="button" class="tab" id="stats-view-monthly" data-granularity="monthly">Mensuel</button>
+              </div>
+            </div>
+            <div class="field hide" id="stats-year-field">
+              <label id="label-stats-year">Année</label>
+              <select id="stats-year"></select>
+            </div>
+          </div>
+
+          <div class="stats-filter-toggle">
+            <input type="checkbox" id="stats-product-toggle" />
+            <label id="label-stats-product-toggle" for="stats-product-toggle" style="margin:0">Filtrer par produit</label>
+          </div>
+          <div class="stats-filters hide" id="stats-product-field-wrap" style="margin-top:.5rem">
+            <div class="field">
+              <label id="label-stats-product">Produit</label>
+              <select id="stats-product"></select>
+            </div>
+          </div>
+
+          <div class="glass-card">
+            <div class="barchart-title" id="stats-chart-title">Valeur estimée des récoltes</div>
+            <div class="barchart-subtitle" id="stats-chart-subtitle">Quantité récoltée × dernier prix bio connu, converti en EUR</div>
+            <div id="stats-chart-container"></div>
+            <p id="stats-chart-empty" class="stats-empty hide"></p>
+            <button type="button" class="table-toggle-btn" id="stats-table-toggle">Voir en tableau</button>
+            <div class="stats-table-wrap table-wrap hide" id="stats-table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th id="th-stats-period">Période</th>
+                    <th id="th-stats-value">Valeur estimée</th>
+                  </tr>
+                </thead>
+                <tbody id="stats-table-rows"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -698,6 +844,13 @@ const I18N = {
     signin: "Se connecter",
     signup: "Créer un compte",
     signup_hint: "Après inscription il peut être nécessaire de confirmer l’email selon tes paramètres Supabase.",
+    forgot_password_link: "Mot de passe oublié ?",
+    enter_email_for_reset: "Entre ton email d'abord.",
+    reset_email_sent: "Email envoyé, vérifie ta boîte mail.",
+    reset_password_h2: "Nouveau mot de passe",
+    new_password_label: "Nouveau mot de passe",
+    password_too_short: "Mot de passe trop court (6 caractères minimum).",
+    password_updated_ok: "Mot de passe mis à jour !",
     magic_hint: "Entre ton email pour recevoir un lien magique.",
     magic_send: "Envoyer le lien",
     connected: "Connecté : ",
@@ -825,7 +978,21 @@ const I18N = {
     recent_prices_none: 'Aucun prix ajouté récemment.',
     nav_stats: 'Stats',
     stats_h2: 'Statistiques',
-    stats_placeholder: 'À venir.',
+    stats_location_label: 'Lieu',
+    stats_all_locations: 'Tous les lieux',
+    stats_granularity_label: 'Vue',
+    stats_yearly_label: 'Par année',
+    stats_monthly_label: 'Mensuel',
+    stats_year_label: 'Année',
+    stats_product_toggle_label: 'Filtrer par produit',
+    stats_product_label: 'Produit',
+    stats_chart_title: 'Valeur estimée des récoltes',
+    stats_chart_subtitle: 'Quantité récoltée × dernier prix bio connu, converti en EUR',
+    stats_empty: 'Aucune donnée pour cette sélection.',
+    stats_show_table: 'Voir en tableau',
+    stats_hide_table: 'Masquer le tableau',
+    stats_th_period: 'Période',
+    stats_th_value: 'Valeur estimée',
     nav_food_independence: "Vers l'autonomie alimentaire",
     food_independence_h2: "Vers l'autonomie alimentaire",
     food_independence_placeholder: 'À venir.',
@@ -860,6 +1027,13 @@ const I18N = {
     signin: "Sign in",
     signup: "Create account",
     signup_hint: "After sign-up you may need to confirm your email depending on Supabase settings.",
+    forgot_password_link: "Forgot password?",
+    enter_email_for_reset: "Enter your email first.",
+    reset_email_sent: "Email sent, check your inbox.",
+    reset_password_h2: "New password",
+    new_password_label: "New password",
+    password_too_short: "Password too short (6 characters minimum).",
+    password_updated_ok: "Password updated!",
     magic_hint: "Enter your email to receive a magic link.",
     magic_send: "Send link",
     connected: "Signed in: ",
@@ -987,7 +1161,21 @@ const I18N = {
     recent_prices_none: 'No prices added recently.',
     nav_stats: 'Stats',
     stats_h2: 'Statistics',
-    stats_placeholder: 'Coming soon.',
+    stats_location_label: 'Location',
+    stats_all_locations: 'All locations',
+    stats_granularity_label: 'View',
+    stats_yearly_label: 'Yearly',
+    stats_monthly_label: 'Monthly',
+    stats_year_label: 'Year',
+    stats_product_toggle_label: 'Filter by product',
+    stats_product_label: 'Product',
+    stats_chart_title: 'Estimated harvest value',
+    stats_chart_subtitle: 'Harvested quantity × last known organic price, converted to EUR',
+    stats_empty: 'No data for this selection.',
+    stats_show_table: 'View as table',
+    stats_hide_table: 'Hide table',
+    stats_th_period: 'Period',
+    stats_th_value: 'Estimated value',
     nav_food_independence: 'Toward food self-sufficiency',
     food_independence_h2: 'Toward food self-sufficiency',
     food_independence_placeholder: 'Coming soon.',
@@ -1029,6 +1217,10 @@ function applyI18n(){
   setTxt('#btn-signin', t.signin);
   setTxt('#btn-signup', t.signup);
   setTxt('#pane-pass .muted', t.signup_hint);
+  setTxt('#forgot-password', t.forgot_password_link);
+  setTxt('#reset-password-h2', t.reset_password_h2);
+  setTxt('#label-new-password', t.new_password_label);
+  setTxt('#set-new-password-btn', t.save_btn);
   setTxt('#pane-magic .muted', t.magic_hint);
   setTxt('#send-link', t.magic_send);
   setTxt('#label-product',  t.product_label);
@@ -1118,7 +1310,25 @@ function applyI18n(){
   setTxt('#nav-locations', t.nav_locations);
   setTxt('#nav-stats', t.nav_stats);
   setTxt('#stats-h2', t.stats_h2);
-  setTxt('#stats-placeholder', t.stats_placeholder);
+  setTxt('#label-stats-location', t.stats_location_label);
+  setTxt('#label-stats-granularity', t.stats_granularity_label);
+  setTxt('#stats-view-yearly', t.stats_yearly_label);
+  setTxt('#stats-view-monthly', t.stats_monthly_label);
+  setTxt('#label-stats-year', t.stats_year_label);
+  setTxt('#label-stats-product-toggle', t.stats_product_toggle_label);
+  setTxt('#label-stats-product', t.stats_product_label);
+  setTxt('#stats-chart-title', t.stats_chart_title);
+  setTxt('#stats-chart-subtitle', t.stats_chart_subtitle);
+  setTxt('#th-stats-period', t.stats_th_period);
+  setTxt('#th-stats-value', t.stats_th_value);
+  {
+    const statsTableWrapEl = document.getElementById('stats-table-wrap');
+    const statsTableToggleBtnEl = document.getElementById('stats-table-toggle');
+    if (statsTableToggleBtnEl){
+      statsTableToggleBtnEl.textContent = (statsTableWrapEl && !statsTableWrapEl.classList.contains('hide'))
+        ? t.stats_hide_table : t.stats_show_table;
+    }
+  }
   setTxt('#nav-food-independence', t.nav_food_independence);
   setTxt('#food-independence-h2', t.food_independence_h2);
   setTxt('#food-independence-placeholder', t.food_independence_placeholder);
@@ -1375,9 +1585,44 @@ function applyI18n(){
         : (data?.user?.identities?.length ? 'Compte créé ! Connecte-toi.' : 'Vérifie ton email pour confirmer le compte.');
     };
 
+    // Mot de passe oublié
+    const forgotPasswordBtn  = document.getElementById('forgot-password');
+    const resetPasswordCard  = document.getElementById('reset-password-card');
+    const newPasswordInp     = document.getElementById('new-password');
+    const setNewPasswordBtn  = document.getElementById('set-new-password-btn');
+    const resetPasswordMsg   = document.getElementById('reset-password-msg');
+
+    forgotPasswordBtn.onclick = async () => {
+      const t = I18N[curLang] || I18N.fr;
+      const email = (emailPass.value || '').trim();
+      if (!email){ msgPass.className='muted'; msgPass.textContent = t.enter_email_for_reset; return; }
+      msgPass.textContent = '…';
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: baseRedirect });
+      msgPass.className = 'muted ' + (error ? 'msg-err' : 'msg-ok');
+      msgPass.textContent = error ? ('Erreur : ' + error.message) : t.reset_email_sent;
+    };
+
+    setNewPasswordBtn.onclick = async () => {
+      const t = I18N[curLang] || I18N.fr;
+      const pwd = newPasswordInp.value;
+      if (!pwd || pwd.length < 6){ resetPasswordMsg.className='muted msg-err'; resetPasswordMsg.textContent = t.password_too_short; return; }
+      const { error } = await sb.auth.updateUser({ password: pwd });
+      if (error){ resetPasswordMsg.className='muted msg-err'; resetPasswordMsg.textContent = error.message; return; }
+      resetPasswordMsg.className='muted msg-ok';
+      resetPasswordMsg.textContent = t.password_updated_ok;
+      newPasswordInp.value = '';
+      setTimeout(() => { resetPasswordCard.classList.add('hide'); toggleUI(true); }, 1200);
+    };
+
     // Session
     sb.auth.getSession().then(({ data }) => toggleUI(!!data.session));
     sb.auth.onAuthStateChange((_e, s) => {
+  if (_e === 'PASSWORD_RECOVERY'){
+    authCard.classList.add('hide');
+    appCard.classList.add('hide');
+    resetPasswordCard.classList.remove('hide');
+    return;
+  }
   toggleUI(!!s);
   if (s?.user) loadLanguageAndRenderBtn();   // ← charge le drapeau après connexion
 });
@@ -1439,6 +1684,7 @@ function applyI18n(){
       if (view === 'products') refreshProductsList();
       if (view === 'locations') refreshLocationsList();
       if (view === 'prices') loadPriceProductOptions();
+      if (view === 'stats') refreshStatsView();
       if (view === 'profile') loadProfile();
     }
 
@@ -2140,6 +2386,227 @@ function applyI18n(){
 
       await Promise.all([refreshPricesList(), refreshRecentPrices()]);
     };
+
+    // === Vue Stats ===
+    function escapeHtml(str){
+      return String(str ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    const statsLocationSel     = document.getElementById('stats-location');
+    const statsViewYearlyBtn   = document.getElementById('stats-view-yearly');
+    const statsViewMonthlyBtn  = document.getElementById('stats-view-monthly');
+    const statsYearField       = document.getElementById('stats-year-field');
+    const statsYearSel         = document.getElementById('stats-year');
+    const statsProductToggle   = document.getElementById('stats-product-toggle');
+    const statsProductFieldWrap= document.getElementById('stats-product-field-wrap');
+    const statsProductSel      = document.getElementById('stats-product');
+    const statsChartContainer  = document.getElementById('stats-chart-container');
+    const statsChartEmpty      = document.getElementById('stats-chart-empty');
+    const statsTableToggleBtn  = document.getElementById('stats-table-toggle');
+    const statsTableWrap       = document.getElementById('stats-table-wrap');
+    const statsTableRows       = document.getElementById('stats-table-rows');
+
+    let statsGranularity = 'yearly';
+    let statsHarvests = [];
+    let statsPrices = [];
+    let statsFxRates = null;
+    let statsDataLoaded = false;
+
+    function monthShortLabel(mm, isFr){
+      const d = new Date(2000, Number(mm) - 1, 1);
+      return new Intl.DateTimeFormat(isFr ? 'fr-FR' : 'en-US', { month: 'short' }).format(d);
+    }
+
+    function statsFilteredHarvests(includeYear){
+      const locId = statsLocationSel.value;
+      const productFilterOn = statsProductToggle.checked;
+      const productId = productFilterOn ? statsProductSel.value : '';
+      const year = includeYear ? statsYearSel.value : null;
+      return statsHarvests.filter(h => {
+        if (locId && String(h.location_id) !== locId) return false;
+        if (productFilterOn && productId && String(h.product_id) !== productId) return false;
+        if (includeYear && (!year || (h.harvest_date || '').slice(0, 4) !== year)) return false;
+        return true;
+      });
+    }
+
+    function statsLatestPricesEUR(){
+      const latest = {};
+      for (const p of statsPrices){
+        const cur = latest[p.product_id];
+        if (!cur || (p.price_date || '') > (cur.price_date || '') ||
+            ((p.price_date || '') === (cur.price_date || '') && (p.created_at || '') > (cur.created_at || ''))){
+          latest[p.product_id] = p;
+        }
+      }
+      const eur = {};
+      for (const [pid, p] of Object.entries(latest)){
+        const v = convertPrice(Number(p.price), p.currency, 'EUR', statsFxRates);
+        if (v !== null) eur[pid] = v;
+      }
+      return eur;
+    }
+
+    function computeStatsSeries(){
+      const isFr = (curLang === 'fr');
+      const eurPrices = statsLatestPricesEUR();
+      const buckets = {};
+
+      if (statsGranularity === 'yearly'){
+        for (const h of statsFilteredHarvests(false)){
+          const year = (h.harvest_date || '').slice(0, 4);
+          const price = eurPrices[h.product_id];
+          if (!year || price == null) continue;
+          buckets[year] = (buckets[year] || 0) + Number(h.quantity) * price;
+        }
+        return Object.keys(buckets).sort().map(k => ({ key: k, label: k, value: buckets[k] }));
+      }
+
+      for (const h of statsFilteredHarvests(true)){
+        const month = (h.harvest_date || '').slice(5, 7);
+        const price = eurPrices[h.product_id];
+        if (!month || price == null) continue;
+        buckets[month] = (buckets[month] || 0) + Number(h.quantity) * price;
+      }
+      return Object.keys(buckets).sort().map(k => ({ key: k, label: monthShortLabel(k, isFr), value: buckets[k] }));
+    }
+
+    function refreshStatsYearOptions(){
+      const years = new Set();
+      for (const h of statsFilteredHarvests(false)){
+        const y = (h.harvest_date || '').slice(0, 4);
+        if (y) years.add(y);
+      }
+      const sorted = [...years].sort().reverse();
+      const keep = statsYearSel.value;
+      statsYearSel.innerHTML = sorted.map(y => `<option value="${y}">${y}</option>`).join('');
+      statsYearSel.value = sorted.includes(keep) ? keep : (sorted[0] || '');
+    }
+
+    async function populateStatsFilterOptions(){
+      const isFr = (curLang === 'fr');
+      const t = I18N[curLang] || I18N.fr;
+      const [{ data: locs }, { data: prods }] = await Promise.all([
+        db.from('locations').select('id,name,name_fr').order('name'),
+        db.from('products').select('id,name,name_fr,variety,variety_fr').order('name')
+      ]);
+
+      const keepLoc = statsLocationSel.value;
+      const sortedLocs = [...(locs || [])].sort((a, b) =>
+        (isFr ? (a.name_fr || a.name) : a.name).localeCompare(isFr ? (b.name_fr || b.name) : b.name, isFr ? 'fr' : 'en')
+      );
+      statsLocationSel.innerHTML = `<option value="">${t.stats_all_locations}</option>` +
+        sortedLocs.map(l => `<option value="${l.id}">${escapeHtml(isFr ? (l.name_fr || l.name) : l.name)}</option>`).join('');
+      statsLocationSel.value = keepLoc;
+
+      const keepProd = statsProductSel.value;
+      const sortedProds = [...(prods || [])].sort((a, b) => {
+        const an = isFr ? (a.name_fr || a.name) : a.name;
+        const bn = isFr ? (b.name_fr || b.name) : b.name;
+        const av = isFr ? (a.variety_fr || a.variety) : a.variety;
+        const bv = isFr ? (b.variety_fr || b.variety) : b.variety;
+        return an.localeCompare(bn, isFr ? 'fr' : 'en') || (av || '').localeCompare(bv || '', isFr ? 'fr' : 'en');
+      });
+      statsProductSel.innerHTML = sortedProds.map(p => {
+        const n = isFr ? (p.name_fr || p.name) : p.name;
+        const v = isFr ? (p.variety_fr || p.variety) : p.variety;
+        return `<option value="${p.id}">${escapeHtml(n)}${v ? ` — ${escapeHtml(v)}` : ''}</option>`;
+      }).join('');
+      if (keepProd) statsProductSel.value = keepProd;
+    }
+
+    async function loadStatsData(){
+      const [{ data: harvests }, { data: prices }] = await Promise.all([
+        db.from('harvests_view').select('*').limit(5000),
+        db.from('prices_view').select('*').limit(5000)
+      ]);
+      statsHarvests = harvests || [];
+      statsPrices = prices || [];
+      statsFxRates = await getFxRates();
+      statsDataLoaded = true;
+    }
+
+    function renderStats(){
+      if (!statsDataLoaded) return;
+      const isFr = (curLang === 'fr');
+      const t = I18N[curLang] || I18N.fr;
+      const numFmt = new Intl.NumberFormat(isFr ? 'fr-FR' : 'en-US', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+      const series = computeStatsSeries();
+
+      if (!series.length || series.every(s => s.value === 0)){
+        statsChartContainer.innerHTML = '';
+        statsChartEmpty.textContent = t.stats_empty;
+        statsChartEmpty.classList.remove('hide');
+        statsTableRows.innerHTML = '';
+        return;
+      }
+      statsChartEmpty.classList.add('hide');
+
+      const maxVal = Math.max(...series.map(s => s.value), 0);
+      const tickCount = 4;
+      const ticks = [];
+      for (let i = tickCount; i >= 0; i--) ticks.push(maxVal * i / tickCount);
+      const yaxisHtml = ticks.map(v => `<span>${numFmt.format(v)}</span>`).join('');
+
+      const barsHtml = series.map(s => {
+        const pct = maxVal > 0 ? (s.value / maxVal * 100) : 0;
+        const heightStyle = pct > 0 ? `height:${pct}%` : 'height:2px';
+        return `
+          <div class="bar-col" tabindex="0">
+            <div class="bar-tooltip"><span class="tt-value">${escapeHtml(numFmt.format(s.value))}</span><br/><span class="tt-label">${escapeHtml(s.label)}</span></div>
+            <div class="bar" style="${heightStyle}"></div>
+            <span class="bar-x-label">${escapeHtml(s.label)}</span>
+          </div>`;
+      }).join('');
+
+      statsChartContainer.innerHTML = `
+        <div class="barchart-outer">
+          <div class="barchart-inner">
+            <div class="barchart-yaxis">${yaxisHtml}</div>
+            <div class="barchart-plot">${barsHtml}</div>
+          </div>
+        </div>`;
+
+      statsTableRows.innerHTML = series.map(s =>
+        `<tr><td>${escapeHtml(s.label)}</td><td>${escapeHtml(numFmt.format(s.value))}</td></tr>`
+      ).join('');
+    }
+
+    statsViewYearlyBtn.onclick = () => {
+      statsGranularity = 'yearly';
+      statsViewYearlyBtn.classList.add('active');
+      statsViewMonthlyBtn.classList.remove('active');
+      statsYearField.classList.add('hide');
+      renderStats();
+    };
+    statsViewMonthlyBtn.onclick = () => {
+      statsGranularity = 'monthly';
+      statsViewMonthlyBtn.classList.add('active');
+      statsViewYearlyBtn.classList.remove('active');
+      statsYearField.classList.remove('hide');
+      refreshStatsYearOptions();
+      renderStats();
+    };
+    statsLocationSel.onchange = () => { refreshStatsYearOptions(); renderStats(); };
+    statsYearSel.onchange = () => renderStats();
+    statsProductToggle.onchange = () => {
+      statsProductFieldWrap.classList.toggle('hide', !statsProductToggle.checked);
+      refreshStatsYearOptions();
+      renderStats();
+    };
+    statsProductSel.onchange = () => { refreshStatsYearOptions(); renderStats(); };
+    statsTableToggleBtn.onclick = () => {
+      const t = I18N[curLang] || I18N.fr;
+      const willShow = statsTableWrap.classList.contains('hide');
+      statsTableWrap.classList.toggle('hide', !willShow);
+      statsTableToggleBtn.textContent = willShow ? t.stats_hide_table : t.stats_show_table;
+    };
+
+    async function refreshStatsView(){
+      await Promise.all([loadStatsData(), populateStatsFilterOptions()]);
+      refreshStatsYearOptions();
+      renderStats();
+    }
 
     // === Vue Profil ===
     const profileUsername       = document.getElementById('profile-username');
