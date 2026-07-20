@@ -27,6 +27,8 @@
       --card:#1f2937;
       --border:#374151;
       --primary:#40cdf2;
+      --accent:#34d399;
+      --accent-ink:#052e1f;
       --ok:#22c55e;
       --err:#ef4444;
     }
@@ -53,6 +55,8 @@
       --card:#ffffff;
       --border:#e2e8f0;
       --primary:#0ea5e9;
+      --accent:#047857;
+      --accent-ink:#ffffff;
       --ok:#16a34a;
       --err:#dc2626;
     }
@@ -166,9 +170,22 @@
     .hide{display:none}
     .tabs{display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
     .tabs .tab{flex:0 0 auto;white-space:nowrap;width:auto}
-    .mobile-nav-select{display:none;margin-bottom:12px}
-    .tab{padding:.35rem .8rem;border:1px solid var(--border);border-radius:999px;background:transparent}
-    .tab.active{border-color:var(--primary);color:var(--primary)}
+    .mobile-nav-select{
+      display:none;margin-bottom:12px;
+      border-radius:999px;
+      border:1px solid var(--accent);
+      background: color-mix(in srgb, var(--accent) 16%, var(--card));
+      color:var(--fg);
+      font-weight:600;
+    }
+    .mobile-nav-select:focus{ outline:2px solid var(--accent); outline-offset:2px; }
+    .tab{
+      padding:.4rem .9rem;border:1px solid var(--border);border-radius:999px;background:transparent;
+      color:var(--fg);
+      transition: background .15s ease, border-color .15s ease, color .15s ease;
+    }
+    .tab:hover:not(.active){ border-color:var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+    .tab.active{ border-color:var(--accent); background:var(--accent); color:var(--accent-ink); font-weight:600; }
     .btn-primary{border-color:var(--primary);color:var(--primary)}
     .msg-ok{color:var(--ok)} .msg-err{color:var(--err)}
 
