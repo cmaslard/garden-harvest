@@ -4,6 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+  <!-- Icône « Aube » : pousse à contre-jour sur le dégradé bleu nuit → vert de l'app -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http://www.w3.org/2000/svg%22%20viewBox%3D%220%200%2096%2096%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22ghBg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%2296%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%230b2f52%22/%3E%3Cstop%20offset%3D%22.6%22%20stop-color%3D%22%230f6e5c%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%230a4d3f%22/%3E%3C/linearGradient%3E%3CradialGradient%20id%3D%22ghSun%22%20cx%3D%2250%25%22%20cy%3D%2250%25%22%20r%3D%2250%25%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23fff7d6%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ffb84d%22/%3E%3C/radialGradient%3E%3Cfilter%20id%3D%22ghGlow%22%20x%3D%22-80%25%22%20y%3D%22-80%25%22%20width%3D%22260%25%22%20height%3D%22260%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%226%22/%3E%3C/filter%3E%3C/defs%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2222%22%20fill%3D%22url%28%23ghBg%29%22/%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2252%22%20r%3D%2230%22%20fill%3D%22%23ffcf6b%22%20opacity%3D%22.55%22%20filter%3D%22url%28%23ghGlow%29%22/%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2252%22%20r%3D%2221%22%20fill%3D%22url%28%23ghSun%29%22/%3E%3Cpath%20d%3D%22M14%2086C14%2074%2030%2066%2048%2066%2066%2066%2082%2074%2082%2086Z%22%20fill%3D%22%2308281f%22/%3E%3Cpath%20d%3D%22M48%2066V48%22%20stroke%3D%22%23081711%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22/%3E%3Cpath%20d%3D%22M48%2050C40%2050%2036%2042%2037%2034%2045%2036%2048%2043%2048%2050Z%22%20fill%3D%22%23081711%22/%3E%3Cpath%20d%3D%22M48%2055C56%2055%2060%2047%2059%2039%2051%2041%2048%2048%2048%2055Z%22%20fill%3D%22%23081711%22%20opacity%3D%22.95%22/%3E%3C/svg%3E" />
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f8fafc" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#181818" />
+
   <!-- Anti-flash thème au tout début -->
   <script>
   try{
@@ -1774,6 +1782,14 @@ function applyI18n(){
       document.documentElement.setAttribute('data-theme', t);
       const btn = document.getElementById('theme-toggle');
       if (btn) btn.innerHTML = (t === 'dark') ? moonSVG : sunSVG;
+      let meta = document.querySelector('meta[name="theme-color"][data-dynamic]');
+      if (!meta){
+        meta = document.createElement('meta');
+        meta.name = 'theme-color';
+        meta.setAttribute('data-dynamic', '');
+        document.head.appendChild(meta);
+      }
+      meta.content = (t === 'light') ? '#f8fafc' : '#181818';
     }
 
     function scheduleAuto(){
