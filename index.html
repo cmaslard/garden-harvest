@@ -320,8 +320,8 @@
     }
 
     /* ===== Planification des cultures — frise ===== */
-    :root{ --cp-harvest:#fbbf24; }
-    html[data-theme="light"]{ --cp-harvest:#d97706; }
+    :root{ --cp-harvest:#fbbf24; --status-critical:#f87171; }
+    html[data-theme="light"]{ --cp-harvest:#d97706; --status-critical:#dc2626; }
 
     .cp-legend{ display:flex; gap:18px; flex-wrap:wrap; margin-bottom:16px; font-size:.82rem; color:var(--muted); }
     .cp-legend-item{ display:flex; align-items:center; gap:6px; }
@@ -376,6 +376,30 @@
     .cp-bar:hover .cp-bar-tooltip, .cp-bar:focus-visible .cp-bar-tooltip, .cp-bar.tapped .cp-bar-tooltip{ opacity:1; }
     .cp-bar-tooltip .tt-value{ font-weight:600; color:var(--fg); }
     .cp-bar-tooltip .tt-label{ color:var(--muted); }
+
+    /* ===== Vers l'autonomie alimentaire — dashboard ===== */
+    .fi-hero{ font-size:2.6rem; font-weight:800; letter-spacing:-.02em; margin:4px 0 2px; font-variant-numeric:tabular-nums; }
+    .fi-hero.tier-good{ color:var(--accent); }
+    .fi-hero.tier-warning{ color:var(--cp-harvest); }
+    .fi-hero.tier-critical{ color:var(--status-critical); }
+
+    .fi-categories{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin:16px 0; }
+    .fi-cat-card{ border:1px solid var(--border); border-radius:14px; padding:16px; background:var(--card); }
+    .fi-cat-name{ font-weight:600; margin-bottom:2px; }
+    .fi-cat-pct{ font-size:1.6rem; font-weight:700; margin:4px 0 10px; font-variant-numeric:tabular-nums; }
+    .fi-cat-pct.tier-good{ color:var(--accent); }
+    .fi-cat-pct.tier-warning{ color:var(--cp-harvest); }
+    .fi-cat-pct.tier-critical{ color:var(--status-critical); }
+    .fi-meter{ position:relative; height:10px; border-radius:999px; background:var(--border); margin-bottom:10px; }
+    .fi-meter-fill{ position:absolute; left:0; top:0; height:100%; border-radius:999px; transition:width .3s ease; }
+    .fi-meter-fill.tier-good{ background:var(--accent); }
+    .fi-meter-fill.tier-warning{ background:var(--cp-harvest); }
+    .fi-meter-fill.tier-critical{ background:var(--status-critical); }
+    .fi-meter-goal{ position:absolute; top:-3px; bottom:-3px; width:2px; background:var(--fg); opacity:.55; }
+    .fi-cat-detail{ font-size:.82rem; color:var(--muted); font-variant-numeric:tabular-nums; }
+
+    .fi-suggestions-list{ margin:0; padding-left:1.2rem; }
+    .fi-suggestions-list li{ margin-bottom:4px; }
   </style>
 </head>
 
@@ -960,7 +984,33 @@
       <div id="view-food-independence" class="hide">
         <div class="card">
           <h2 id="food-independence-h2">Vers l'autonomie alimentaire</h2>
-          <p id="food-independence-placeholder" class="muted">À venir.</p>
+
+          <div class="stats-filters">
+            <div class="field">
+              <label id="label-fi-year">Année</label>
+              <select id="fi-year"></select>
+            </div>
+          </div>
+          <p id="fi-no-profile-hint" class="muted hide"></p>
+
+          <div id="fi-dashboard" class="hide">
+            <div class="glass-card">
+              <div class="barchart-title" id="fi-hero-title">Autonomie globale</div>
+              <div class="fi-hero" id="fi-hero-value">—</div>
+              <p class="barchart-subtitle" id="fi-hero-subtitle"></p>
+            </div>
+
+            <div class="fi-categories" id="fi-categories"></div>
+
+            <div class="glass-card">
+              <div class="barchart-title" id="fi-suggestions-title">À semer davantage</div>
+              <ul id="fi-suggestions-list" class="fi-suggestions-list"></ul>
+              <p id="fi-suggestions-empty" class="muted hide"></p>
+            </div>
+
+            <p id="fi-excluded-note" class="muted"></p>
+            <p id="fi-estimate-hint" class="muted"></p>
+          </div>
         </div>
       </div>
 
@@ -1338,7 +1388,21 @@ const I18N = {
     stats_th_value: 'Valeur estimée',
     nav_food_independence: "Vers l'autonomie alimentaire",
     food_independence_h2: "Vers l'autonomie alimentaire",
-    food_independence_placeholder: 'À venir.',
+    fi_year_label: 'Année',
+    fi_no_profile_hint: "Renseigne au moins le nombre d'adultes du foyer dans l'onglet Profil pour voir ton autonomie.",
+    fi_hero_title: 'Autonomie globale',
+    fi_hero_subtitle_with_goal: "En {year}, par rapport à ton objectif de {goal}% d'autonomie.",
+    fi_hero_subtitle_no_goal: 'En {year}, par rapport à des repères de consommation approximatifs.',
+    fi_cat_vegetables: 'Légumes',
+    fi_cat_fruits: 'Fruits',
+    fi_cat_grains: 'Céréales / féculents',
+    fi_of: 'sur',
+    fi_goal_marker_title: 'Ton objectif : {pct}%',
+    fi_suggestions_title: 'À semer davantage',
+    fi_suggestion_prefix: 'Plus de',
+    fi_suggestions_empty: 'Tu es au niveau de ton objectif dans toutes les catégories, bravo !',
+    fi_excluded_prefix: "Récoltes non comptées ici (unité non convertible en kg) : ",
+    fi_estimate_hint: 'Estimation approximative — repères de consommation génériques, pas un calcul nutritionnel précis.',
     nav_crop_planning: 'Planification des cultures',
     crop_planning_h2: 'Planification des cultures',
     crop_planning_placeholder: 'À venir.',
@@ -1605,7 +1669,21 @@ const I18N = {
     stats_th_value: 'Estimated value',
     nav_food_independence: 'Toward food self-sufficiency',
     food_independence_h2: 'Toward food self-sufficiency',
-    food_independence_placeholder: 'Coming soon.',
+    fi_year_label: 'Year',
+    fi_no_profile_hint: 'Set at least the number of adults in your household in the Profile tab to see your self-sufficiency.',
+    fi_hero_title: 'Overall self-sufficiency',
+    fi_hero_subtitle_with_goal: 'In {year}, against your goal of {goal}% self-sufficiency.',
+    fi_hero_subtitle_no_goal: 'In {year}, against rough consumption reference amounts.',
+    fi_cat_vegetables: 'Vegetables',
+    fi_cat_fruits: 'Fruits',
+    fi_cat_grains: 'Grains / starches',
+    fi_of: 'of',
+    fi_goal_marker_title: 'Your goal: {pct}%',
+    fi_suggestions_title: 'Sow more of',
+    fi_suggestion_prefix: 'More',
+    fi_suggestions_empty: "You're at or above your goal in every category, well done!",
+    fi_excluded_prefix: "Harvests not counted here (unit not convertible to kg): ",
+    fi_estimate_hint: 'Rough estimate — generic consumption reference amounts, not a precise nutritional calculation.',
     nav_crop_planning: 'Crop planning',
     crop_planning_h2: 'Crop planning',
     crop_planning_placeholder: 'Coming soon.',
@@ -1842,7 +1920,9 @@ function applyI18n(){
   }
   setTxt('#nav-food-independence', t.nav_food_independence);
   setTxt('#food-independence-h2', t.food_independence_h2);
-  setTxt('#food-independence-placeholder', t.food_independence_placeholder);
+  setTxt('#label-fi-year', t.fi_year_label);
+  setTxt('#fi-hero-title', t.fi_hero_title);
+  setTxt('#fi-suggestions-title', t.fi_suggestions_title);
   setTxt('#nav-crop-planning', t.nav_crop_planning);
   setTxt('#crop-planning-h2', t.crop_planning_h2);
   setTxt('#label-cp-location', t.cp_location_label);
@@ -2264,6 +2344,7 @@ function applyI18n(){
       if (view === 'prices') loadPriceProductOptions();
       if (view === 'stats') refreshStatsView();
       if (view === 'crop-planning') refreshCropPlanningView();
+      if (view === 'food-independence') refreshFoodIndependenceView();
       if (view === 'profile') loadProfile();
     }
 
@@ -3560,6 +3641,173 @@ function applyI18n(){
       await loadCropPlanningData();
       populateCropPlanningLocations();
       renderCropPlanning();
+    }
+
+    // === Vue Vers l'autonomie alimentaire ===
+    const fiYearSel = document.getElementById('fi-year');
+    const fiNoProfileHint = document.getElementById('fi-no-profile-hint');
+    const fiDashboard = document.getElementById('fi-dashboard');
+    const fiHeroValue = document.getElementById('fi-hero-value');
+    const fiHeroSubtitle = document.getElementById('fi-hero-subtitle');
+    const fiCategories = document.getElementById('fi-categories');
+    const fiSuggestionsList = document.getElementById('fi-suggestions-list');
+    const fiSuggestionsEmpty = document.getElementById('fi-suggestions-empty');
+    const fiExcludedNote = document.getElementById('fi-excluded-note');
+    const fiEstimateHint = document.getElementById('fi-estimate-hint');
+
+    let fiHarvests = [];
+    let fiProducts = [];
+    let fiProfile = null;
+    let fiDataLoaded = false;
+
+    const FI_CATEGORIES = ['vegetables', 'fruits', 'grains'];
+    const FI_KG_UNITS = ['kg'];
+    // Rough per-adult yearly reference amounts (kg), loosely derived from PNNS-style
+    // dietary guidance — not lab-grade, just enough to gauge a rough %.
+    const FI_TARGET_PER_ADULT = { vegetables: 73, fruits: 55, grains: 73 };
+
+    function fiCategoryForProduct(product){
+      if (product.name === 'Potato') return 'grains'; // féculent, not counted as a vegetable here
+      if (product.type === 'Vegetable') return 'vegetables';
+      if (product.type === 'Fruit' || product.type === 'Fruit tree') return 'fruits';
+      if (product.type === 'Grain') return 'grains';
+      return null;
+    }
+
+    async function loadFoodIndependenceData(){
+      const [{ data: profileData }, { data: harvests }, { data: products }] = await Promise.all([
+        db.from('profiles').select('household_adults,household_children,diet,self_sufficiency_goal').eq('user_id', currentUserId).maybeSingle(),
+        db.from('harvests_view').select('*').limit(5000),
+        db.from('products').select('id,name,name_fr,type,unit_harvest')
+      ]);
+      fiProfile = profileData;
+      fiHarvests = harvests || [];
+      fiProducts = products || [];
+      fiDataLoaded = true;
+    }
+
+    function fiPopulateYearOptions(){
+      const years = new Set();
+      fiHarvests.forEach(h => { const y = (h.harvest_date || '').slice(0, 4); if (y) years.add(y); });
+      const sorted = [...years].sort().reverse();
+      const keep = fiYearSel.value;
+      fiYearSel.innerHTML = sorted.map(y => `<option value="${y}">${y}</option>`).join('');
+      fiYearSel.value = sorted.includes(keep) ? keep : (sorted[0] || '');
+    }
+
+    function fiComputeTargets(){
+      const adults = fiProfile?.household_adults || 0;
+      const children = fiProfile?.household_children || 0;
+      const diet = fiProfile?.diet;
+      const dietMultiplier = diet === 'vegan' ? 1.25 : diet === 'vegetarian' ? 1.15 : 1;
+      const personUnits = adults + children * 0.6; // children counted as ~60% of an adult's portion
+      const targets = {};
+      FI_CATEGORIES.forEach(cat => { targets[cat] = personUnits * FI_TARGET_PER_ADULT[cat] * dietMultiplier; });
+      return targets;
+    }
+
+    function fiComputeActuals(year){
+      const productById = {};
+      fiProducts.forEach(p => { productById[p.id] = p; });
+      const isFr = (curLang === 'fr');
+      const actuals = { vegetables: 0, fruits: 0, grains: 0 };
+      const excludedNames = new Set();
+      fiHarvests.forEach(h => {
+        if ((h.harvest_date || '').slice(0, 4) !== year) return;
+        const p = productById[h.product_id];
+        if (!p) return;
+        const cat = fiCategoryForProduct(p);
+        if (!cat) return;
+        const unit = (p.unit_harvest || '').toLowerCase();
+        if (!FI_KG_UNITS.includes(unit)){
+          excludedNames.add(isFr ? (h.product_name_fr || h.product_name) : h.product_name);
+          return;
+        }
+        actuals[cat] += Number(h.quantity) || 0;
+      });
+      return { actuals, excludedNames: [...excludedNames] };
+    }
+
+    function fiTier(pct){
+      if (pct >= 75) return 'good';
+      if (pct >= 40) return 'warning';
+      return 'critical';
+    }
+
+    function renderFoodIndependence(){
+      if (!fiDataLoaded) return;
+      const t = I18N[curLang] || I18N.fr;
+
+      if (!fiProfile || !fiProfile.household_adults){
+        fiNoProfileHint.textContent = t.fi_no_profile_hint;
+        fiNoProfileHint.classList.remove('hide');
+        fiDashboard.classList.add('hide');
+        return;
+      }
+      fiNoProfileHint.classList.add('hide');
+      fiDashboard.classList.remove('hide');
+
+      const year = fiYearSel.value;
+      const targets = fiComputeTargets();
+      const { actuals, excludedNames } = fiComputeActuals(year);
+      const goal = fiProfile.self_sufficiency_goal || null;
+      const catLabels = { vegetables: t.fi_cat_vegetables, fruits: t.fi_cat_fruits, grains: t.fi_cat_grains };
+
+      let totalTarget = 0, totalActual = 0;
+      fiCategories.innerHTML = FI_CATEGORIES.map(cat => {
+        const target = targets[cat];
+        const actual = actuals[cat];
+        const pct = target > 0 ? Math.round(actual / target * 100) : 0;
+        totalTarget += target; totalActual += actual;
+        const tier = fiTier(pct);
+        const fillPct = Math.min(pct, 100);
+        const goalMarker = goal ? `<div class="fi-meter-goal" style="left:${goal}%" title="${escapeHtml(t.fi_goal_marker_title.replace('{pct}', goal))}"></div>` : '';
+        return `
+          <div class="fi-cat-card">
+            <div class="fi-cat-name">${escapeHtml(catLabels[cat])}</div>
+            <div class="fi-cat-pct tier-${tier}">${pct}%</div>
+            <div class="fi-meter">
+              <div class="fi-meter-fill tier-${tier}" style="width:${fillPct}%"></div>
+              ${goalMarker}
+            </div>
+            <div class="fi-cat-detail">${Math.round(actual)} kg ${escapeHtml(t.fi_of)} ${Math.round(target)} kg</div>
+          </div>`;
+      }).join('');
+
+      const overallPct = totalTarget > 0 ? Math.round(totalActual / totalTarget * 100) : 0;
+      const overallTier = fiTier(overallPct);
+      fiHeroValue.textContent = `${overallPct}%`;
+      fiHeroValue.className = `fi-hero tier-${overallTier}`;
+      fiHeroSubtitle.textContent = goal
+        ? t.fi_hero_subtitle_with_goal.replace('{goal}', goal).replace('{year}', year)
+        : t.fi_hero_subtitle_no_goal.replace('{year}', year);
+
+      const under = FI_CATEGORIES.filter(cat => {
+        const target = targets[cat];
+        const pct = target > 0 ? (actuals[cat] / target * 100) : 0;
+        return pct < (goal || 100);
+      });
+      if (under.length){
+        fiSuggestionsEmpty.classList.add('hide');
+        fiSuggestionsList.innerHTML = under.map(cat => `<li>${escapeHtml(t.fi_suggestion_prefix)} ${escapeHtml(catLabels[cat])}</li>`).join('');
+      } else {
+        fiSuggestionsList.innerHTML = '';
+        fiSuggestionsEmpty.classList.remove('hide');
+        fiSuggestionsEmpty.textContent = t.fi_suggestions_empty;
+      }
+
+      fiExcludedNote.textContent = excludedNames.length
+        ? `${t.fi_excluded_prefix} ${excludedNames.join(', ')}`
+        : '';
+      fiEstimateHint.textContent = t.fi_estimate_hint;
+    }
+
+    fiYearSel.onchange = () => renderFoodIndependence();
+
+    async function refreshFoodIndependenceView(){
+      await loadFoodIndependenceData();
+      fiPopulateYearOptions();
+      renderFoodIndependence();
     }
 
     // === Vue Profil ===
