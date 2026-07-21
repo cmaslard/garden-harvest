@@ -614,15 +614,15 @@
               <input id="p-sow-indoor" type="number" step="0.5" min="0" />
             </div>
             <div>
-              <label id="label-p-sow-direct">Semis direct (semaines après le dernier gel)</label>
-              <input id="p-sow-direct" type="number" step="0.5" min="0" />
+              <label id="label-p-sow-direct">Semis direct (semaines / dernier gel, négatif = avant)</label>
+              <input id="p-sow-direct" type="number" step="0.5" />
             </div>
             <div>
-              <label id="label-p-transplant">Repiquage / plantation (semaines après le dernier gel)</label>
-              <input id="p-transplant" type="number" step="0.5" min="0" />
+              <label id="label-p-transplant">Repiquage (semaines / dernier gel, négatif = avant)</label>
+              <input id="p-transplant" type="number" step="0.5" />
             </div>
           </div>
-          <div class="row" style="margin-top:1rem">
+          <div class="row3" style="margin-top:1rem">
             <div>
               <label id="label-p-maturity-min">Jours jusqu'à maturité (min)</label>
               <input id="p-maturity-min" type="number" step="1" min="0" />
@@ -631,7 +631,25 @@
               <label id="label-p-maturity-max">Jours jusqu'à maturité (max)</label>
               <input id="p-maturity-max" type="number" step="1" min="0" />
             </div>
+            <div>
+              <label id="label-p-succession">Semis échelonnés (tous les X semaines)</label>
+              <input id="p-succession" type="number" step="0.5" min="0" />
+            </div>
           </div>
+
+          <h2 id="p-perennial-h2" style="font-size:1.1rem;margin:1.5rem 0 .75rem">Récolte à date fixe (plantes pérennes)</h2>
+          <p id="p-perennial-hint" class="muted">Pour les arbres fruitiers et vivaces : une période de récolte habituelle, indépendante des semis/gel. Si renseignée, elle remplace le calcul ci-dessus.</p>
+          <div class="row" style="margin-top:.75rem">
+            <div>
+              <label id="label-p-harvest-fixed-start">Début de récolte habituel</label>
+              <input id="p-harvest-fixed-start" type="date" />
+            </div>
+            <div>
+              <label id="label-p-harvest-fixed-end">Fin de récolte habituelle</label>
+              <input id="p-harvest-fixed-end" type="date" />
+            </div>
+          </div>
+
           <div class="row" style="margin-top:1rem">
             <div style="align-self:end; display:flex; gap:.5rem">
               <button id="p-save" class="btn-primary">Ajouter</button>
@@ -1224,10 +1242,15 @@ const I18N = {
     p_planning_h2: 'Calendrier de culture',
     p_planning_hint: "Optionnel — sert à calculer le calendrier de l'onglet « Planification des cultures » à partir des dates de gel du lieu.",
     p_sow_indoor_label: 'Semis intérieur (semaines avant le dernier gel)',
-    p_sow_direct_label: 'Semis direct (semaines après le dernier gel)',
-    p_transplant_label: 'Repiquage / plantation (semaines après le dernier gel)',
+    p_sow_direct_label: 'Semis direct (semaines / dernier gel, négatif = avant)',
+    p_transplant_label: 'Repiquage (semaines / dernier gel, négatif = avant)',
     p_maturity_min_label: "Jours jusqu'à maturité (min)",
     p_maturity_max_label: "Jours jusqu'à maturité (max)",
+    p_succession_label: 'Semis échelonnés (tous les X semaines)',
+    p_perennial_h2: 'Récolte à date fixe (plantes pérennes)',
+    p_perennial_hint: 'Pour les arbres fruitiers et vivaces : une période de récolte habituelle, indépendante des semis/gel. Si renseignée, elle remplace le calcul ci-dessus.',
+    p_harvest_fixed_start_label: 'Début de récolte habituel',
+    p_harvest_fixed_end_label: 'Fin de récolte habituelle',
     type_label: 'Type',
     type_vegetable: 'Légume',
     type_fruit: 'Fruit',
@@ -1331,6 +1354,7 @@ const I18N = {
     th_cp_sow: 'Semis',
     th_cp_plant: 'Plantation',
     th_cp_harvest: 'Récolte',
+    cp_cycle: 'semis',
     nav_locations: 'Lieux',
     locations_h2: 'Ajouter un lieu',
     locations_edit_h2: 'Modifier le lieu',
@@ -1485,10 +1509,15 @@ const I18N = {
     p_planning_h2: 'Growing calendar',
     p_planning_hint: 'Optional — used to compute the calendar in the "Crop planning" tab from the location\'s frost dates.',
     p_sow_indoor_label: 'Indoor sowing (weeks before last frost)',
-    p_sow_direct_label: 'Direct sowing (weeks after last frost)',
-    p_transplant_label: 'Transplanting (weeks after last frost)',
+    p_sow_direct_label: 'Direct sowing (weeks vs. last frost, negative = before)',
+    p_transplant_label: 'Transplanting (weeks vs. last frost, negative = before)',
     p_maturity_min_label: 'Days to maturity (min)',
     p_maturity_max_label: 'Days to maturity (max)',
+    p_succession_label: 'Succession sowing (every X weeks)',
+    p_perennial_h2: 'Fixed harvest window (perennials)',
+    p_perennial_hint: 'For fruit trees and perennials: a usual harvest period, independent of sowing/frost. If set, it overrides the calculation above.',
+    p_harvest_fixed_start_label: 'Usual harvest start',
+    p_harvest_fixed_end_label: 'Usual harvest end',
     type_label: 'Type',
     type_vegetable: 'Vegetable',
     type_fruit: 'Fruit',
@@ -1592,6 +1621,7 @@ const I18N = {
     th_cp_sow: 'Sowing',
     th_cp_plant: 'Transplanting',
     th_cp_harvest: 'Harvest',
+    cp_cycle: 'sowing',
     nav_locations: 'Locations',
     locations_h2: 'Add a location',
     locations_edit_h2: 'Edit location',
@@ -1769,6 +1799,11 @@ function applyI18n(){
   setTxt('#label-p-transplant', t.p_transplant_label);
   setTxt('#label-p-maturity-min', t.p_maturity_min_label);
   setTxt('#label-p-maturity-max', t.p_maturity_max_label);
+  setTxt('#label-p-succession', t.p_succession_label);
+  setTxt('#p-perennial-h2', t.p_perennial_h2);
+  setTxt('#p-perennial-hint', t.p_perennial_hint);
+  setTxt('#label-p-harvest-fixed-start', t.p_harvest_fixed_start_label);
+  setTxt('#label-p-harvest-fixed-end', t.p_harvest_fixed_end_label);
   setTxt('#th-p-name', t.th_p_name);
   setTxt('#th-p-variety', t.th_p_variety);
   setTxt('#th-p-latin', t.th_p_latin);
@@ -2265,6 +2300,9 @@ function applyI18n(){
     const pTransplant    = document.getElementById('p-transplant');
     const pMaturityMin   = document.getElementById('p-maturity-min');
     const pMaturityMax   = document.getElementById('p-maturity-max');
+    const pSuccession    = document.getElementById('p-succession');
+    const pHarvestFixedStart = document.getElementById('p-harvest-fixed-start');
+    const pHarvestFixedEnd   = document.getElementById('p-harvest-fixed-end');
     const pSaveBtn       = document.getElementById('p-save');
     const pCancelEditBtn = document.getElementById('p-cancel-edit');
     const pMsg           = document.getElementById('product-msg');
@@ -2330,6 +2368,9 @@ function applyI18n(){
       pTransplant.value = row.transplant_weeks_after_frost ?? '';
       pMaturityMin.value = row.days_to_maturity_min ?? '';
       pMaturityMax.value = row.days_to_maturity_max ?? '';
+      pSuccession.value = row.succession_interval_weeks ?? '';
+      pHarvestFixedStart.value = row.harvest_fixed_start || '';
+      pHarvestFixedEnd.value = row.harvest_fixed_end || '';
       pMsg.textContent = '';
       renderProductFormMode();
       document.getElementById('product-form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2343,6 +2384,7 @@ function applyI18n(){
       pLatin.value = '';
       pSowIndoor.value = ''; pSowDirect.value = ''; pTransplant.value = '';
       pMaturityMin.value = ''; pMaturityMax.value = '';
+      pSuccession.value = ''; pHarvestFixedStart.value = ''; pHarvestFixedEnd.value = '';
       selPType.value = 'Fruit';
       pMsg.textContent = '';
       renderProductFormMode();
@@ -2375,7 +2417,7 @@ function applyI18n(){
       const { data, error } = await db.from('products')
         .select('id,name,name_fr,type,variety,variety_fr,unit_harvest,unit_harvest_fr,latin_name,' +
           'sow_indoor_weeks_before_frost,sow_direct_weeks_after_frost,transplant_weeks_after_frost,' +
-          'days_to_maturity_min,days_to_maturity_max')
+          'days_to_maturity_min,days_to_maturity_max,succession_interval_weeks,harvest_fixed_start,harvest_fixed_end')
         .order('name');
       if (error){
         productsListMsg.textContent = (window.__i18n_products_err_hint2||'Erreur produits : ') + error.message;
@@ -2456,7 +2498,10 @@ function applyI18n(){
         sow_direct_weeks_after_frost: numOrNull(pSowDirect.value),
         transplant_weeks_after_frost: numOrNull(pTransplant.value),
         days_to_maturity_min: numOrNull(pMaturityMin.value),
-        days_to_maturity_max: numOrNull(pMaturityMax.value)
+        days_to_maturity_max: numOrNull(pMaturityMax.value),
+        succession_interval_weeks: numOrNull(pSuccession.value),
+        harvest_fixed_start: pHarvestFixedStart.value || null,
+        harvest_fixed_end: pHarvestFixedEnd.value || null
       };
 
       const { error } = editingProductId
@@ -2475,6 +2520,7 @@ function applyI18n(){
       else {
         pName.value=''; pNameFr.value=''; pVariety.value=''; pVarietyFr.value=''; pUnit.value=''; pUnitFr.value=''; pLatin.value='';
         pSowIndoor.value=''; pSowDirect.value=''; pTransplant.value=''; pMaturityMin.value=''; pMaturityMax.value='';
+        pSuccession.value=''; pHarvestFixedStart.value=''; pHarvestFixedEnd.value='';
       }
 
       await Promise.all([refreshProductsList(), loadProducts()]);
@@ -3316,7 +3362,7 @@ function applyI18n(){
         db.from('locations').select('id,name,name_fr,last_spring_frost,first_fall_frost').order('name'),
         db.from('products').select('id,name,name_fr,variety,variety_fr,' +
           'sow_indoor_weeks_before_frost,sow_direct_weeks_after_frost,transplant_weeks_after_frost,' +
-          'days_to_maturity_min,days_to_maturity_max').order('name')
+          'days_to_maturity_min,days_to_maturity_max,succession_interval_weeks,harvest_fixed_start,harvest_fixed_end').order('name')
       ]);
       cpLocations = locs || [];
       cpProducts = prods || [];
@@ -3336,12 +3382,9 @@ function applyI18n(){
       else if (favoriteLocationId && sorted.some(l => String(l.id) === String(favoriteLocationId))) cpLocationSel.value = String(favoriteLocationId);
     }
 
-    function cpComputeProductWindows(product, frostLoc){
-      const lastFrost = cpParseDate(frostLoc.last_spring_frost);
-      const lastFrostDoy = cpDayOfYear(lastFrost.month, lastFrost.day);
-
-      const windows = { sow: null, plant: null, harvest: null };
-
+    // Builds one round's { sow, plant, harvest } windows, offsetting every
+    // anchor by extraDays (used to generate successive succession rounds).
+    function cpBuildRound(product, lastFrostDoy, extraDays){
       const sowIndoorWeeks = product.sow_indoor_weeks_before_frost;
       const sowDirectWeeks = product.sow_direct_weeks_after_frost;
       const transplantWeeks = product.transplant_weeks_after_frost;
@@ -3349,23 +3392,66 @@ function applyI18n(){
       const matMax = product.days_to_maturity_max;
 
       let sowRaw = null;
-      if (sowIndoorWeeks != null){ sowRaw = lastFrostDoy - sowIndoorWeeks * 7; }
-      else if (sowDirectWeeks != null){ sowRaw = lastFrostDoy + sowDirectWeeks * 7; }
-      if (sowRaw != null) windows.sow = { start: sowRaw, end: sowRaw + 3 }; // ~3-day sowing window
+      if (sowIndoorWeeks != null){ sowRaw = lastFrostDoy - sowIndoorWeeks * 7 + extraDays; }
+      else if (sowDirectWeeks != null){ sowRaw = lastFrostDoy + sowDirectWeeks * 7 + extraDays; }
 
       let plantRaw = null;
-      if (transplantWeeks != null){ plantRaw = lastFrostDoy + transplantWeeks * 7; }
-      else if (sowDirectWeeks != null){ plantRaw = lastFrostDoy + sowDirectWeeks * 7; }
-      if (plantRaw != null) windows.plant = { start: plantRaw, end: plantRaw + 3 };
+      if (transplantWeeks != null){ plantRaw = lastFrostDoy + transplantWeeks * 7 + extraDays; }
+      else if (sowDirectWeeks != null){ plantRaw = lastFrostDoy + sowDirectWeeks * 7 + extraDays; }
 
       const referenceRaw = plantRaw != null ? plantRaw : sowRaw;
+      let harvest = null;
       if (referenceRaw != null && (matMin != null || matMax != null)){
         const min = matMin != null ? matMin : matMax;
         const max = matMax != null ? matMax : matMin;
-        windows.harvest = { start: referenceRaw + min, end: referenceRaw + max };
+        harvest = { start: referenceRaw + min, end: referenceRaw + max };
       }
 
-      return windows;
+      return {
+        sow: sowRaw != null ? { start: sowRaw, end: sowRaw + 3 } : null,
+        plant: plantRaw != null ? { start: plantRaw, end: plantRaw + 3 } : null,
+        harvest
+      };
+    }
+
+    function cpComputeProductWindows(product, frostLoc){
+      // Perennials / fruit trees: a fixed habitual harvest window, independent
+      // of any spring-frost offset — overrides everything else when set.
+      if (product.harvest_fixed_start && product.harvest_fixed_end){
+        const hs = cpParseDate(product.harvest_fixed_start);
+        const he = cpParseDate(product.harvest_fixed_end);
+        const hsDoy = cpDayOfYear(hs.month, hs.day);
+        let heDoy = cpDayOfYear(he.month, he.day);
+        if (heDoy < hsDoy) heDoy += 365; // wraps the year boundary (e.g. Nov -> Feb)
+        return { rounds: [{ sow: null, plant: null, harvest: { start: hsDoy, end: heDoy } }] };
+      }
+
+      const lastFrost = cpParseDate(frostLoc.last_spring_frost);
+      const lastFrostDoy = cpDayOfYear(lastFrost.month, lastFrost.day);
+
+      const intervalDays = product.succession_interval_weeks ? product.succession_interval_weeks * 7 : null;
+      if (!intervalDays){
+        return { rounds: [cpBuildRound(product, lastFrostDoy, 0)] };
+      }
+
+      // Succession sowing: repeat every intervalDays until the harvest would
+      // start after the location's first fall frost.
+      let firstFallFrostRaw = null;
+      if (frostLoc.first_fall_frost){
+        const ff = cpParseDate(frostLoc.first_fall_frost);
+        let ffDoy = cpDayOfYear(ff.month, ff.day);
+        if (ffDoy < lastFrostDoy) ffDoy += 365;
+        firstFallFrostRaw = ffDoy;
+      }
+
+      const rounds = [];
+      for (let i = 0; i < 26; i++){ // safety cap
+        const round = cpBuildRound(product, lastFrostDoy, i * intervalDays);
+        if (firstFallFrostRaw != null && round.harvest && round.harvest.start > firstFallFrostRaw) break;
+        rounds.push(round);
+        if (firstFallFrostRaw == null) break; // no fall frost known: can't bound successions, show just the first round
+      }
+      return { rounds: rounds.length ? rounds : [cpBuildRound(product, lastFrostDoy, 0)] };
     }
 
     function cpRenderTooltipText(win, isFr){
@@ -3394,8 +3480,8 @@ function applyI18n(){
       const rows = cpProducts.map(p => ({
         product: p,
         label: `${isFr ? (p.name_fr || p.name) : p.name}${p.variety ? ' — ' + (isFr ? (p.variety_fr || p.variety) : p.variety) : ''}`,
-        windows: cpComputeProductWindows(p, loc)
-      })).filter(r => r.windows.sow || r.windows.plant || r.windows.harvest);
+        rounds: cpComputeProductWindows(p, loc).rounds
+      })).filter(r => r.rounds.some(w => w.sow || w.plant || w.harvest));
 
       if (!rows.length){
         cpChartContainer.innerHTML = '';
@@ -3426,9 +3512,11 @@ function applyI18n(){
         <div class="cp-row">
           <div class="cp-row-label" title="${escapeHtml(r.label)}">${escapeHtml(r.label)}</div>
           <div class="cp-track">
-            ${barsFor(r.windows.sow, 'cp-sow', t.cp_legend_sow)}
-            ${barsFor(r.windows.plant, 'cp-plant', t.cp_legend_plant)}
-            ${barsFor(r.windows.harvest, 'cp-harvest', t.cp_legend_harvest)}
+            ${r.rounds.map(w => `
+              ${barsFor(w.sow, 'cp-sow', t.cp_legend_sow)}
+              ${barsFor(w.plant, 'cp-plant', t.cp_legend_plant)}
+              ${barsFor(w.harvest, 'cp-harvest', t.cp_legend_harvest)}
+            `).join('')}
           </div>
         </div>`).join('');
 
@@ -3440,13 +3528,16 @@ function applyI18n(){
           </div>
         </div>`;
 
-      cpTableRows.innerHTML = rows.map(r => `
-        <tr>
-          <td>${escapeHtml(r.label)}</td>
-          <td>${r.windows.sow ? escapeHtml(cpRenderTooltipText(r.windows.sow, isFr)) : '–'}</td>
-          <td>${r.windows.plant ? escapeHtml(cpRenderTooltipText(r.windows.plant, isFr)) : '–'}</td>
-          <td>${r.windows.harvest ? escapeHtml(cpRenderTooltipText(r.windows.harvest, isFr)) : '–'}</td>
-        </tr>`).join('');
+      cpTableRows.innerHTML = rows.flatMap(r => r.rounds.map((w, i) => {
+        const label = r.rounds.length > 1 ? `${r.label} (${t.cp_cycle} ${i + 1})` : r.label;
+        return `
+          <tr>
+            <td>${escapeHtml(label)}</td>
+            <td>${w.sow ? escapeHtml(cpRenderTooltipText(w.sow, isFr)) : '–'}</td>
+            <td>${w.plant ? escapeHtml(cpRenderTooltipText(w.plant, isFr)) : '–'}</td>
+            <td>${w.harvest ? escapeHtml(cpRenderTooltipText(w.harvest, isFr)) : '–'}</td>
+          </tr>`;
+      })).join('');
     }
 
     // Tap-to-show tooltip (mobile — hover/focus alone isn't reliable on touch)
