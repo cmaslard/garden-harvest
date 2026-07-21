@@ -320,8 +320,8 @@
     }
 
     /* ===== Planification des cultures — frise ===== */
-    :root{ --cp-harvest:#fbbf24; --status-critical:#f87171; }
-    html[data-theme="light"]{ --cp-harvest:#d97706; --status-critical:#dc2626; }
+    :root{ --cp-harvest:#fbbf24; --status-critical:#f87171; --frozen:#67e8f9; }
+    html[data-theme="light"]{ --cp-harvest:#d97706; --status-critical:#dc2626; --frozen:#0891b2; }
 
     .cp-legend{ display:flex; gap:18px; flex-wrap:wrap; margin-bottom:16px; font-size:.82rem; color:var(--muted); }
     .cp-legend-item{ display:flex; align-items:center; gap:6px; }
@@ -406,15 +406,15 @@
     .fi-monthly-bars{ display:flex; align-items:flex-end; gap:4px; height:56px; }
     .fi-monthly-bar-col{ flex:1 1 0; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; position:relative; }
     .fi-monthly-bar-stack{ width:100%; max-width:22px; display:flex; flex-direction:column; border-radius:3px 3px 1px 1px; overflow:hidden; cursor:pointer; min-height:2px; }
-    .fi-monthly-bar-seg.seg-fresh{ opacity:1; }
-    .fi-monthly-bar-seg.seg-stored{ opacity:.5; }
-    .fi-monthly-bar-seg.tier-good{ background:var(--accent); }
-    .fi-monthly-bar-seg.tier-warning{ background:var(--cp-harvest); }
-    .fi-monthly-bar-seg.tier-critical{ background:var(--status-critical); }
-    .fi-monthly-legend{ display:flex; gap:16px; margin-bottom:12px; font-size:.78rem; color:var(--muted); }
+    .fi-monthly-bar-seg.seg-fresh{ background:var(--accent); }
+    .fi-monthly-bar-seg.seg-cellar{ background:var(--primary); }
+    .fi-monthly-bar-seg.seg-frozen{ background:var(--frozen); }
+    .fi-monthly-legend{ display:flex; gap:16px; flex-wrap:wrap; margin-bottom:12px; font-size:.78rem; color:var(--muted); }
     .fi-monthly-legend-item{ display:flex; align-items:center; gap:6px; }
-    .fi-monthly-legend-swatch{ width:10px; height:10px; border-radius:3px; background:var(--accent); }
-    .fi-monthly-legend-swatch.stored{ opacity:.5; }
+    .fi-monthly-legend-swatch{ width:10px; height:10px; border-radius:3px; }
+    .fi-monthly-legend-swatch.fresh{ background:var(--accent); }
+    .fi-monthly-legend-swatch.cellar{ background:var(--primary); }
+    .fi-monthly-legend-swatch.frozen{ background:var(--frozen); }
     .fi-monthly-bar-label{ font-size:.6rem; color:var(--muted); margin-top:4px; }
     .fi-monthly-bar-tooltip{
       position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
@@ -1055,8 +1055,9 @@
               <div class="barchart-title" id="fi-monthly-title">Couverture mensuelle (avec conservation)</div>
               <p class="barchart-subtitle" id="fi-monthly-subtitle">Stock disponible chaque mois (récoltes + conservation) par rapport au besoin de ce mois</p>
               <div class="fi-monthly-legend">
-                <span class="fi-monthly-legend-item"><i class="fi-monthly-legend-swatch"></i><span id="fi-legend-fresh">Frais</span></span>
-                <span class="fi-monthly-legend-item"><i class="fi-monthly-legend-swatch stored"></i><span id="fi-legend-stored">Conservé (cave/congélateur)</span></span>
+                <span class="fi-monthly-legend-item"><i class="fi-monthly-legend-swatch fresh"></i><span id="fi-legend-fresh">Frais</span></span>
+                <span class="fi-monthly-legend-item"><i class="fi-monthly-legend-swatch cellar"></i><span id="fi-legend-cellar">Cave</span></span>
+                <span class="fi-monthly-legend-item"><i class="fi-monthly-legend-swatch frozen"></i><span id="fi-legend-frozen">Congélateur</span></span>
               </div>
               <div id="fi-monthly-container" class="fi-monthly-container"></div>
             </div>
@@ -1478,9 +1479,11 @@ const I18N = {
     fi_monthly_title: 'Couverture mensuelle (avec conservation)',
     fi_monthly_subtitle: 'Stock disponible chaque mois (récoltes + conservation) par rapport au besoin de ce mois',
     fi_legend_fresh: 'Frais',
-    fi_legend_stored: 'Conservé (cave/congélateur)',
+    fi_legend_cellar: 'Cave',
+    fi_legend_frozen: 'Congélateur',
     fi_fresh: 'frais',
-    fi_stored: 'conservé',
+    fi_cellar: 'cave',
+    fi_frozen: 'congélateur',
     nav_crop_planning: 'Planification des cultures',
     crop_planning_h2: 'Planification des cultures',
     crop_planning_placeholder: 'À venir.',
@@ -1773,9 +1776,11 @@ const I18N = {
     fi_monthly_title: 'Monthly coverage (with storage)',
     fi_monthly_subtitle: 'Stock available each month (harvests + storage) against that month\'s need',
     fi_legend_fresh: 'Fresh',
-    fi_legend_stored: 'Stored (cellar/freezer)',
+    fi_legend_cellar: 'Cellar',
+    fi_legend_frozen: 'Freezer',
     fi_fresh: 'fresh',
-    fi_stored: 'stored',
+    fi_cellar: 'cellar',
+    fi_frozen: 'frozen',
     nav_crop_planning: 'Crop planning',
     crop_planning_h2: 'Crop planning',
     crop_planning_placeholder: 'Coming soon.',
@@ -2025,7 +2030,8 @@ function applyI18n(){
   setTxt('#fi-monthly-title', t.fi_monthly_title);
   setTxt('#fi-monthly-subtitle', t.fi_monthly_subtitle);
   setTxt('#fi-legend-fresh', t.fi_legend_fresh);
-  setTxt('#fi-legend-stored', t.fi_legend_stored);
+  setTxt('#fi-legend-cellar', t.fi_legend_cellar);
+  setTxt('#fi-legend-frozen', t.fi_legend_frozen);
   setTxt('#nav-crop-planning', t.nav_crop_planning);
   setTxt('#crop-planning-h2', t.crop_planning_h2);
   setTxt('#label-cp-location', t.cp_location_label);
@@ -3875,16 +3881,28 @@ function applyI18n(){
     // product's base conservation window) and "stored" (only available thanks
     // to cave/freezer — whichever the profile unlocks and gives the longest
     // extension for that product; left blank on a product = not applicable).
-    function fiComputeMonthlyAvailability(year, locationId){
+    // Simulates a real pantry: each month, need is met from fresh harvest
+    // first, then cellar stock, then frozen stock (capped at the month's
+    // share of the yearly target — you don't "eat" more than you need).
+    // Whatever isn't consumed carries forward as stock for later months,
+    // until its conservation window (fresh/cellar/frozen, whichever unlocked
+    // method lasts longest) runs out — including rolling into January.
+    function fiComputeMonthlyAvailability(year, locationId, targets){
       const productById = {};
       fiProducts.forEach(p => { productById[p.id] = p; });
-      const monthly = {};
-      FI_CATEGORIES.forEach(cat => { monthly[cat] = Array.from({ length: 12 }, () => ({ fresh: 0, stored: 0 })); });
 
       const hasCellar = !!fiProfile?.has_cellar;
       const hasFreezer = !!fiProfile?.has_freezer;
+      const yearNum = Number(year);
 
-      fiFilteredHarvests(year, locationId).forEach(h => {
+      // Also pull in the prior year's harvests (as pure carryover seed stock,
+      // not displayed) so long-lasting stock picked late last year can still
+      // roll into this January and beyond, instead of resetting every Jan 1.
+      const batchesByCat = { vegetables: [], fruits: [], grains: [] };
+      fiHarvests.forEach(h => {
+        const hy = Number((h.harvest_date || '').slice(0, 4));
+        if (hy !== yearNum && hy !== yearNum - 1) return;
+        if (locationId && String(h.location_id) !== locationId) return;
         const p = productById[h.product_id];
         if (!p) return;
         const cat = fiCategoryForProduct(p);
@@ -3896,25 +3914,75 @@ function applyI18n(){
 
         const freshDays = p.conservation_days != null ? p.conservation_days : FI_DEFAULT_CONSERVATION_DAYS;
         let extendedDays = freshDays;
-        if (hasCellar && p.conservation_days_cellar != null) extendedDays = Math.max(extendedDays, p.conservation_days_cellar);
-        if (hasFreezer && p.conservation_days_frozen != null) extendedDays = Math.max(extendedDays, p.conservation_days_frozen);
+        let source = null;
+        if (hasCellar && p.conservation_days_cellar != null && p.conservation_days_cellar > extendedDays){
+          extendedDays = p.conservation_days_cellar; source = 'cellar';
+        }
+        if (hasFreezer && p.conservation_days_frozen != null && p.conservation_days_frozen > extendedDays){
+          extendedDays = p.conservation_days_frozen; source = 'frozen';
+        }
 
-        const [hy, hm, hd] = h.harvest_date.split('-').map(Number);
-        const start = new Date(hy, hm - 1, hd);
-        const freshEnd = new Date(hy, hm - 1, hd + freshDays);
-        const extendedEnd = new Date(hy, hm - 1, hd + extendedDays);
+        const [, hm, hd] = h.harvest_date.split('-').map(Number);
+        // Continuous 2-year scale: prior year = days 1-365, selected year = 366-730.
+        const harvestDoy = (hy === yearNum ? 365 : 0) + cpDayOfYear(hm - 1, hd);
+        batchesByCat[cat].push({
+          harvestDoy, qty,
+          freshEndDoy: harvestDoy + freshDays,
+          extendedEndDoy: harvestDoy + extendedDays,
+          source
+        });
+      });
+      FI_CATEGORIES.forEach(cat => batchesByCat[cat].sort((a, b) => a.harvestDoy - b.harvestDoy));
 
-        for (let m = 0; m < 12; m++){
-          const monthStart = new Date(hy, m, 1);
-          const monthEnd = new Date(hy, m + 1, 0);
-          if (extendedEnd < monthStart || start > monthEnd) continue; // no overlap
-          // "Fresh" as soon as any part of the month is still within the fresh
-          // window; only counts as "stored" once the whole month is past it
-          // (i.e. only the storage extension is keeping it available).
-          if (monthStart > freshEnd) monthly[cat][m].stored += qty;
-          else monthly[cat][m].fresh += qty;
+      const monthly = {};
+      FI_CATEGORIES.forEach(cat => { monthly[cat] = Array.from({ length: 12 }, () => ({ fresh: 0, cellar: 0, frozen: 0 })); });
+
+      function consumeFIFO(list, amount){
+        let remaining = amount;
+        for (const b of list){
+          if (remaining <= 0.0001) break;
+          const take = Math.min(b.qty, remaining);
+          b.qty -= take;
+          remaining -= take;
+        }
+      }
+
+      FI_CATEGORIES.forEach(cat => {
+        const batches = batchesByCat[cat];
+        const monthlyTarget = targets[cat] / 12;
+        // Simulate 24 months (prior year seeds carryover stock) but only
+        // record the selected year's months (the second 12).
+        for (let m = 0; m < 24; m++){
+          const yearOffset = m >= 12 ? 365 : 0;
+          const monthStartDoy = yearOffset + CP_MONTH_CUM_DAYS[m % 12] + 1;
+          const monthEndDoy = yearOffset + CP_MONTH_CUM_DAYS[(m % 12) + 1];
+
+          const freshBatches = [], cellarBatches = [], frozenBatches = [];
+          for (const b of batches){
+            if (b.qty <= 0) continue;
+            if (b.extendedEndDoy < monthStartDoy || b.harvestDoy > monthEndDoy) continue; // not harvested yet or fully expired
+            if (monthStartDoy > b.freshEndDoy) (b.source === 'frozen' ? frozenBatches : cellarBatches).push(b);
+            else freshBatches.push(b);
+          }
+          const freshAvail = freshBatches.reduce((s, b) => s + b.qty, 0);
+          const cellarAvail = cellarBatches.reduce((s, b) => s + b.qty, 0);
+          const frozenAvail = frozenBatches.reduce((s, b) => s + b.qty, 0);
+
+          const consumedFresh = Math.min(freshAvail, monthlyTarget);
+          const consumedCellar = Math.min(cellarAvail, monthlyTarget - consumedFresh);
+          const consumedFrozen = Math.min(frozenAvail, monthlyTarget - consumedFresh - consumedCellar);
+          if (m >= 12){
+            monthly[cat][m - 12].fresh = consumedFresh;
+            monthly[cat][m - 12].cellar = consumedCellar;
+            monthly[cat][m - 12].frozen = consumedFrozen;
+          }
+
+          consumeFIFO(freshBatches, consumedFresh);
+          consumeFIFO(cellarBatches, consumedCellar);
+          consumeFIFO(frozenBatches, consumedFrozen);
         }
       });
+
       return monthly;
     }
 
@@ -3927,7 +3995,7 @@ function applyI18n(){
     function renderFiMonthly(year, locationId, targets){
       const isFr = (curLang === 'fr');
       const t = I18N[curLang] || I18N.fr;
-      const monthly = fiComputeMonthlyAvailability(year, locationId);
+      const monthly = fiComputeMonthlyAvailability(year, locationId, targets);
       const monthLabels = isFr
         ? ['J','F','M','A','M','J','J','A','S','O','N','D']
         : ['J','F','M','A','M','J','J','A','S','O','N','D'];
@@ -3940,19 +4008,21 @@ function applyI18n(){
       fiMonthlyContainer.innerHTML = FI_CATEGORIES.map(cat => {
         const monthlyTarget = targets[cat] / 12;
         const barsHtml = monthly[cat].map((m, i) => {
-          const totalKg = m.fresh + m.stored;
+          const totalKg = m.fresh + m.cellar + m.frozen;
           const pct = monthlyTarget > 0 ? Math.round(totalKg / monthlyTarget * 100) : 0;
-          const tier = fiTier(pct);
           const heightPct = Math.max(Math.min(pct, 100), pct > 0 ? 3 : 0);
-          const valueText = m.stored > 0
-            ? `${numFmt.format(m.fresh)} kg ${t.fi_fresh} + ${numFmt.format(m.stored)} kg ${t.fi_stored}`
-            : `${numFmt.format(m.fresh)} kg ${t.fi_fresh}`;
+          const parts = [];
+          if (m.fresh > 0) parts.push(`${numFmt.format(m.fresh)} kg ${t.fi_fresh}`);
+          if (m.cellar > 0) parts.push(`${numFmt.format(m.cellar)} kg ${t.fi_cellar}`);
+          if (m.frozen > 0) parts.push(`${numFmt.format(m.frozen)} kg ${t.fi_frozen}`);
+          const valueText = parts.length ? parts.join(' + ') : `0 kg`;
           return `
             <div class="fi-monthly-bar-col" tabindex="0">
               <div class="fi-monthly-bar-tooltip"><span class="tt-value">${escapeHtml(valueText)} (${pct}%)</span><br/><span class="tt-label">${escapeHtml(monthNames[i])}</span></div>
               <div class="fi-monthly-bar-stack" style="height:${heightPct}%">
-                ${m.stored > 0 ? `<div class="fi-monthly-bar-seg tier-${tier} seg-stored" style="flex:${m.stored}"></div>` : ''}
-                ${m.fresh > 0 ? `<div class="fi-monthly-bar-seg tier-${tier} seg-fresh" style="flex:${m.fresh}"></div>` : ''}
+                ${m.frozen > 0 ? `<div class="fi-monthly-bar-seg seg-frozen" style="flex:${m.frozen}"></div>` : ''}
+                ${m.cellar > 0 ? `<div class="fi-monthly-bar-seg seg-cellar" style="flex:${m.cellar}"></div>` : ''}
+                ${m.fresh > 0 ? `<div class="fi-monthly-bar-seg seg-fresh" style="flex:${m.fresh}"></div>` : ''}
               </div>
               <span class="fi-monthly-bar-label">${monthLabels[i]}</span>
             </div>`;
