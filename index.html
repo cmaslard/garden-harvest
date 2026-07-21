@@ -85,6 +85,10 @@
       background:var(--bg);
       border-bottom:1px solid var(--border);
     }
+    #main-nav, .mobile-nav-select{
+      position:sticky; top:var(--topbar-h, 56px); z-index:40;
+      background:var(--bg);
+    }
     .topbar .wrap{
       max-width:1000px; margin:0 auto;
       display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -320,8 +324,8 @@
     }
 
     /* ===== Planification des cultures — frise ===== */
-    :root{ --cp-harvest:#fbbf24; --status-critical:#f87171; --frozen:#67e8f9; }
-    html[data-theme="light"]{ --cp-harvest:#d97706; --status-critical:#dc2626; --frozen:#0891b2; }
+    :root{ --cp-harvest:#fbbf24; --status-critical:#f87171; --cellar:#f0a868; --frozen:#c4b5fd; }
+    html[data-theme="light"]{ --cp-harvest:#d97706; --status-critical:#dc2626; --cellar:#c2703d; --frozen:#7c3aed; }
 
     .cp-legend{ display:flex; gap:18px; flex-wrap:wrap; margin-bottom:16px; font-size:.82rem; color:var(--muted); }
     .cp-legend-item{ display:flex; align-items:center; gap:6px; }
@@ -407,13 +411,13 @@
     .fi-monthly-bar-col{ flex:1 1 0; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; position:relative; }
     .fi-monthly-bar-stack{ width:100%; max-width:22px; display:flex; flex-direction:column; border-radius:3px 3px 1px 1px; overflow:hidden; cursor:pointer; min-height:2px; }
     .fi-monthly-bar-seg.seg-fresh{ background:var(--accent); }
-    .fi-monthly-bar-seg.seg-cellar{ background:var(--primary); }
+    .fi-monthly-bar-seg.seg-cellar{ background:var(--cellar); }
     .fi-monthly-bar-seg.seg-frozen{ background:var(--frozen); }
     .fi-monthly-legend{ display:flex; gap:16px; flex-wrap:wrap; margin-bottom:12px; font-size:.78rem; color:var(--muted); }
     .fi-monthly-legend-item{ display:flex; align-items:center; gap:6px; }
     .fi-monthly-legend-swatch{ width:10px; height:10px; border-radius:3px; }
     .fi-monthly-legend-swatch.fresh{ background:var(--accent); }
-    .fi-monthly-legend-swatch.cellar{ background:var(--primary); }
+    .fi-monthly-legend-swatch.cellar{ background:var(--cellar); }
     .fi-monthly-legend-swatch.frozen{ background:var(--frozen); }
     .fi-monthly-bar-label{ font-size:.6rem; color:var(--muted); margin-top:4px; }
     .fi-monthly-bar-tooltip{
@@ -2257,6 +2261,16 @@ function applyI18n(){
     }
 
     initTheme();
+
+    // Keeps the tab menu stuck right below the header, whatever the
+    // header's actual height is on this screen (mobile vs desktop layouts
+    // differ), instead of a hardcoded offset that would drift out of sync.
+    function updateTopbarHeightVar(){
+      const topbar = document.querySelector('.topbar');
+      if (topbar) document.documentElement.style.setProperty('--topbar-h', topbar.offsetHeight + 'px');
+    }
+    updateTopbarHeightVar();
+    window.addEventListener('resize', updateTopbarHeightVar);
 
     const themeBtn = document.getElementById('theme-toggle');
     themeBtn.addEventListener('click', () => {
