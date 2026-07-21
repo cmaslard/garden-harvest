@@ -400,6 +400,28 @@
 
     .fi-suggestions-list{ margin:0; padding-left:1.2rem; }
     .fi-suggestions-list li{ margin-bottom:4px; }
+
+    .fi-monthly-cat{ margin-bottom:20px; }
+    .fi-monthly-cat:last-child{ margin-bottom:0; }
+    .fi-monthly-cat-name{ font-weight:600; font-size:.85rem; margin-bottom:8px; }
+    .fi-monthly-bars{ display:flex; align-items:flex-end; gap:4px; height:56px; }
+    .fi-monthly-bar-col{ flex:1 1 0; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; position:relative; }
+    .fi-monthly-bar{ width:100%; max-width:22px; border-radius:3px 3px 1px 1px; min-height:2px; cursor:pointer; }
+    .fi-monthly-bar.tier-good{ background:var(--accent); }
+    .fi-monthly-bar.tier-warning{ background:var(--cp-harvest); }
+    .fi-monthly-bar.tier-critical{ background:var(--status-critical); }
+    .fi-monthly-bar-label{ font-size:.6rem; color:var(--muted); margin-top:4px; }
+    .fi-monthly-bar-tooltip{
+      position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
+      background:var(--card); border:1px solid var(--border); border-radius:10px;
+      padding:6px 10px; font-size:.78rem; white-space:nowrap;
+      box-shadow:0 6px 16px rgba(0,0,0,.18);
+      opacity:0; pointer-events:none; transition:opacity .12s ease; z-index:5;
+    }
+    .fi-monthly-bar-col:hover .fi-monthly-bar-tooltip,
+    .fi-monthly-bar-col:focus-within .fi-monthly-bar-tooltip,
+    .fi-monthly-bar-col.tapped .fi-monthly-bar-tooltip{ opacity:1; }
+    .fi-monthly-container{ padding-top:44px; }
   </style>
 </head>
 
@@ -671,6 +693,15 @@
             <div>
               <label id="label-p-harvest-fixed-end">Fin de récolte habituelle</label>
               <input id="p-harvest-fixed-end" type="date" />
+            </div>
+          </div>
+
+          <h2 id="p-conservation-h2" style="font-size:1.1rem;margin:1.5rem 0 .75rem">Conservation après récolte</h2>
+          <p id="p-conservation-hint" class="muted">Sert à savoir combien de temps une récolte reste disponible (onglet Autonomie alimentaire). Laissé vide = ~14 jours (frais) par défaut.</p>
+          <div class="row" style="margin-top:.75rem">
+            <div>
+              <label id="label-p-conservation">Durée de conservation (jours)</label>
+              <input id="p-conservation" type="number" step="1" min="0" placeholder="14" />
             </div>
           </div>
 
@@ -990,6 +1021,10 @@
               <label id="label-fi-year">Année</label>
               <select id="fi-year"></select>
             </div>
+            <div class="field">
+              <label id="label-fi-location">Lieu</label>
+              <select id="fi-location"></select>
+            </div>
           </div>
           <p id="fi-no-profile-hint" class="muted hide"></p>
 
@@ -1001,6 +1036,12 @@
             </div>
 
             <div class="fi-categories" id="fi-categories"></div>
+
+            <div class="glass-card">
+              <div class="barchart-title" id="fi-monthly-title">Couverture mensuelle (avec conservation)</div>
+              <p class="barchart-subtitle" id="fi-monthly-subtitle">Stock disponible chaque mois (récoltes + conservation) par rapport au besoin de ce mois</p>
+              <div id="fi-monthly-container" class="fi-monthly-container"></div>
+            </div>
 
             <div class="glass-card">
               <div class="barchart-title" id="fi-suggestions-title">À semer davantage</div>
@@ -1301,6 +1342,9 @@ const I18N = {
     p_perennial_hint: 'Pour les arbres fruitiers et vivaces : une période de récolte habituelle, indépendante des semis/gel. Si renseignée, elle remplace le calcul ci-dessus.',
     p_harvest_fixed_start_label: 'Début de récolte habituel',
     p_harvest_fixed_end_label: 'Fin de récolte habituelle',
+    p_conservation_h2: 'Conservation après récolte',
+    p_conservation_hint: "Sert à savoir combien de temps une récolte reste disponible (onglet Autonomie alimentaire). Laissé vide = ~14 jours (frais) par défaut.",
+    p_conservation_label: 'Durée de conservation (jours)',
     type_label: 'Type',
     type_vegetable: 'Légume',
     type_fruit: 'Fruit',
@@ -1403,6 +1447,10 @@ const I18N = {
     fi_suggestions_empty: 'Tu es au niveau de ton objectif dans toutes les catégories, bravo !',
     fi_excluded_prefix: "Récoltes non comptées ici (unité non convertible en kg) : ",
     fi_estimate_hint: 'Estimation approximative — repères de consommation génériques, pas un calcul nutritionnel précis.',
+    fi_location_label: 'Lieu',
+    fi_all_locations: 'Tous les lieux',
+    fi_monthly_title: 'Couverture mensuelle (avec conservation)',
+    fi_monthly_subtitle: 'Stock disponible chaque mois (récoltes + conservation) par rapport au besoin de ce mois',
     nav_crop_planning: 'Planification des cultures',
     crop_planning_h2: 'Planification des cultures',
     crop_planning_placeholder: 'À venir.',
@@ -1582,6 +1630,9 @@ const I18N = {
     p_perennial_hint: 'For fruit trees and perennials: a usual harvest period, independent of sowing/frost. If set, it overrides the calculation above.',
     p_harvest_fixed_start_label: 'Usual harvest start',
     p_harvest_fixed_end_label: 'Usual harvest end',
+    p_conservation_h2: 'Storage after harvest',
+    p_conservation_hint: 'Used to know how long a harvest stays available (Food self-sufficiency tab). Left empty = ~14 days (fresh) by default.',
+    p_conservation_label: 'Storage duration (days)',
     type_label: 'Type',
     type_vegetable: 'Vegetable',
     type_fruit: 'Fruit',
@@ -1684,6 +1735,10 @@ const I18N = {
     fi_suggestions_empty: "You're at or above your goal in every category, well done!",
     fi_excluded_prefix: "Harvests not counted here (unit not convertible to kg): ",
     fi_estimate_hint: 'Rough estimate — generic consumption reference amounts, not a precise nutritional calculation.',
+    fi_location_label: 'Location',
+    fi_all_locations: 'All locations',
+    fi_monthly_title: 'Monthly coverage (with storage)',
+    fi_monthly_subtitle: 'Stock available each month (harvests + storage) against that month\'s need',
     nav_crop_planning: 'Crop planning',
     crop_planning_h2: 'Crop planning',
     crop_planning_placeholder: 'Coming soon.',
@@ -1882,6 +1937,9 @@ function applyI18n(){
   setTxt('#p-perennial-hint', t.p_perennial_hint);
   setTxt('#label-p-harvest-fixed-start', t.p_harvest_fixed_start_label);
   setTxt('#label-p-harvest-fixed-end', t.p_harvest_fixed_end_label);
+  setTxt('#p-conservation-h2', t.p_conservation_h2);
+  setTxt('#p-conservation-hint', t.p_conservation_hint);
+  setTxt('#label-p-conservation', t.p_conservation_label);
   setTxt('#th-p-name', t.th_p_name);
   setTxt('#th-p-variety', t.th_p_variety);
   setTxt('#th-p-latin', t.th_p_latin);
@@ -1923,6 +1981,9 @@ function applyI18n(){
   setTxt('#label-fi-year', t.fi_year_label);
   setTxt('#fi-hero-title', t.fi_hero_title);
   setTxt('#fi-suggestions-title', t.fi_suggestions_title);
+  setTxt('#label-fi-location', t.fi_location_label);
+  setTxt('#fi-monthly-title', t.fi_monthly_title);
+  setTxt('#fi-monthly-subtitle', t.fi_monthly_subtitle);
   setTxt('#nav-crop-planning', t.nav_crop_planning);
   setTxt('#crop-planning-h2', t.crop_planning_h2);
   setTxt('#label-cp-location', t.cp_location_label);
@@ -2384,6 +2445,7 @@ function applyI18n(){
     const pSuccession    = document.getElementById('p-succession');
     const pHarvestFixedStart = document.getElementById('p-harvest-fixed-start');
     const pHarvestFixedEnd   = document.getElementById('p-harvest-fixed-end');
+    const pConservation  = document.getElementById('p-conservation');
     const pSaveBtn       = document.getElementById('p-save');
     const pCancelEditBtn = document.getElementById('p-cancel-edit');
     const pMsg           = document.getElementById('product-msg');
@@ -2452,6 +2514,7 @@ function applyI18n(){
       pSuccession.value = row.succession_interval_weeks ?? '';
       pHarvestFixedStart.value = row.harvest_fixed_start || '';
       pHarvestFixedEnd.value = row.harvest_fixed_end || '';
+      pConservation.value = row.conservation_days ?? '';
       pMsg.textContent = '';
       renderProductFormMode();
       document.getElementById('product-form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2465,7 +2528,7 @@ function applyI18n(){
       pLatin.value = '';
       pSowIndoor.value = ''; pSowDirect.value = ''; pTransplant.value = '';
       pMaturityMin.value = ''; pMaturityMax.value = '';
-      pSuccession.value = ''; pHarvestFixedStart.value = ''; pHarvestFixedEnd.value = '';
+      pSuccession.value = ''; pHarvestFixedStart.value = ''; pHarvestFixedEnd.value = ''; pConservation.value = '';
       selPType.value = 'Fruit';
       pMsg.textContent = '';
       renderProductFormMode();
@@ -2498,7 +2561,7 @@ function applyI18n(){
       const { data, error } = await db.from('products')
         .select('id,name,name_fr,type,variety,variety_fr,unit_harvest,unit_harvest_fr,latin_name,' +
           'sow_indoor_weeks_before_frost,sow_direct_weeks_after_frost,transplant_weeks_after_frost,' +
-          'days_to_maturity_min,days_to_maturity_max,succession_interval_weeks,harvest_fixed_start,harvest_fixed_end')
+          'days_to_maturity_min,days_to_maturity_max,succession_interval_weeks,harvest_fixed_start,harvest_fixed_end,conservation_days')
         .order('name');
       if (error){
         productsListMsg.textContent = (window.__i18n_products_err_hint2||'Erreur produits : ') + error.message;
@@ -2582,7 +2645,8 @@ function applyI18n(){
         days_to_maturity_max: numOrNull(pMaturityMax.value),
         succession_interval_weeks: numOrNull(pSuccession.value),
         harvest_fixed_start: pHarvestFixedStart.value || null,
-        harvest_fixed_end: pHarvestFixedEnd.value || null
+        harvest_fixed_end: pHarvestFixedEnd.value || null,
+        conservation_days: numOrNull(pConservation.value)
       };
 
       const { error } = editingProductId
@@ -3645,11 +3709,13 @@ function applyI18n(){
 
     // === Vue Vers l'autonomie alimentaire ===
     const fiYearSel = document.getElementById('fi-year');
+    const fiLocationSel = document.getElementById('fi-location');
     const fiNoProfileHint = document.getElementById('fi-no-profile-hint');
     const fiDashboard = document.getElementById('fi-dashboard');
     const fiHeroValue = document.getElementById('fi-hero-value');
     const fiHeroSubtitle = document.getElementById('fi-hero-subtitle');
     const fiCategories = document.getElementById('fi-categories');
+    const fiMonthlyContainer = document.getElementById('fi-monthly-container');
     const fiSuggestionsList = document.getElementById('fi-suggestions-list');
     const fiSuggestionsEmpty = document.getElementById('fi-suggestions-empty');
     const fiExcludedNote = document.getElementById('fi-excluded-note');
@@ -3657,11 +3723,13 @@ function applyI18n(){
 
     let fiHarvests = [];
     let fiProducts = [];
+    let fiLocations = [];
     let fiProfile = null;
     let fiDataLoaded = false;
 
     const FI_CATEGORIES = ['vegetables', 'fruits', 'grains'];
     const FI_KG_UNITS = ['kg'];
+    const FI_DEFAULT_CONSERVATION_DAYS = 14;
     // Rough per-adult yearly reference amounts (kg), loosely derived from PNNS-style
     // dietary guidance — not lab-grade, just enough to gauge a rough %.
     const FI_TARGET_PER_ADULT = { vegetables: 73, fruits: 55, grains: 73 };
@@ -3675,24 +3743,36 @@ function applyI18n(){
     }
 
     async function loadFoodIndependenceData(){
-      const [{ data: profileData }, { data: harvests }, { data: products }] = await Promise.all([
+      const [{ data: profileData }, { data: harvests }, { data: products }, { data: locs }] = await Promise.all([
         db.from('profiles').select('household_adults,household_children,diet,self_sufficiency_goal').eq('user_id', currentUserId).maybeSingle(),
         db.from('harvests_view').select('*').limit(5000),
-        db.from('products').select('id,name,name_fr,type,unit_harvest')
+        db.from('products').select('id,name,name_fr,type,unit_harvest,conservation_days'),
+        db.from('locations').select('id,name,name_fr').order('name')
       ]);
       fiProfile = profileData;
       fiHarvests = harvests || [];
       fiProducts = products || [];
+      fiLocations = locs || [];
       fiDataLoaded = true;
     }
 
-    function fiPopulateYearOptions(){
+    function fiPopulateFilters(){
       const years = new Set();
       fiHarvests.forEach(h => { const y = (h.harvest_date || '').slice(0, 4); if (y) years.add(y); });
-      const sorted = [...years].sort().reverse();
-      const keep = fiYearSel.value;
-      fiYearSel.innerHTML = sorted.map(y => `<option value="${y}">${y}</option>`).join('');
-      fiYearSel.value = sorted.includes(keep) ? keep : (sorted[0] || '');
+      const sortedYears = [...years].sort().reverse();
+      const keepYear = fiYearSel.value;
+      fiYearSel.innerHTML = sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
+      fiYearSel.value = sortedYears.includes(keepYear) ? keepYear : (sortedYears[0] || '');
+
+      const isFr = (curLang === 'fr');
+      const t = I18N[curLang] || I18N.fr;
+      const keepLoc = fiLocationSel.value;
+      const sortedLocs = [...fiLocations].sort((a, b) =>
+        (isFr ? (a.name_fr || a.name) : a.name).localeCompare(isFr ? (b.name_fr || b.name) : b.name, isFr ? 'fr' : 'en')
+      );
+      fiLocationSel.innerHTML = `<option value="">${t.fi_all_locations}</option>` +
+        sortedLocs.map(l => `<option value="${l.id}">${escapeHtml(isFr ? (l.name_fr || l.name) : l.name)}</option>`).join('');
+      fiLocationSel.value = keepLoc;
     }
 
     function fiComputeTargets(){
@@ -3706,14 +3786,21 @@ function applyI18n(){
       return targets;
     }
 
-    function fiComputeActuals(year){
+    // Shared filter: which harvests count for the selected year + location.
+    function fiFilteredHarvests(year, locationId){
+      return fiHarvests.filter(h =>
+        (h.harvest_date || '').slice(0, 4) === year &&
+        (!locationId || String(h.location_id) === locationId)
+      );
+    }
+
+    function fiComputeActuals(year, locationId){
       const productById = {};
       fiProducts.forEach(p => { productById[p.id] = p; });
       const isFr = (curLang === 'fr');
       const actuals = { vegetables: 0, fruits: 0, grains: 0 };
       const excludedNames = new Set();
-      fiHarvests.forEach(h => {
-        if ((h.harvest_date || '').slice(0, 4) !== year) return;
+      fiFilteredHarvests(year, locationId).forEach(h => {
         const p = productById[h.product_id];
         if (!p) return;
         const cat = fiCategoryForProduct(p);
@@ -3728,11 +3815,89 @@ function applyI18n(){
       return { actuals, excludedNames: [...excludedNames] };
     }
 
+    // For each of the 12 months, how much stock (kg) is available in that month —
+    // a harvest counts toward every month its [harvest date, +conservation_days]
+    // window overlaps, so preserved produce keeps "covering" later months.
+    function fiComputeMonthlyAvailability(year, locationId){
+      const productById = {};
+      fiProducts.forEach(p => { productById[p.id] = p; });
+      const monthly = { vegetables: Array(12).fill(0), fruits: Array(12).fill(0), grains: Array(12).fill(0) };
+
+      fiFilteredHarvests(year, locationId).forEach(h => {
+        const p = productById[h.product_id];
+        if (!p) return;
+        const cat = fiCategoryForProduct(p);
+        if (!cat) return;
+        const unit = (p.unit_harvest || '').toLowerCase();
+        if (!FI_KG_UNITS.includes(unit)) return;
+        const qty = Number(h.quantity) || 0;
+        if (!qty) return;
+
+        const conservDays = p.conservation_days != null ? p.conservation_days : FI_DEFAULT_CONSERVATION_DAYS;
+        const [hy, hm, hd] = h.harvest_date.split('-').map(Number);
+        const start = new Date(hy, hm - 1, hd);
+        const end = new Date(hy, hm - 1, hd + conservDays);
+
+        // Mark this harvest as available in every month (within the selected year)
+        // its storage window overlaps.
+        for (let m = 0; m < 12; m++){
+          const monthStart = new Date(hy, m, 1);
+          const monthEnd = new Date(hy, m + 1, 0);
+          if (end >= monthStart && start <= monthEnd){
+            monthly[cat][m] += qty;
+          }
+        }
+      });
+      return monthly;
+    }
+
     function fiTier(pct){
       if (pct >= 75) return 'good';
       if (pct >= 40) return 'warning';
       return 'critical';
     }
+
+    function renderFiMonthly(year, locationId, targets){
+      const isFr = (curLang === 'fr');
+      const t = I18N[curLang] || I18N.fr;
+      const monthly = fiComputeMonthlyAvailability(year, locationId);
+      const monthLabels = isFr
+        ? ['J','F','M','A','M','J','J','A','S','O','N','D']
+        : ['J','F','M','A','M','J','J','A','S','O','N','D'];
+      const monthNames = isFr
+        ? ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre']
+        : ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      const catLabels = { vegetables: t.fi_cat_vegetables, fruits: t.fi_cat_fruits, grains: t.fi_cat_grains };
+      const numFmt = new Intl.NumberFormat(isFr ? 'fr-FR' : 'en-US', { maximumFractionDigits: 1 });
+
+      fiMonthlyContainer.innerHTML = FI_CATEGORIES.map(cat => {
+        const monthlyTarget = targets[cat] / 12;
+        const barsHtml = monthly[cat].map((kg, i) => {
+          const pct = monthlyTarget > 0 ? Math.round(kg / monthlyTarget * 100) : 0;
+          const tier = fiTier(pct);
+          const heightPct = Math.max(Math.min(pct, 100), pct > 0 ? 3 : 0);
+          return `
+            <div class="fi-monthly-bar-col" tabindex="0">
+              <div class="fi-monthly-bar-tooltip"><span class="tt-value">${escapeHtml(numFmt.format(kg))} kg (${pct}%)</span><br/><span class="tt-label">${escapeHtml(monthNames[i])}</span></div>
+              <div class="fi-monthly-bar tier-${tier}" style="height:${heightPct}%"></div>
+              <span class="fi-monthly-bar-label">${monthLabels[i]}</span>
+            </div>`;
+        }).join('');
+        return `
+          <div class="fi-monthly-cat">
+            <div class="fi-monthly-cat-name">${escapeHtml(catLabels[cat])}</div>
+            <div class="fi-monthly-bars">${barsHtml}</div>
+          </div>`;
+      }).join('');
+    }
+
+    // Tap-to-show tooltip (mobile — hover/focus alone isn't reliable on touch)
+    fiMonthlyContainer.addEventListener('click', (e) => {
+      const col = e.target.closest('.fi-monthly-bar-col');
+      const wasTapped = col && col.classList.contains('tapped');
+      fiMonthlyContainer.querySelectorAll('.fi-monthly-bar-col.tapped').forEach(c => c.classList.remove('tapped'));
+      if (col && !wasTapped) col.classList.add('tapped');
+    });
 
     function renderFoodIndependence(){
       if (!fiDataLoaded) return;
@@ -3748,8 +3913,9 @@ function applyI18n(){
       fiDashboard.classList.remove('hide');
 
       const year = fiYearSel.value;
+      const locationId = fiLocationSel.value;
       const targets = fiComputeTargets();
-      const { actuals, excludedNames } = fiComputeActuals(year);
+      const { actuals, excludedNames } = fiComputeActuals(year, locationId);
       const goal = fiProfile.self_sufficiency_goal || null;
       const catLabels = { vegetables: t.fi_cat_vegetables, fruits: t.fi_cat_fruits, grains: t.fi_cat_grains };
 
@@ -3782,6 +3948,8 @@ function applyI18n(){
         ? t.fi_hero_subtitle_with_goal.replace('{goal}', goal).replace('{year}', year)
         : t.fi_hero_subtitle_no_goal.replace('{year}', year);
 
+      renderFiMonthly(year, locationId, targets);
+
       const under = FI_CATEGORIES.filter(cat => {
         const target = targets[cat];
         const pct = target > 0 ? (actuals[cat] / target * 100) : 0;
@@ -3803,10 +3971,11 @@ function applyI18n(){
     }
 
     fiYearSel.onchange = () => renderFoodIndependence();
+    fiLocationSel.onchange = () => renderFoodIndependence();
 
     async function refreshFoodIndependenceView(){
       await loadFoodIndependenceData();
-      fiPopulateYearOptions();
+      fiPopulateFilters();
       renderFoodIndependence();
     }
 
