@@ -3864,9 +3864,13 @@ function applyI18n(){
     const FI_CATEGORIES = ['vegetables', 'fruits', 'grains'];
     const FI_KG_UNITS = ['kg'];
     const FI_DEFAULT_CONSERVATION_DAYS = 14;
-    // Rough per-adult yearly reference amounts (kg), loosely derived from PNNS-style
-    // dietary guidance — not lab-grade, just enough to gauge a rough %.
-    const FI_TARGET_PER_ADULT = { vegetables: 73, fruits: 55, grains: 73 };
+    // Rough per-adult yearly reference amounts (kg). Vegetables/fruits are
+    // derived from the ANSES/PNNS "5 a day" guidance (400-500g/day combined,
+    // ~3 portions veg + 2 portions fruit) — 450g/day midpoint, split 3:2 ->
+    // 270g/day veg (~99kg/year), 180g/day fruit (~66kg/year). Grains/starches
+    // don't have an equivalent official split for this app's narrower
+    // "home-grown grains + potatoes" scope, kept as a looser estimate.
+    const FI_TARGET_PER_ADULT = { vegetables: 99, fruits: 66, grains: 73 };
 
     function fiCategoryForProduct(product){
       if (product.name === 'Potato') return 'grains'; // féculent, not counted as a vegetable here
