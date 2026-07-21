@@ -81,12 +81,11 @@
 
     /* Header sticky (titre + switch de thème) */
     .topbar{
-      position:sticky; top:0; z-index:50;
       background:var(--bg);
       border-bottom:1px solid var(--border);
     }
     #main-nav, .mobile-nav-select{
-      position:sticky; top:var(--topbar-h, 56px); z-index:40;
+      position:sticky; top:0; z-index:50;
       background:var(--bg);
     }
     .topbar .wrap{
@@ -440,7 +439,7 @@
     <div class="wrap">
       <div class="topbar-brand">
         <img src="icons/icon-192.png" alt="" class="topbar-logo" />
-        <h1>Garden Harvests – Data base</h1>
+        <h1>Garden Harvest</h1>
       </div>
       <button id="theme-toggle" aria-label="Changer de thème" title="Changer de thème"></button>
       <button id="lang-toggle" class="btn" title="Language">🌐</button>
@@ -1281,7 +1280,7 @@
 // ==== i18n UI statique ====
 const I18N = {
   fr: {
-    app_title: "Récolte au jardin – Base de données",
+    app_title: "Récolte au jardin",
     nav_harvests_label: "Récolte",
     auth_title: "Connexion",
     tab_pass: "Email + mot de passe",
@@ -1578,7 +1577,7 @@ const I18N = {
     ss_eq_storage_label: 'Stockage / conservation'
   },
   en: {
-    app_title: "Garden Harvests – Database",
+    app_title: "Garden Harvest",
     nav_harvests_label: "Harvest",
     auth_title: "Sign in",
     tab_pass: "Email + password",
@@ -2261,16 +2260,6 @@ function applyI18n(){
     }
 
     initTheme();
-
-    // Keeps the tab menu stuck right below the header, whatever the
-    // header's actual height is on this screen (mobile vs desktop layouts
-    // differ), instead of a hardcoded offset that would drift out of sync.
-    function updateTopbarHeightVar(){
-      const topbar = document.querySelector('.topbar');
-      if (topbar) document.documentElement.style.setProperty('--topbar-h', topbar.offsetHeight + 'px');
-    }
-    updateTopbarHeightVar();
-    window.addEventListener('resize', updateTopbarHeightVar);
 
     const themeBtn = document.getElementById('theme-toggle');
     themeBtn.addEventListener('click', () => {
