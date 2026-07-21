@@ -324,7 +324,9 @@
     #stats-table-wrap th:first-child,
     #stats-table-wrap td:first-child,
     #cp-table-wrap th:first-child,
-    #cp-table-wrap td:first-child{
+    #cp-table-wrap td:first-child,
+    #fi-detail-table-wrap th:first-child,
+    #fi-detail-table-wrap td:first-child{
       position:sticky; left:0; z-index:2;
       background: color-mix(in srgb, var(--card) 92%, transparent);
       border-right:1px solid var(--border);
@@ -1084,6 +1086,27 @@
 
             <p id="fi-excluded-note" class="muted"></p>
             <p id="fi-estimate-hint" class="muted"></p>
+
+            <button type="button" class="table-toggle-btn" id="fi-detail-toggle">Voir le détail du calcul</button>
+            <div class="glass-card hide" id="fi-detail-card">
+              <div class="barchart-title" id="fi-detail-title">Détail du calcul</div>
+              <div id="fi-need-detail"></div>
+              <div class="table-wrap" id="fi-detail-table-wrap" style="margin-top:14px">
+                <table>
+                  <thead>
+                    <tr>
+                      <th id="th-fi-product">Produit</th>
+                      <th id="th-fi-harvested">Récolté</th>
+                      <th id="th-fi-eaten-fresh">Mangé frais</th>
+                      <th id="th-fi-eaten-cellar">Cave</th>
+                      <th id="th-fi-eaten-frozen">Congélateur</th>
+                      <th id="th-fi-remaining">Restant</th>
+                    </tr>
+                  </thead>
+                  <tbody id="fi-detail-rows"></tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1488,6 +1511,21 @@ const I18N = {
     fi_suggestions_empty: 'Tu es au niveau de ton objectif dans toutes les catégories, bravo !',
     fi_excluded_prefix: "Récoltes non comptées ici (unité non convertible en kg) : ",
     fi_estimate_hint: 'Estimation approximative — repères de consommation génériques, pas un calcul nutritionnel précis.',
+    fi_show_detail: 'Voir le détail du calcul',
+    fi_hide_detail: 'Masquer le détail',
+    fi_detail_title: 'Détail du calcul',
+    fi_need_intro: "Foyer : {adults} adulte(s) + {children} enfant(s) (comptés à 60% d'une part adulte) = {parts} part(s). Régime : {diet}. Objectif d'autonomie : {goal}%.",
+    fi_need_cat_th: 'Catégorie',
+    fi_need_per_adult_th: 'Repère / adulte / an',
+    fi_need_full_th: 'Besoin plein (100%)',
+    fi_need_goal_th: "Besoin selon l'objectif",
+    fi_need_monthly_th: 'Besoin mensuel',
+    th_fi_product: 'Produit',
+    th_fi_harvested: 'Récolté',
+    th_fi_eaten_fresh: 'Mangé frais',
+    th_fi_eaten_cellar: 'Cave',
+    th_fi_eaten_frozen: 'Congélateur',
+    th_fi_remaining: 'Restant',
     fi_location_label: 'Lieu',
     fi_all_locations: 'Tous les lieux',
     fi_monthly_title: 'Couverture mensuelle (avec conservation)',
@@ -1785,6 +1823,21 @@ const I18N = {
     fi_suggestions_empty: "You're at or above your goal in every category, well done!",
     fi_excluded_prefix: "Harvests not counted here (unit not convertible to kg): ",
     fi_estimate_hint: 'Rough estimate — generic consumption reference amounts, not a precise nutritional calculation.',
+    fi_show_detail: 'Show calculation details',
+    fi_hide_detail: 'Hide details',
+    fi_detail_title: 'Calculation details',
+    fi_need_intro: 'Household: {adults} adult(s) + {children} child(ren) (counted as 60% of an adult share) = {parts} share(s). Diet: {diet}. Self-sufficiency goal: {goal}%.',
+    fi_need_cat_th: 'Category',
+    fi_need_per_adult_th: 'Reference / adult / year',
+    fi_need_full_th: 'Full need (100%)',
+    fi_need_goal_th: 'Need per your goal',
+    fi_need_monthly_th: 'Monthly need',
+    th_fi_product: 'Product',
+    th_fi_harvested: 'Harvested',
+    th_fi_eaten_fresh: 'Eaten fresh',
+    th_fi_eaten_cellar: 'Cellar',
+    th_fi_eaten_frozen: 'Freezer',
+    th_fi_remaining: 'Remaining',
     fi_location_label: 'Location',
     fi_all_locations: 'All locations',
     fi_monthly_title: 'Monthly coverage (with storage)',
@@ -2036,6 +2089,21 @@ function applyI18n(){
   setTxt('#fi-legend-fresh', t.fi_legend_fresh);
   setTxt('#fi-legend-cellar', t.fi_legend_cellar);
   setTxt('#fi-legend-frozen', t.fi_legend_frozen);
+  setTxt('#fi-detail-title', t.fi_detail_title);
+  setTxt('#th-fi-product', t.th_fi_product);
+  setTxt('#th-fi-harvested', t.th_fi_harvested);
+  setTxt('#th-fi-eaten-fresh', t.th_fi_eaten_fresh);
+  setTxt('#th-fi-eaten-cellar', t.th_fi_eaten_cellar);
+  setTxt('#th-fi-eaten-frozen', t.th_fi_eaten_frozen);
+  setTxt('#th-fi-remaining', t.th_fi_remaining);
+  {
+    const fiDetailCardEl = document.getElementById('fi-detail-card');
+    const fiDetailToggleEl = document.getElementById('fi-detail-toggle');
+    if (fiDetailToggleEl){
+      fiDetailToggleEl.textContent = (fiDetailCardEl && !fiDetailCardEl.classList.contains('hide'))
+        ? t.fi_hide_detail : t.fi_show_detail;
+    }
+  }
   setTxt('#nav-crop-planning', t.nav_crop_planning);
   setTxt('#crop-planning-h2', t.crop_planning_h2);
   setTxt('#label-cp-location', t.cp_location_label);
@@ -3782,6 +3850,10 @@ function applyI18n(){
     const fiSuggestionsEmpty = document.getElementById('fi-suggestions-empty');
     const fiExcludedNote = document.getElementById('fi-excluded-note');
     const fiEstimateHint = document.getElementById('fi-estimate-hint');
+    const fiDetailToggle = document.getElementById('fi-detail-toggle');
+    const fiDetailCard = document.getElementById('fi-detail-card');
+    const fiNeedDetail = document.getElementById('fi-need-detail');
+    const fiDetailRows = document.getElementById('fi-detail-rows');
 
     let fiHarvests = [];
     let fiProducts = [];
@@ -3930,10 +4002,13 @@ function applyI18n(){
         // Continuous 2-year scale: prior year = days 1-365, selected year = 366-730.
         const harvestDoy = (hy === yearNum ? 365 : 0) + cpDayOfYear(hm - 1, hd);
         batchesByCat[cat].push({
-          harvestDoy, qty,
+          harvestDoy, qty, originalQty: qty,
           freshEndDoy: harvestDoy + freshDays,
           extendedEndDoy: harvestDoy + extendedDays,
-          source
+          source,
+          productId: p.id, cat,
+          isSelectedYear: hy === yearNum,
+          eatenFresh: 0, eatenCellar: 0, eatenFrozen: 0
         });
       });
       FI_CATEGORIES.forEach(cat => batchesByCat[cat].sort((a, b) => a.harvestDoy - b.harvestDoy));
@@ -3941,12 +4016,13 @@ function applyI18n(){
       const monthly = {};
       FI_CATEGORIES.forEach(cat => { monthly[cat] = Array.from({ length: 12 }, () => ({ fresh: 0, cellar: 0, frozen: 0 })); });
 
-      function consumeFIFO(list, amount){
+      function consumeFIFO(list, amount, kind){
         let remaining = amount;
         for (const b of list){
           if (remaining <= 0.0001) break;
           const take = Math.min(b.qty, remaining);
           b.qty -= take;
+          b[kind] += take;
           remaining -= take;
         }
       }
@@ -3981,13 +4057,32 @@ function applyI18n(){
             monthly[cat][m - 12].frozen = consumedFrozen;
           }
 
-          consumeFIFO(freshBatches, consumedFresh);
-          consumeFIFO(cellarBatches, consumedCellar);
-          consumeFIFO(frozenBatches, consumedFrozen);
+          consumeFIFO(freshBatches, consumedFresh, 'eatenFresh');
+          consumeFIFO(cellarBatches, consumedCellar, 'eatenCellar');
+          consumeFIFO(frozenBatches, consumedFrozen, 'eatenFrozen');
         }
       });
 
-      return monthly;
+      // Per-product summary, for the "how was this calculated" detail view —
+      // only the selected year's own harvests (prior-year carryover batches
+      // are excluded, they belong to last year's own summary).
+      const productSummary = {};
+      FI_CATEGORIES.forEach(cat => {
+        batchesByCat[cat].forEach(b => {
+          if (!b.isSelectedYear) return;
+          if (!productSummary[b.productId]){
+            productSummary[b.productId] = { productId: b.productId, cat, harvested: 0, eatenFresh: 0, eatenCellar: 0, eatenFrozen: 0, remaining: 0 };
+          }
+          const s = productSummary[b.productId];
+          s.harvested += b.originalQty;
+          s.eatenFresh += b.eatenFresh;
+          s.eatenCellar += b.eatenCellar;
+          s.eatenFrozen += b.eatenFrozen;
+          s.remaining += b.qty;
+        });
+      });
+
+      return { monthly, productSummary: Object.values(productSummary) };
     }
 
     function fiTier(pct){
@@ -3996,10 +4091,9 @@ function applyI18n(){
       return 'critical';
     }
 
-    function renderFiMonthly(year, locationId, targets){
+    function renderFiMonthly(monthly, targets){
       const isFr = (curLang === 'fr');
       const t = I18N[curLang] || I18N.fr;
-      const monthly = fiComputeMonthlyAvailability(year, locationId, targets);
       const monthLabels = isFr
         ? ['J','F','M','A','M','J','J','A','S','O','N','D']
         : ['J','F','M','A','M','J','J','A','S','O','N','D'];
@@ -4046,6 +4140,79 @@ function applyI18n(){
       fiMonthlyContainer.querySelectorAll('.fi-monthly-bar-col.tapped').forEach(c => c.classList.remove('tapped'));
       if (col && !wasTapped) col.classList.add('tapped');
     });
+
+    function renderFiDetail(productSummary, targets, goal){
+      const isFr = (curLang === 'fr');
+      const t = I18N[curLang] || I18N.fr;
+      const numFmt = new Intl.NumberFormat(isFr ? 'fr-FR' : 'en-US', { maximumFractionDigits: 1 });
+      const catLabels = { vegetables: t.fi_cat_vegetables, fruits: t.fi_cat_fruits, grains: t.fi_cat_grains };
+
+      const adults = fiProfile?.household_adults || 0;
+      const children = fiProfile?.household_children || 0;
+      const diet = fiProfile?.diet;
+      const dietLabel = diet === 'vegan' ? t.ss_diet_vegan : diet === 'vegetarian' ? t.ss_diet_vegetarian : t.ss_diet_omnivore;
+      const dietMultiplier = diet === 'vegan' ? 1.25 : diet === 'vegetarian' ? 1.15 : 1;
+      const personUnits = adults + children * 0.6;
+
+      const needRowsHtml = FI_CATEGORIES.map(cat => {
+        const perAdult = FI_TARGET_PER_ADULT[cat];
+        const fullTarget = personUnits * perAdult * dietMultiplier;
+        const goalTarget = targets[cat];
+        return `<tr>
+          <td>${escapeHtml(catLabels[cat])}</td>
+          <td>${perAdult} kg</td>
+          <td>${numFmt.format(fullTarget)} kg</td>
+          <td>${numFmt.format(goalTarget)} kg</td>
+          <td>${numFmt.format(goalTarget / 12)} kg</td>
+        </tr>`;
+      }).join('');
+
+      fiNeedDetail.innerHTML = `
+        <p>${escapeHtml(t.fi_need_intro
+          .replace('{adults}', adults)
+          .replace('{children}', children)
+          .replace('{parts}', numFmt.format(personUnits))
+          .replace('{diet}', dietLabel)
+          .replace('{goal}', goal))}</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>${escapeHtml(t.fi_need_cat_th)}</th>
+              <th>${escapeHtml(t.fi_need_per_adult_th)}</th>
+              <th>${escapeHtml(t.fi_need_full_th)}</th>
+              <th>${escapeHtml(t.fi_need_goal_th)}</th>
+              <th>${escapeHtml(t.fi_need_monthly_th)}</th>
+            </tr></thead>
+            <tbody>${needRowsHtml}</tbody>
+          </table>
+        </div>`;
+
+      const productById = {};
+      fiProducts.forEach(p => { productById[p.id] = p; });
+
+      const sorted = [...productSummary].sort((a, b) => b.harvested - a.harvested);
+      fiDetailRows.innerHTML = sorted.map(s => {
+        const p = productById[s.productId];
+        const label = p
+          ? `${isFr ? (p.name_fr || p.name) : p.name}${p.variety ? ' — ' + (isFr ? (p.variety_fr || p.variety) : p.variety) : ''}`
+          : '?';
+        return `<tr>
+          <td>${escapeHtml(label)}</td>
+          <td>${numFmt.format(s.harvested)} kg</td>
+          <td>${numFmt.format(s.eatenFresh)} kg</td>
+          <td>${numFmt.format(s.eatenCellar)} kg</td>
+          <td>${numFmt.format(s.eatenFrozen)} kg</td>
+          <td>${numFmt.format(s.remaining)} kg</td>
+        </tr>`;
+      }).join('');
+    }
+
+    fiDetailToggle.onclick = () => {
+      const t = I18N[curLang] || I18N.fr;
+      const willShow = fiDetailCard.classList.contains('hide');
+      fiDetailCard.classList.toggle('hide', !willShow);
+      fiDetailToggle.textContent = willShow ? t.fi_hide_detail : t.fi_show_detail;
+    };
 
     function renderFoodIndependence(){
       if (!fiDataLoaded) return;
@@ -4104,7 +4271,9 @@ function applyI18n(){
         ? t.fi_hero_subtitle_with_goal.replace('{goal}', goal).replace('{year}', year)
         : t.fi_hero_subtitle_no_goal.replace('{year}', year);
 
-      renderFiMonthly(year, locationId, targets);
+      const { monthly, productSummary } = fiComputeMonthlyAvailability(year, locationId, targets);
+      renderFiMonthly(monthly, targets);
+      renderFiDetail(productSummary, targets, goal);
 
       const under = FI_CATEGORIES.filter(cat => {
         const target = targets[cat];
