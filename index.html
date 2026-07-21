@@ -603,6 +603,19 @@
               <label id="label-loc-description">Description</label>
               <input id="loc-description" />
             </div>
+          </div>
+          <div class="row" style="margin-top:1rem">
+            <div>
+              <label id="label-loc-last-frost">Dernier gel (printemps)</label>
+              <input id="loc-last-frost" type="date" />
+            </div>
+            <div>
+              <label id="label-loc-first-frost">Premier gel (automne)</label>
+              <input id="loc-first-frost" type="date" />
+            </div>
+          </div>
+          <p id="loc-frost-hint" class="muted">Seuls le mois et le jour comptent — l'année choisie n'a pas d'importance, ces dates se répètent chaque année.</p>
+          <div class="row" style="margin-top:1rem">
             <div style="align-self:end; display:flex; gap:.5rem">
               <button id="loc-save" class="btn-primary">Ajouter</button>
               <button id="loc-cancel-edit" type="button" class="hide">Annuler</button>
@@ -620,6 +633,8 @@
                   <th id="th-loc-name-col">Nom</th>
                   <th id="th-loc-area-col">Surface</th>
                   <th id="th-loc-description-col">Description</th>
+                  <th id="th-loc-last-frost-col">Dernier gel</th>
+                  <th id="th-loc-first-frost-col">Premier gel</th>
                   <th id="th-loc-actions">Actions</th>
                 </tr>
               </thead>
@@ -1183,6 +1198,9 @@ const I18N = {
     loc_name_fr_label: 'Nom (FR)',
     loc_area_label: 'Surface (m²)',
     loc_description_label: 'Description',
+    loc_last_frost_label: 'Dernier gel (printemps)',
+    loc_first_frost_label: 'Premier gel (automne)',
+    loc_frost_hint: "Seuls le mois et le jour comptent — l'année choisie n'a pas d'importance, ces dates se répètent chaque année.",
     choose_loc_name_err: 'Entre un nom.',
     location_added_ok: 'Lieu ajouté.',
     location_updated_ok: 'Lieu modifié.',
@@ -1191,6 +1209,8 @@ const I18N = {
     th_loc_name: 'Nom',
     th_loc_area: 'Surface',
     th_loc_description: 'Description',
+    th_loc_last_frost: 'Dernier gel',
+    th_loc_first_frost: 'Premier gel',
     favorite_location_label: 'Lieu favori',
     favorite_currency_label: 'Devise favorite',
     favorite_language_label: 'Langue favorite',
@@ -1420,6 +1440,9 @@ const I18N = {
     loc_name_fr_label: 'Name (FR)',
     loc_area_label: 'Area (m²)',
     loc_description_label: 'Description',
+    loc_last_frost_label: 'Last frost (spring)',
+    loc_first_frost_label: 'First frost (fall)',
+    loc_frost_hint: 'Only the month and day matter — the chosen year makes no difference, these dates repeat every year.',
     choose_loc_name_err: 'Enter a name.',
     location_added_ok: 'Location added.',
     location_updated_ok: 'Location updated.',
@@ -1428,6 +1451,8 @@ const I18N = {
     th_loc_name: 'Name',
     th_loc_area: 'Area',
     th_loc_description: 'Description',
+    th_loc_last_frost: 'Last frost',
+    th_loc_first_frost: 'First frost',
     favorite_location_label: 'Favorite location',
     favorite_currency_label: 'Favorite currency',
     favorite_language_label: 'Favorite language',
@@ -1626,9 +1651,14 @@ function applyI18n(){
   setTxt('#label-loc-name-fr', t.loc_name_fr_label);
   setTxt('#label-loc-area', t.loc_area_label);
   setTxt('#label-loc-description', t.loc_description_label);
+  setTxt('#label-loc-last-frost', t.loc_last_frost_label);
+  setTxt('#label-loc-first-frost', t.loc_first_frost_label);
+  setTxt('#loc-frost-hint', t.loc_frost_hint);
   setTxt('#th-loc-name-col', t.th_loc_name);
   setTxt('#th-loc-area-col', t.th_loc_area);
   setTxt('#th-loc-description-col', t.th_loc_description);
+  setTxt('#th-loc-last-frost-col', t.th_loc_last_frost);
+  setTxt('#th-loc-first-frost-col', t.th_loc_first_frost);
   setTxt('#loc-cancel-edit', t.product_cancel_btn);
   renderLocationFormMode();
 
@@ -2247,6 +2277,8 @@ function applyI18n(){
     const locNameFr       = document.getElementById('loc-name-fr');
     const locArea          = document.getElementById('loc-area');
     const locDescription   = document.getElementById('loc-description');
+    const locLastFrost      = document.getElementById('loc-last-frost');
+    const locFirstFrost     = document.getElementById('loc-first-frost');
     const locSaveBtn       = document.getElementById('loc-save');
     const locCancelEditBtn = document.getElementById('loc-cancel-edit');
     const locMsg            = document.getElementById('location-msg');
@@ -2275,6 +2307,8 @@ function applyI18n(){
       locNameFr.value = row.name_fr || '';
       locArea.value = row.area_m2 ?? '';
       locDescription.value = row.description || '';
+      locLastFrost.value = row.last_spring_frost || '';
+      locFirstFrost.value = row.first_fall_frost || '';
       locMsg.textContent = '';
       renderLocationFormMode();
       document.getElementById('location-form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2284,6 +2318,7 @@ function applyI18n(){
       editingLocationId = null;
       locName.value = ''; locNameFr.value = '';
       locArea.value = ''; locDescription.value = '';
+      locLastFrost.value = ''; locFirstFrost.value = '';
       locMsg.textContent = '';
       renderLocationFormMode();
     }
@@ -2298,7 +2333,7 @@ function applyI18n(){
 
     async function refreshLocationsList(){
       const { data, error } = await db.from('locations')
-        .select('id,name,name_fr,area_m2,description')
+        .select('id,name,name_fr,area_m2,description,last_spring_frost,first_fall_frost')
         .order('name');
       if (error){
         locationsListMsg.textContent = (window.__i18n_locations_err_hint||'Erreur lieux : ') + error.message;
@@ -2313,6 +2348,8 @@ function applyI18n(){
           <td>${isFr ? (l.name_fr || l.name) : l.name}</td>
           <td>${l.area_m2 ?? ''}</td>
           <td>${l.description ?? ''}</td>
+          <td>${l.last_spring_frost ?? ''}</td>
+          <td>${l.first_fall_frost ?? ''}</td>
           <td><button type="button" class="loc-edit-btn" data-id="${l.id}">${t.edit_btn}</button></td>
         </tr>
       `).join('');
@@ -2330,7 +2367,9 @@ function applyI18n(){
         name,
         name_fr: locNameFr.value.trim() || null,
         area_m2: locArea.value === '' ? null : Number(locArea.value),
-        description: locDescription.value.trim() || null
+        description: locDescription.value.trim() || null,
+        last_spring_frost: locLastFrost.value || null,
+        first_fall_frost: locFirstFrost.value || null
       };
 
       const { error } = editingLocationId
@@ -2346,7 +2385,7 @@ function applyI18n(){
       const wasEditing = !!editingLocationId;
       editingLocationId = null;
       if (wasEditing) renderLocationFormMode();
-      else { locName.value=''; locNameFr.value=''; locArea.value=''; locDescription.value=''; }
+      else { locName.value=''; locNameFr.value=''; locArea.value=''; locDescription.value=''; locLastFrost.value=''; locFirstFrost.value=''; }
 
       await Promise.all([refreshLocationsList(), loadLocations()]);
     };
