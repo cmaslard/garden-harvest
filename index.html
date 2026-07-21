@@ -91,6 +91,9 @@
       padding:10px 16px;
     }
     .topbar h1{ margin:0; font-size:1.35rem; letter-spacing:.2px; }
+    .topbar-brand{ display:flex; align-items:center; gap:.6rem; flex:1 1 auto; min-width:0; }
+    .topbar-logo{ width:28px; height:28px; border-radius:8px; flex:0 0 auto; display:block; }
+    @media (max-width:760px){ .topbar-logo{ width:22px; height:22px; border-radius:6px; } }
 
       /* Fix: bouton dark/light compact dans le header */
       .topbar #theme-toggle{
@@ -144,6 +147,7 @@
       .topbar .wrap > * { min-width: 0; }
       .topbar h1{
         flex: 1 1 auto;
+        min-width: 0;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -319,7 +323,10 @@
   <!-- Header sticky -->
   <header class="topbar">
     <div class="wrap">
-      <h1>Garden Harvests – Data base</h1>
+      <div class="topbar-brand">
+        <img src="icons/icon-192.png" alt="" class="topbar-logo" />
+        <h1>Garden Harvests – Data base</h1>
+      </div>
       <button id="theme-toggle" aria-label="Changer de thème" title="Changer de thème"></button>
       <button id="lang-toggle" class="btn" title="Language">🌐</button>
     </div>
