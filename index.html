@@ -4277,6 +4277,11 @@ if (langBtn) {
       };
       await Promise.all([loadProducts(), loadLocations(), refreshRows()]);
       if (!editingId && !selLoc.value && favoriteLocationId) selLoc.value = String(favoriteLocationId);
+      const filterLocEl = document.getElementById('filter-loc');
+      if (filterLocEl && !filterLocEl.value && favoriteLocationId){
+        const favOpt = selLoc.querySelector(`option[value="${favoriteLocationId}"]`);
+        if (favOpt){ filterLocEl.value = favOpt.textContent; applyRowFilters(); }
+      }
       addBtn.onclick = onAdd;
       cancelEditBtn.onclick = cancelEdit;
     }
