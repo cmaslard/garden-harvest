@@ -168,6 +168,14 @@
     }
     input::placeholder{color:#6b7280}
     button{cursor:pointer}
+    .qty-input-group{ display:flex; align-items:stretch; }
+    .qty-input-group input{ border-top-right-radius:0; border-bottom-right-radius:0; border-right:none; min-width:0; flex:1 1 auto; }
+    .qty-unit-badge{
+      display:flex; align-items:center; flex:0 0 auto; white-space:nowrap;
+      padding:0 .8rem; border:1px solid var(--border); border-top-right-radius:12px; border-bottom-right-radius:12px;
+      background: color-mix(in srgb, var(--accent) 18%, var(--card));
+      color:var(--fg); font-weight:600; font-size:.85rem;
+    }
     table{width:100%;border-collapse:collapse}
     th,td{padding:.6rem;border-top:1px solid var(--border);text-align:left;vertical-align:top}
 
@@ -557,8 +565,11 @@
         </div>
         <div class="row3" style="margin-top:1rem">
           <div>
-            <label id="label-qty">Quantité (<span id="unit">–</span>)</label>
-            <input id="qty" type="number" step="0.01" min="0" required/>
+            <label id="label-qty">Quantité</label>
+            <div class="qty-input-group">
+              <input id="qty" type="number" step="0.01" min="0" required/>
+              <span id="unit" class="qty-unit-badge">–</span>
+            </div>
           </div>
           <div>
             <label id="label-note">Note</label>
@@ -1908,28 +1919,18 @@ function applyI18n(){
     whoPrefix.childNodes[0].nodeValue = t.connected; // remplace le texte fixe avant <span id="who">
     const rls = whoPrefix.querySelector('.pill'); if (rls) rls.textContent = t.rls;
   }
-  const lblQty = document.getElementById('label-qty');
-    if (lblQty) {
-      // on suppose la structure "Texte ( <span id=unit>…</span> )"
-      if (lblQty.firstChild && lblQty.firstChild.nodeType === Node.TEXT_NODE) {
-        lblQty.firstChild.nodeValue = t.qty_label + ' (';
-      } else {
-        // fallback si la structure a changé
-        lblQty.innerHTML = `${t.qty_label} (<span id="unit">–</span>)`;
-      }
-    }
+  setTxt('#label-qty', t.qty_label);
 
   setTxt('#reload', t.refresh);
   setTxt('#signout', t.signout);
 
- setTxt('#add-card-title', t.add_h2); 
+ setTxt('#add-card-title', t.add_h2);
   // labels du formulaire
   document.querySelectorAll('label').forEach(lbl => {
     const htmlFor = lbl.getAttribute('for');
     if (htmlFor === 'product') lbl.textContent = t.product_label;
     if (htmlFor === 'location') lbl.textContent = t.location_label;
     if (htmlFor === 'date') lbl.textContent = t.date_label;
-    if (htmlFor === 'qty') lbl.innerHTML = `${t.qty_label} (<span id="unit">–</span>)`;
     if (htmlFor === 'note') lbl.textContent = t.note_label;
   });
   const note = document.getElementById('note'); if (note) note.placeholder = t.note_ph;
@@ -2912,7 +2913,7 @@ function applyI18n(){
           const n = isFr ? (p.name_fr || p.name) : p.name;
           const v = isFr ? (p.variety_fr || p.variety) : p.variety;
           const u = isFr ? (p.unit_harvest_fr || p.unit_harvest) : p.unit_harvest;
-          return `<option value="${p.id}" data-unit="${u}">${n}${v?` — ${v}`:''}</option>`;
+          return `<option value="${p.id}" data-unit="${u}">${n}${v?` — ${v}`:''} (${u})</option>`;
         }).join('');
       if (keep) priceProductSel.value = keep;
       updatePriceUnit();
@@ -4507,7 +4508,7 @@ if (langBtn) {
           const n = isFr ? (p.name_fr || p.name) : p.name;
           const v = isFr ? (p.variety_fr || p.variety) : p.variety;
           const u = isFr ? (p.unit_harvest_fr || p.unit_harvest) : p.unit_harvest;
-          return `<option value="${p.id}" data-unit="${u}">${n}${v?` — ${v}`:''}</option>`;
+          return `<option value="${p.id}" data-unit="${u}">${n}${v?` — ${v}`:''} (${u})</option>`;
         }).join('');
       unitSpan.textContent = '–';
     }
