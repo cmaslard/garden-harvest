@@ -395,7 +395,6 @@
     .fi-meter-fill.tier-good{ background:var(--accent); }
     .fi-meter-fill.tier-warning{ background:var(--cp-harvest); }
     .fi-meter-fill.tier-critical{ background:var(--status-critical); }
-    .fi-meter-goal{ position:absolute; top:-3px; bottom:-3px; width:2px; background:var(--fg); opacity:.55; }
     .fi-cat-detail{ font-size:.82rem; color:var(--muted); font-variant-numeric:tabular-nums; }
 
     .fi-suggestions-list{ margin:0; padding-left:1.2rem; }
@@ -1437,13 +1436,12 @@ const I18N = {
     fi_no_profile_hint: "Renseigne au moins le nombre d'adultes du foyer dans l'onglet Profil pour voir ton autonomie.",
     fi_no_favorite_hint: "Aucun lieu favori défini (onglet Profil) — affichage sur tous les lieux combinés. Choisis un lieu favori pour un calcul propre à ton jardin.",
     fi_hero_title: 'Autonomie globale',
-    fi_hero_subtitle_with_goal: "En {year}, par rapport à ton objectif de {goal}% d'autonomie.",
+    fi_hero_subtitle_with_goal: "En {year} — 100% correspond ici à ton objectif de {goal}% d'autonomie réelle.",
     fi_hero_subtitle_no_goal: 'En {year}, par rapport à des repères de consommation approximatifs.',
     fi_cat_vegetables: 'Légumes',
     fi_cat_fruits: 'Fruits',
     fi_cat_grains: 'Céréales / féculents',
     fi_of: 'sur',
-    fi_goal_marker_title: 'Ton objectif : {pct}%',
     fi_suggestions_title: 'À semer davantage',
     fi_suggestion_prefix: 'Plus de',
     fi_suggestions_empty: 'Tu es au niveau de ton objectif dans toutes les catégories, bravo !',
@@ -1726,13 +1724,12 @@ const I18N = {
     fi_no_profile_hint: 'Set at least the number of adults in your household in the Profile tab to see your self-sufficiency.',
     fi_no_favorite_hint: 'No favorite location set (Profile tab) — showing all locations combined. Pick a favorite location for a calculation scoped to your own garden.',
     fi_hero_title: 'Overall self-sufficiency',
-    fi_hero_subtitle_with_goal: 'In {year}, against your goal of {goal}% self-sufficiency.',
+    fi_hero_subtitle_with_goal: 'In {year} — 100% here means your goal of {goal}% real self-sufficiency.',
     fi_hero_subtitle_no_goal: 'In {year}, against rough consumption reference amounts.',
     fi_cat_vegetables: 'Vegetables',
     fi_cat_fruits: 'Fruits',
     fi_cat_grains: 'Grains / starches',
     fi_of: 'of',
-    fi_goal_marker_title: 'Your goal: {pct}%',
     fi_suggestions_title: 'Sow more of',
     fi_suggestion_prefix: 'More',
     fi_suggestions_empty: "You're at or above your goal in every category, well done!",
@@ -3926,9 +3923,12 @@ function applyI18n(){
 
       const year = fiYearSel.value;
       const locationId = fiLocationSel.value;
-      const targets = fiComputeTargets();
+      const fullTargets = fiComputeTargets();
       const { actuals, excludedNames } = fiComputeActuals(year, locationId);
-      const goal = fiProfile.self_sufficiency_goal || null;
+      const rawGoal = fiProfile.self_sufficiency_goal || null;
+      const goal = rawGoal || 100; // no goal set = aim for full self-sufficiency
+      const targets = {};
+      FI_CATEGORIES.forEach(cat => { targets[cat] = fullTargets[cat] * goal / 100; });
       const catLabels = { vegetables: t.fi_cat_vegetables, fruits: t.fi_cat_fruits, grains: t.fi_cat_grains };
 
       let totalTarget = 0, totalActual = 0;
@@ -3939,14 +3939,12 @@ function applyI18n(){
         totalTarget += target; totalActual += actual;
         const tier = fiTier(pct);
         const fillPct = Math.min(pct, 100);
-        const goalMarker = goal ? `<div class="fi-meter-goal" style="left:${goal}%" title="${escapeHtml(t.fi_goal_marker_title.replace('{pct}', goal))}"></div>` : '';
         return `
           <div class="fi-cat-card">
             <div class="fi-cat-name">${escapeHtml(catLabels[cat])}</div>
             <div class="fi-cat-pct tier-${tier}">${pct}%</div>
             <div class="fi-meter">
               <div class="fi-meter-fill tier-${tier}" style="width:${fillPct}%"></div>
-              ${goalMarker}
             </div>
             <div class="fi-cat-detail">${Math.round(actual)} kg ${escapeHtml(t.fi_of)} ${Math.round(target)} kg</div>
           </div>`;
@@ -3956,7 +3954,7 @@ function applyI18n(){
       const overallTier = fiTier(overallPct);
       fiHeroValue.textContent = `${overallPct}%`;
       fiHeroValue.className = `fi-hero tier-${overallTier}`;
-      fiHeroSubtitle.textContent = goal
+      fiHeroSubtitle.textContent = rawGoal
         ? t.fi_hero_subtitle_with_goal.replace('{goal}', goal).replace('{year}', year)
         : t.fi_hero_subtitle_no_goal.replace('{year}', year);
 
@@ -3965,7 +3963,7 @@ function applyI18n(){
       const under = FI_CATEGORIES.filter(cat => {
         const target = targets[cat];
         const pct = target > 0 ? (actuals[cat] / target * 100) : 0;
-        return pct < (goal || 100);
+        return pct < 100;
       });
       if (under.length){
         fiSuggestionsEmpty.classList.add('hide');
