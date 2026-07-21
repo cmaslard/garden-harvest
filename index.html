@@ -311,11 +311,71 @@
     .table-toggle-btn{ width:auto; padding:.4rem .8rem; font-size:.82rem; margin-top:10px; }
     .stats-table-wrap{ margin-top:10px; }
     #stats-table-wrap th:first-child,
-    #stats-table-wrap td:first-child{
+    #stats-table-wrap td:first-child,
+    #cp-table-wrap th:first-child,
+    #cp-table-wrap td:first-child{
       position:sticky; left:0; z-index:2;
       background: color-mix(in srgb, var(--card) 92%, transparent);
       border-right:1px solid var(--border);
     }
+
+    /* ===== Planification des cultures — frise ===== */
+    :root{ --cp-harvest:#fbbf24; }
+    html[data-theme="light"]{ --cp-harvest:#d97706; }
+
+    .cp-legend{ display:flex; gap:18px; flex-wrap:wrap; margin-bottom:16px; font-size:.82rem; color:var(--muted); }
+    .cp-legend-item{ display:flex; align-items:center; gap:6px; }
+    .cp-swatch{ display:inline-block; width:10px; height:10px; border-radius:3px; flex:0 0 auto; }
+    .cp-swatch.cp-sow{ background:var(--primary); }
+    .cp-swatch.cp-plant{ background:var(--accent); }
+    .cp-swatch.cp-harvest{ background:var(--cp-harvest); }
+
+    .cp-outer{ overflow-x:auto; -webkit-overflow-scrolling:touch; padding-top:48px; }
+    .cp-inner{ min-width:640px; }
+    .cp-months{ display:flex; padding-left:150px; margin-bottom:6px; position:relative; height:16px; }
+    .cp-months span{ position:absolute; transform:translateX(-50%); font-size:.68rem; color:var(--muted); white-space:nowrap; }
+    .cp-row{ display:flex; align-items:center; min-height:34px; border-top:1px solid var(--border); }
+    .cp-row:first-child{ border-top:none; }
+    .cp-row-label{
+      width:150px; flex:0 0 150px; padding-right:10px; font-size:.82rem;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      position:sticky; left:0; background:var(--card); z-index:1;
+    }
+    .cp-track{
+      position:relative; flex:1 1 auto; height:34px;
+      background-repeat: no-repeat;
+      background-image:
+        linear-gradient(var(--border), var(--border)), linear-gradient(var(--border), var(--border)),
+        linear-gradient(var(--border), var(--border)), linear-gradient(var(--border), var(--border)),
+        linear-gradient(var(--border), var(--border)), linear-gradient(var(--border), var(--border)),
+        linear-gradient(var(--border), var(--border)), linear-gradient(var(--border), var(--border)),
+        linear-gradient(var(--border), var(--border)), linear-gradient(var(--border), var(--border)),
+        linear-gradient(var(--border), var(--border));
+      background-size: 1px 100%;
+      background-position:
+        8.4932% 0, 16.1644% 0, 24.6575% 0, 32.8767% 0, 41.3699% 0,
+        49.5890% 0, 58.0822% 0, 66.5753% 0, 74.7945% 0, 83.2877% 0, 91.5068% 0;
+      opacity: 1;
+    }
+    .cp-bar{
+      position:absolute; top:9px; height:16px; border-radius:4px;
+      cursor:pointer; transition:filter .15s ease;
+    }
+    .cp-bar:hover, .cp-bar:focus-visible{ filter:brightness(1.15); outline:none; }
+    .cp-bar.cp-sow{ background:var(--primary); }
+    .cp-bar.cp-plant{ background:var(--accent); }
+    .cp-bar.cp-harvest{ background:var(--cp-harvest); }
+    .cp-bar-tooltip{
+      position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
+      background:var(--card); border:1px solid var(--border); border-radius:10px;
+      padding:6px 10px; font-size:.78rem; white-space:nowrap;
+      box-shadow:0 6px 16px rgba(0,0,0,.18);
+      opacity:0; pointer-events:none; transition:opacity .12s ease;
+      z-index:5;
+    }
+    .cp-bar:hover .cp-bar-tooltip, .cp-bar:focus-visible .cp-bar-tooltip, .cp-bar.tapped .cp-bar-tooltip{ opacity:1; }
+    .cp-bar-tooltip .tt-value{ font-weight:600; color:var(--fg); }
+    .cp-bar-tooltip .tt-label{ color:var(--muted); }
   </style>
 </head>
 
@@ -544,6 +604,35 @@
               <label id="label-p-unit-fr">Unité (FR)</label>
               <input id="p-unit-fr" />
             </div>
+          </div>
+
+          <h2 id="p-planning-h2" style="font-size:1.1rem;margin:1.5rem 0 .75rem">Calendrier de culture</h2>
+          <p id="p-planning-hint" class="muted">Optionnel — sert à calculer le calendrier de l'onglet « Planification des cultures » à partir des dates de gel du lieu.</p>
+          <div class="row3" style="margin-top:.75rem">
+            <div>
+              <label id="label-p-sow-indoor">Semis intérieur (semaines avant le dernier gel)</label>
+              <input id="p-sow-indoor" type="number" step="0.5" min="0" />
+            </div>
+            <div>
+              <label id="label-p-sow-direct">Semis direct (semaines après le dernier gel)</label>
+              <input id="p-sow-direct" type="number" step="0.5" min="0" />
+            </div>
+            <div>
+              <label id="label-p-transplant">Repiquage / plantation (semaines après le dernier gel)</label>
+              <input id="p-transplant" type="number" step="0.5" min="0" />
+            </div>
+          </div>
+          <div class="row" style="margin-top:1rem">
+            <div>
+              <label id="label-p-maturity-min">Jours jusqu'à maturité (min)</label>
+              <input id="p-maturity-min" type="number" step="1" min="0" />
+            </div>
+            <div>
+              <label id="label-p-maturity-max">Jours jusqu'à maturité (max)</label>
+              <input id="p-maturity-max" type="number" step="1" min="0" />
+            </div>
+          </div>
+          <div class="row" style="margin-top:1rem">
             <div style="align-self:end; display:flex; gap:.5rem">
               <button id="p-save" class="btn-primary">Ajouter</button>
               <button id="p-cancel-edit" type="button" class="hide">Annuler</button>
@@ -860,7 +949,40 @@
       <div id="view-crop-planning" class="hide">
         <div class="card">
           <h2 id="crop-planning-h2">Planification des cultures</h2>
-          <p id="crop-planning-placeholder" class="muted">À venir.</p>
+
+          <div class="stats-filters">
+            <div class="field">
+              <label id="label-cp-location">Lieu</label>
+              <select id="cp-location"></select>
+            </div>
+          </div>
+          <p id="cp-no-frost-hint" class="muted hide"></p>
+
+          <div class="glass-card">
+            <div class="barchart-title" id="cp-chart-title">Calendrier de culture</div>
+            <div class="barchart-subtitle" id="cp-chart-subtitle">Semis, plantation et récolte estimés à partir des dates de gel du lieu sélectionné</div>
+            <div class="cp-legend">
+              <span class="cp-legend-item"><i class="cp-swatch cp-sow"></i><span id="cp-legend-sow">Semis</span></span>
+              <span class="cp-legend-item"><i class="cp-swatch cp-plant"></i><span id="cp-legend-plant">Plantation</span></span>
+              <span class="cp-legend-item"><i class="cp-swatch cp-harvest"></i><span id="cp-legend-harvest">Récolte</span></span>
+            </div>
+            <div id="cp-chart-container"></div>
+            <p id="cp-chart-empty" class="stats-empty hide"></p>
+            <button type="button" class="table-toggle-btn" id="cp-table-toggle">Voir en tableau</button>
+            <div class="stats-table-wrap table-wrap hide" id="cp-table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th id="th-cp-product">Produit</th>
+                    <th id="th-cp-sow">Semis</th>
+                    <th id="th-cp-plant">Plantation</th>
+                    <th id="th-cp-harvest">Récolte</th>
+                  </tr>
+                </thead>
+                <tbody id="cp-table-rows"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1099,6 +1221,13 @@ const I18N = {
     name_fr_label: 'Nom (FR)',
     latin_name_label: 'Nom latin',
     th_p_latin: 'Nom latin',
+    p_planning_h2: 'Calendrier de culture',
+    p_planning_hint: "Optionnel — sert à calculer le calendrier de l'onglet « Planification des cultures » à partir des dates de gel du lieu.",
+    p_sow_indoor_label: 'Semis intérieur (semaines avant le dernier gel)',
+    p_sow_direct_label: 'Semis direct (semaines après le dernier gel)',
+    p_transplant_label: 'Repiquage / plantation (semaines après le dernier gel)',
+    p_maturity_min_label: "Jours jusqu'à maturité (min)",
+    p_maturity_max_label: "Jours jusqu'à maturité (max)",
     type_label: 'Type',
     type_vegetable: 'Légume',
     type_fruit: 'Fruit',
@@ -1190,6 +1319,18 @@ const I18N = {
     nav_crop_planning: 'Planification des cultures',
     crop_planning_h2: 'Planification des cultures',
     crop_planning_placeholder: 'À venir.',
+    cp_location_label: 'Lieu',
+    cp_chart_title: 'Calendrier de culture',
+    cp_chart_subtitle: 'Semis, plantation et récolte estimés à partir des dates de gel du lieu sélectionné',
+    cp_legend_sow: 'Semis',
+    cp_legend_plant: 'Plantation',
+    cp_legend_harvest: 'Récolte',
+    cp_no_frost_hint: "Renseigne la date de dernier gel de ce lieu (onglet Lieux) pour voir le calendrier.",
+    cp_empty: "Aucun produit n'a de calendrier de culture renseigné pour l'instant (onglet Produits).",
+    th_cp_product: 'Produit',
+    th_cp_sow: 'Semis',
+    th_cp_plant: 'Plantation',
+    th_cp_harvest: 'Récolte',
     nav_locations: 'Lieux',
     locations_h2: 'Ajouter un lieu',
     locations_edit_h2: 'Modifier le lieu',
@@ -1341,6 +1482,13 @@ const I18N = {
     name_fr_label: 'Name (FR)',
     latin_name_label: 'Latin name',
     th_p_latin: 'Latin name',
+    p_planning_h2: 'Growing calendar',
+    p_planning_hint: 'Optional — used to compute the calendar in the "Crop planning" tab from the location\'s frost dates.',
+    p_sow_indoor_label: 'Indoor sowing (weeks before last frost)',
+    p_sow_direct_label: 'Direct sowing (weeks after last frost)',
+    p_transplant_label: 'Transplanting (weeks after last frost)',
+    p_maturity_min_label: 'Days to maturity (min)',
+    p_maturity_max_label: 'Days to maturity (max)',
     type_label: 'Type',
     type_vegetable: 'Vegetable',
     type_fruit: 'Fruit',
@@ -1432,6 +1580,18 @@ const I18N = {
     nav_crop_planning: 'Crop planning',
     crop_planning_h2: 'Crop planning',
     crop_planning_placeholder: 'Coming soon.',
+    cp_location_label: 'Location',
+    cp_chart_title: 'Growing calendar',
+    cp_chart_subtitle: 'Sowing, transplanting, and harvest estimated from the selected location\'s frost dates',
+    cp_legend_sow: 'Sowing',
+    cp_legend_plant: 'Transplanting',
+    cp_legend_harvest: 'Harvest',
+    cp_no_frost_hint: 'Set this location\'s last frost date (Locations tab) to see the calendar.',
+    cp_empty: 'No product has a growing calendar set up yet (Products tab).',
+    th_cp_product: 'Product',
+    th_cp_sow: 'Sowing',
+    th_cp_plant: 'Transplanting',
+    th_cp_harvest: 'Harvest',
     nav_locations: 'Locations',
     locations_h2: 'Add a location',
     locations_edit_h2: 'Edit location',
@@ -1602,6 +1762,13 @@ function applyI18n(){
   setTxt('#label-p-unit', t.unit_en_label);
   setTxt('#label-p-unit-fr', t.unit_fr_label);
   setTxt('#label-p-latin', t.latin_name_label);
+  setTxt('#p-planning-h2', t.p_planning_h2);
+  setTxt('#p-planning-hint', t.p_planning_hint);
+  setTxt('#label-p-sow-indoor', t.p_sow_indoor_label);
+  setTxt('#label-p-sow-direct', t.p_sow_direct_label);
+  setTxt('#label-p-transplant', t.p_transplant_label);
+  setTxt('#label-p-maturity-min', t.p_maturity_min_label);
+  setTxt('#label-p-maturity-max', t.p_maturity_max_label);
   setTxt('#th-p-name', t.th_p_name);
   setTxt('#th-p-variety', t.th_p_variety);
   setTxt('#th-p-latin', t.th_p_latin);
@@ -1643,7 +1810,24 @@ function applyI18n(){
   setTxt('#food-independence-placeholder', t.food_independence_placeholder);
   setTxt('#nav-crop-planning', t.nav_crop_planning);
   setTxt('#crop-planning-h2', t.crop_planning_h2);
-  setTxt('#crop-planning-placeholder', t.crop_planning_placeholder);
+  setTxt('#label-cp-location', t.cp_location_label);
+  setTxt('#cp-chart-title', t.cp_chart_title);
+  setTxt('#cp-chart-subtitle', t.cp_chart_subtitle);
+  setTxt('#cp-legend-sow', t.cp_legend_sow);
+  setTxt('#cp-legend-plant', t.cp_legend_plant);
+  setTxt('#cp-legend-harvest', t.cp_legend_harvest);
+  setTxt('#th-cp-product', t.th_cp_product);
+  setTxt('#th-cp-sow', t.th_cp_sow);
+  setTxt('#th-cp-plant', t.th_cp_plant);
+  setTxt('#th-cp-harvest', t.th_cp_harvest);
+  {
+    const cpTableWrapEl = document.getElementById('cp-table-wrap');
+    const cpTableToggleBtnEl = document.getElementById('cp-table-toggle');
+    if (cpTableToggleBtnEl){
+      cpTableToggleBtnEl.textContent = (cpTableWrapEl && !cpTableWrapEl.classList.contains('hide'))
+        ? t.stats_hide_table : t.stats_show_table;
+    }
+  }
 
   // vue Lieux
   setTxt('#locations-list-h2', t.locations_list_h2);
@@ -2044,6 +2228,7 @@ function applyI18n(){
       if (view === 'locations') refreshLocationsList();
       if (view === 'prices') loadPriceProductOptions();
       if (view === 'stats') refreshStatsView();
+      if (view === 'crop-planning') refreshCropPlanningView();
       if (view === 'profile') loadProfile();
     }
 
@@ -2075,6 +2260,11 @@ function applyI18n(){
     const pUnit          = document.getElementById('p-unit');
     const pUnitFr        = document.getElementById('p-unit-fr');
     const pLatin         = document.getElementById('p-latin');
+    const pSowIndoor     = document.getElementById('p-sow-indoor');
+    const pSowDirect     = document.getElementById('p-sow-direct');
+    const pTransplant    = document.getElementById('p-transplant');
+    const pMaturityMin   = document.getElementById('p-maturity-min');
+    const pMaturityMax   = document.getElementById('p-maturity-max');
     const pSaveBtn       = document.getElementById('p-save');
     const pCancelEditBtn = document.getElementById('p-cancel-edit');
     const pMsg           = document.getElementById('product-msg');
@@ -2135,6 +2325,11 @@ function applyI18n(){
       pUnit.value = row.unit_harvest || '';
       pUnitFr.value = row.unit_harvest_fr || '';
       pLatin.value = row.latin_name || '';
+      pSowIndoor.value = row.sow_indoor_weeks_before_frost ?? '';
+      pSowDirect.value = row.sow_direct_weeks_after_frost ?? '';
+      pTransplant.value = row.transplant_weeks_after_frost ?? '';
+      pMaturityMin.value = row.days_to_maturity_min ?? '';
+      pMaturityMax.value = row.days_to_maturity_max ?? '';
       pMsg.textContent = '';
       renderProductFormMode();
       document.getElementById('product-form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2146,6 +2341,8 @@ function applyI18n(){
       pVariety.value = ''; pVarietyFr.value = '';
       pUnit.value = ''; pUnitFr.value = '';
       pLatin.value = '';
+      pSowIndoor.value = ''; pSowDirect.value = ''; pTransplant.value = '';
+      pMaturityMin.value = ''; pMaturityMax.value = '';
       selPType.value = 'Fruit';
       pMsg.textContent = '';
       renderProductFormMode();
@@ -2176,7 +2373,9 @@ function applyI18n(){
 
     async function refreshProductsList(){
       const { data, error } = await db.from('products')
-        .select('id,name,name_fr,type,variety,variety_fr,unit_harvest,unit_harvest_fr,latin_name')
+        .select('id,name,name_fr,type,variety,variety_fr,unit_harvest,unit_harvest_fr,latin_name,' +
+          'sow_indoor_weeks_before_frost,sow_direct_weeks_after_frost,transplant_weeks_after_frost,' +
+          'days_to_maturity_min,days_to_maturity_max')
         .order('name');
       if (error){
         productsListMsg.textContent = (window.__i18n_products_err_hint2||'Erreur produits : ') + error.message;
@@ -2243,6 +2442,7 @@ function applyI18n(){
       const unit = pUnit.value.trim();
       if (!unit){ pMsg.textContent = t.choose_unit_err; return; }
 
+      const numOrNull = (v) => (v === '' || v == null) ? null : Number(v);
       const payload = {
         name,
         name_fr: pNameFr.value.trim() || null,
@@ -2251,7 +2451,12 @@ function applyI18n(){
         variety_fr: pVarietyFr.value.trim() || null,
         unit_harvest: unit,
         unit_harvest_fr: pUnitFr.value.trim() || null,
-        latin_name: pLatin.value.trim() || null
+        latin_name: pLatin.value.trim() || null,
+        sow_indoor_weeks_before_frost: numOrNull(pSowIndoor.value),
+        sow_direct_weeks_after_frost: numOrNull(pSowDirect.value),
+        transplant_weeks_after_frost: numOrNull(pTransplant.value),
+        days_to_maturity_min: numOrNull(pMaturityMin.value),
+        days_to_maturity_max: numOrNull(pMaturityMax.value)
       };
 
       const { error } = editingProductId
@@ -2267,7 +2472,10 @@ function applyI18n(){
       const wasEditing = !!editingProductId;
       editingProductId = null;
       if (wasEditing) renderProductFormMode();
-      else { pName.value=''; pNameFr.value=''; pVariety.value=''; pVarietyFr.value=''; pUnit.value=''; pUnitFr.value=''; pLatin.value=''; }
+      else {
+        pName.value=''; pNameFr.value=''; pVariety.value=''; pVarietyFr.value=''; pUnit.value=''; pUnitFr.value=''; pLatin.value='';
+        pSowIndoor.value=''; pSowDirect.value=''; pTransplant.value=''; pMaturityMin.value=''; pMaturityMax.value='';
+      }
 
       await Promise.all([refreshProductsList(), loadProducts()]);
     };
@@ -3047,6 +3255,220 @@ function applyI18n(){
       await populateStatsFilterOptions();
       refreshStatsYearOptions();
       renderStats();
+    }
+
+    // === Vue Planification des cultures ===
+    const CP_MONTH_CUM_DAYS = [0,31,59,90,120,151,181,212,243,273,304,334,365];
+
+    function cpDayOfYear(monthIdx, day){ // monthIdx: 0-11
+      return CP_MONTH_CUM_DAYS[monthIdx] + day; // 1..365
+    }
+
+    function cpParseDate(dateStr){
+      // 'YYYY-MM-DD' -> { month: 0-11, day }
+      const [, m, d] = dateStr.split('-').map(Number);
+      return { month: m - 1, day: d };
+    }
+
+    function cpMonthDayLabel(rawDoy, isFr){
+      const wrapped = ((rawDoy - 1) % 365 + 365) % 365 + 1;
+      let monthIdx = 11;
+      for (let i = 0; i < 12; i++){ if (wrapped <= CP_MONTH_CUM_DAYS[i + 1]){ monthIdx = i; break; } }
+      const day = wrapped - CP_MONTH_CUM_DAYS[monthIdx];
+      const d = new Date(2001, monthIdx, day);
+      return new Intl.DateTimeFormat(isFr ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'short' }).format(d);
+    }
+
+    function cpPct(rawDoy){
+      const wrapped = ((rawDoy - 1) % 365 + 365) % 365;
+      return wrapped / 365 * 100;
+    }
+
+    // Splits a [rawStart, rawEnd] span (rawEnd >= rawStart, possibly > 365) into
+    // one or two { startPct, widthPct } segments, wrapping at the year boundary.
+    function cpSegments(rawStart, rawEnd){
+      const startYear = Math.floor((rawStart - 1) / 365);
+      const endYear = Math.floor((rawEnd - 1) / 365);
+      if (startYear === endYear){
+        return [{ startPct: cpPct(rawStart), widthPct: (rawEnd - rawStart) / 365 * 100 }];
+      }
+      const yearEndRaw = (startYear + 1) * 365 + 1;
+      return [
+        { startPct: cpPct(rawStart), widthPct: (yearEndRaw - rawStart) / 365 * 100 },
+        { startPct: 0, widthPct: (rawEnd - yearEndRaw) / 365 * 100 }
+      ];
+    }
+
+    const cpLocationSel = document.getElementById('cp-location');
+    const cpNoFrostHint = document.getElementById('cp-no-frost-hint');
+    const cpChartContainer = document.getElementById('cp-chart-container');
+    const cpChartEmpty = document.getElementById('cp-chart-empty');
+    const cpTableToggleBtn = document.getElementById('cp-table-toggle');
+    const cpTableWrap = document.getElementById('cp-table-wrap');
+    const cpTableRows = document.getElementById('cp-table-rows');
+
+    let cpLocations = [];
+    let cpProducts = [];
+    let cpDataLoaded = false;
+
+    async function loadCropPlanningData(){
+      const [{ data: locs }, { data: prods }] = await Promise.all([
+        db.from('locations').select('id,name,name_fr,last_spring_frost,first_fall_frost').order('name'),
+        db.from('products').select('id,name,name_fr,variety,variety_fr,' +
+          'sow_indoor_weeks_before_frost,sow_direct_weeks_after_frost,transplant_weeks_after_frost,' +
+          'days_to_maturity_min,days_to_maturity_max').order('name')
+      ]);
+      cpLocations = locs || [];
+      cpProducts = prods || [];
+      cpDataLoaded = true;
+    }
+
+    function populateCropPlanningLocations(){
+      const isFr = (curLang === 'fr');
+      const keep = cpLocationSel.value;
+      const sorted = [...cpLocations].sort((a, b) =>
+        (isFr ? (a.name_fr || a.name) : a.name).localeCompare(isFr ? (b.name_fr || b.name) : b.name, isFr ? 'fr' : 'en')
+      );
+      cpLocationSel.innerHTML = sorted.map(l =>
+        `<option value="${l.id}">${escapeHtml(isFr ? (l.name_fr || l.name) : l.name)}</option>`
+      ).join('');
+      if (keep && sorted.some(l => String(l.id) === keep)) cpLocationSel.value = keep;
+      else if (favoriteLocationId && sorted.some(l => String(l.id) === String(favoriteLocationId))) cpLocationSel.value = String(favoriteLocationId);
+    }
+
+    function cpComputeProductWindows(product, frostLoc){
+      const lastFrost = cpParseDate(frostLoc.last_spring_frost);
+      const lastFrostDoy = cpDayOfYear(lastFrost.month, lastFrost.day);
+
+      const windows = { sow: null, plant: null, harvest: null };
+
+      const sowIndoorWeeks = product.sow_indoor_weeks_before_frost;
+      const sowDirectWeeks = product.sow_direct_weeks_after_frost;
+      const transplantWeeks = product.transplant_weeks_after_frost;
+      const matMin = product.days_to_maturity_min;
+      const matMax = product.days_to_maturity_max;
+
+      let sowRaw = null;
+      if (sowIndoorWeeks != null){ sowRaw = lastFrostDoy - sowIndoorWeeks * 7; }
+      else if (sowDirectWeeks != null){ sowRaw = lastFrostDoy + sowDirectWeeks * 7; }
+      if (sowRaw != null) windows.sow = { start: sowRaw, end: sowRaw + 3 }; // ~3-day sowing window
+
+      let plantRaw = null;
+      if (transplantWeeks != null){ plantRaw = lastFrostDoy + transplantWeeks * 7; }
+      else if (sowDirectWeeks != null){ plantRaw = lastFrostDoy + sowDirectWeeks * 7; }
+      if (plantRaw != null) windows.plant = { start: plantRaw, end: plantRaw + 3 };
+
+      const referenceRaw = plantRaw != null ? plantRaw : sowRaw;
+      if (referenceRaw != null && (matMin != null || matMax != null)){
+        const min = matMin != null ? matMin : matMax;
+        const max = matMax != null ? matMax : matMin;
+        windows.harvest = { start: referenceRaw + min, end: referenceRaw + max };
+      }
+
+      return windows;
+    }
+
+    function cpRenderTooltipText(win, isFr){
+      const startLabel = cpMonthDayLabel(win.start, isFr);
+      const endLabel = cpMonthDayLabel(win.end, isFr);
+      return startLabel === endLabel ? startLabel : `${startLabel} → ${endLabel}`;
+    }
+
+    function renderCropPlanning(){
+      if (!cpDataLoaded) return;
+      const isFr = (curLang === 'fr');
+      const t = I18N[curLang] || I18N.fr;
+      const locId = cpLocationSel.value;
+      const loc = cpLocations.find(l => String(l.id) === locId);
+
+      if (!loc || !loc.last_spring_frost){
+        cpNoFrostHint.textContent = t.cp_no_frost_hint;
+        cpNoFrostHint.classList.remove('hide');
+        cpChartContainer.innerHTML = '';
+        cpChartEmpty.classList.add('hide');
+        cpTableRows.innerHTML = '';
+        return;
+      }
+      cpNoFrostHint.classList.add('hide');
+
+      const rows = cpProducts.map(p => ({
+        product: p,
+        label: `${isFr ? (p.name_fr || p.name) : p.name}${p.variety ? ' — ' + (isFr ? (p.variety_fr || p.variety) : p.variety) : ''}`,
+        windows: cpComputeProductWindows(p, loc)
+      })).filter(r => r.windows.sow || r.windows.plant || r.windows.harvest);
+
+      if (!rows.length){
+        cpChartContainer.innerHTML = '';
+        cpChartEmpty.textContent = t.cp_empty;
+        cpChartEmpty.classList.remove('hide');
+        cpTableRows.innerHTML = '';
+        return;
+      }
+      cpChartEmpty.classList.add('hide');
+
+      const monthLabels = isFr
+        ? ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.']
+        : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const monthsHtml = monthLabels.map((lbl, i) => {
+        const pct = (CP_MONTH_CUM_DAYS[i] + CP_MONTH_CUM_DAYS[i + 1]) / 2 / 365 * 100;
+        return `<span style="left:calc(150px + (100% - 150px) * ${pct / 100})">${lbl}</span>`;
+      }).join('');
+
+      function barsFor(win, cls, label){
+        if (!win) return '';
+        return cpSegments(win.start, win.end).map(seg => `
+          <div class="cp-bar ${cls}" tabindex="0" style="left:${seg.startPct}%;width:${Math.max(seg.widthPct, 0.6)}%">
+            <div class="cp-bar-tooltip"><span class="tt-value">${escapeHtml(label)}</span><br/><span class="tt-label">${escapeHtml(cpRenderTooltipText(win, isFr))}</span></div>
+          </div>`).join('');
+      }
+
+      const rowsHtml = rows.map(r => `
+        <div class="cp-row">
+          <div class="cp-row-label" title="${escapeHtml(r.label)}">${escapeHtml(r.label)}</div>
+          <div class="cp-track">
+            ${barsFor(r.windows.sow, 'cp-sow', t.cp_legend_sow)}
+            ${barsFor(r.windows.plant, 'cp-plant', t.cp_legend_plant)}
+            ${barsFor(r.windows.harvest, 'cp-harvest', t.cp_legend_harvest)}
+          </div>
+        </div>`).join('');
+
+      cpChartContainer.innerHTML = `
+        <div class="cp-outer">
+          <div class="cp-inner">
+            <div class="cp-months">${monthsHtml}</div>
+            ${rowsHtml}
+          </div>
+        </div>`;
+
+      cpTableRows.innerHTML = rows.map(r => `
+        <tr>
+          <td>${escapeHtml(r.label)}</td>
+          <td>${r.windows.sow ? escapeHtml(cpRenderTooltipText(r.windows.sow, isFr)) : '–'}</td>
+          <td>${r.windows.plant ? escapeHtml(cpRenderTooltipText(r.windows.plant, isFr)) : '–'}</td>
+          <td>${r.windows.harvest ? escapeHtml(cpRenderTooltipText(r.windows.harvest, isFr)) : '–'}</td>
+        </tr>`).join('');
+    }
+
+    // Tap-to-show tooltip (mobile — hover/focus alone isn't reliable on touch)
+    cpChartContainer.addEventListener('click', (e) => {
+      const bar = e.target.closest('.cp-bar');
+      const wasTapped = bar && bar.classList.contains('tapped');
+      cpChartContainer.querySelectorAll('.cp-bar.tapped').forEach(b => b.classList.remove('tapped'));
+      if (bar && !wasTapped) bar.classList.add('tapped');
+    });
+
+    cpLocationSel.onchange = () => renderCropPlanning();
+    cpTableToggleBtn.onclick = () => {
+      const t = I18N[curLang] || I18N.fr;
+      const willShow = cpTableWrap.classList.contains('hide');
+      cpTableWrap.classList.toggle('hide', !willShow);
+      cpTableToggleBtn.textContent = willShow ? t.stats_hide_table : t.stats_show_table;
+    };
+
+    async function refreshCropPlanningView(){
+      await loadCropPlanningData();
+      populateCropPlanningLocations();
+      renderCropPlanning();
     }
 
     // === Vue Profil ===
