@@ -1214,6 +1214,7 @@
             </div>
             <div id="cp-chart-container"></div>
             <p id="cp-chart-empty" class="stats-empty hide"></p>
+            <button type="button" class="table-toggle-btn" id="cp-gantt-expand-toggle">Détail des semis</button>
             <button type="button" class="table-toggle-btn" id="cp-table-toggle">Voir en tableau</button>
             <div class="stats-table-wrap table-wrap hide" id="cp-table-wrap">
               <table>
@@ -1287,6 +1288,7 @@
               </div>
               <div id="cpp-chart-container"></div>
               <p id="cpp-chart-empty" class="stats-empty hide"></p>
+              <button type="button" class="table-toggle-btn" id="cpp-gantt-expand-toggle">Détail des semis</button>
               <button type="button" class="table-toggle-btn" id="cpp-table-toggle">Voir en tableau</button>
               <div class="stats-table-wrap table-wrap hide" id="cpp-table-wrap">
                 <table>
@@ -1698,6 +1700,8 @@ const I18N = {
     stats_empty: 'Aucune donnée pour cette sélection.',
     stats_show_table: 'Voir en tableau',
     stats_hide_table: 'Masquer le tableau',
+    cp_gantt_expand_btn: 'Détail des semis',
+    cp_gantt_compact_btn: 'Vue compacte',
     stats_th_period: 'Période',
     stats_th_qty: 'Quantité récoltée',
     stats_th_value: 'Valeur estimée',
@@ -2062,6 +2066,8 @@ const I18N = {
     stats_empty: 'No data for this selection.',
     stats_show_table: 'View as table',
     stats_hide_table: 'Hide table',
+    cp_gantt_expand_btn: 'Sowing detail',
+    cp_gantt_compact_btn: 'Compact view',
     stats_th_period: 'Period',
     stats_th_qty: 'Harvested quantity',
     stats_th_value: 'Estimated value',
@@ -2484,6 +2490,14 @@ function applyI18n(){
     if (cppAreaTableToggleBtnEl){
       cppAreaTableToggleBtnEl.textContent = (cppAreaTableWrapEl && !cppAreaTableWrapEl.classList.contains('hide'))
         ? t.stats_hide_table : t.stats_show_table;
+    }
+    const cpGanttExpandToggleBtnEl = document.getElementById('cp-gantt-expand-toggle');
+    if (cpGanttExpandToggleBtnEl){
+      cpGanttExpandToggleBtnEl.textContent = cpGanttExpanded ? t.cp_gantt_compact_btn : t.cp_gantt_expand_btn;
+    }
+    const cppGanttExpandToggleBtnEl = document.getElementById('cpp-gantt-expand-toggle');
+    if (cppGanttExpandToggleBtnEl){
+      cppGanttExpandToggleBtnEl.textContent = cppGanttExpanded ? t.cp_gantt_compact_btn : t.cp_gantt_expand_btn;
     }
   }
 
@@ -4017,12 +4031,16 @@ function applyI18n(){
     const cpTableToggleBtn = document.getElementById('cp-table-toggle');
     const cpTableWrap = document.getElementById('cp-table-wrap');
     const cpTableRows = document.getElementById('cp-table-rows');
+    const cpGanttExpandToggleBtn = document.getElementById('cp-gantt-expand-toggle');
     const cppChartSection = document.getElementById('cpp-chart-section');
     const cppChartContainer = document.getElementById('cpp-chart-container');
     const cppChartEmpty = document.getElementById('cpp-chart-empty');
     const cppTableToggleBtn = document.getElementById('cpp-table-toggle');
     const cppTableWrap = document.getElementById('cpp-table-wrap');
     const cppTableRows = document.getElementById('cpp-table-rows');
+    const cppGanttExpandToggleBtn = document.getElementById('cpp-gantt-expand-toggle');
+    let cpGanttExpanded = false;
+    let cppGanttExpanded = false;
     const cppAreaSection = document.getElementById('cpp-area-section');
     const cppAreaHint = document.getElementById('cpp-area-hint');
     const cppAreaContainer = document.getElementById('cpp-area-container');
@@ -4186,13 +4204,13 @@ function applyI18n(){
       }
       cpChartEmpty.classList.add('hide');
 
-      cpRenderGanttInto(rows, cpSortSel.value, isFr, t, cpChartContainer, cpTableRows);
+      cpRenderGanttInto(rows, cpSortSel.value, isFr, t, cpChartContainer, cpTableRows, cpGanttExpanded);
     }
 
     // Shared Gantt renderer for both the full product calendar and the
     // plan-scoped calendar below "Mon plan de culture" — same bars, same
     // table-view twin, just fed a different `rows` list.
-    function cpRenderGanttInto(rows, sortBy, isFr, t, chartEl, tableRowsEl){
+    function cpRenderGanttInto(rows, sortBy, isFr, t, chartEl, tableRowsEl, expanded){
       if (sortBy === 'name'){
         rows.sort((a, b) => a.label.localeCompare(b.label, isFr ? 'fr' : 'en'));
       } else {
@@ -4231,24 +4249,27 @@ function applyI18n(){
           </div>`).join('');
       }
 
-      // Each succession round gets its own horizontal lane within the row —
-      // otherwise several rounds' wide harvest bars (extended via
+      // Optional: each succession round gets its own horizontal lane within
+      // the row — otherwise several rounds' wide harvest bars (extended via
       // harvest_duration_weeks) overlap almost entirely and read as one
-      // solid block instead of distinct sowings.
+      // solid block instead of distinct sowings. Off by default (compact,
+      // rounds overlapping in one lane) since it takes a lot more vertical
+      // space — toggled per chart via a small button.
       const rowsHtml = rows.map(r => {
-        const rowH = Math.max(34, r.rounds.length * 20);
+        const rowH = expanded ? Math.max(34, r.rounds.length * 20) : 34;
+        const roundsHtml = r.rounds.map((w, i) => {
+          const bars = `
+            ${barsFor(w.sow, 'cp-sow', t.cp_legend_sow)}
+            ${barsFor(w.plant, 'cp-plant', t.cp_legend_plant)}
+            ${barsFor(w.harvest, 'cp-harvest', t.cp_legend_harvest)}`;
+          return expanded
+            ? `<div class="cp-subtrack" title="${r.rounds.length > 1 ? escapeHtml(`${t.cp_cycle} ${i + 1}`) : ''}">${bars}</div>`
+            : bars;
+        }).join('');
         return `
         <div class="cp-row" style="min-height:${rowH}px">
           <div class="cp-row-label" title="${escapeHtml(r.label)}">${escapeHtml(r.label)}</div>
-          <div class="cp-track" style="height:${rowH}px">
-            ${r.rounds.map((w, i) => `
-              <div class="cp-subtrack" title="${r.rounds.length > 1 ? escapeHtml(`${t.cp_cycle} ${i + 1}`) : ''}">
-                ${barsFor(w.sow, 'cp-sow', t.cp_legend_sow)}
-                ${barsFor(w.plant, 'cp-plant', t.cp_legend_plant)}
-                ${barsFor(w.harvest, 'cp-harvest', t.cp_legend_harvest)}
-              </div>
-            `).join('')}
-          </div>
+          <div class="cp-track" style="height:${rowH}px">${roundsHtml}</div>
         </div>`;
       }).join('');
 
@@ -4307,7 +4328,7 @@ function applyI18n(){
 
       // Chronological read of "what to do first" for the plan, not tied to
       // the main calendar's user-selectable sort.
-      cpRenderGanttInto(rows, 'sow', isFr, t, cppChartContainer, cppTableRows);
+      cpRenderGanttInto(rows, 'sow', isFr, t, cppChartContainer, cppTableRows, cppGanttExpanded);
     }
 
     // Adds `area` to every day a round occupies the garden, handling the
@@ -4506,6 +4527,18 @@ function applyI18n(){
       const willShow = cppTableWrap.classList.contains('hide');
       cppTableWrap.classList.toggle('hide', !willShow);
       cppTableToggleBtn.textContent = willShow ? t.stats_hide_table : t.stats_show_table;
+    };
+    cpGanttExpandToggleBtn.onclick = () => {
+      const t = I18N[curLang] || I18N.fr;
+      cpGanttExpanded = !cpGanttExpanded;
+      cpGanttExpandToggleBtn.textContent = cpGanttExpanded ? t.cp_gantt_compact_btn : t.cp_gantt_expand_btn;
+      renderCropPlanning();
+    };
+    cppGanttExpandToggleBtn.onclick = () => {
+      const t = I18N[curLang] || I18N.fr;
+      cppGanttExpanded = !cppGanttExpanded;
+      cppGanttExpandToggleBtn.textContent = cppGanttExpanded ? t.cp_gantt_compact_btn : t.cp_gantt_expand_btn;
+      renderCropPlanCalendar();
     };
     cppAreaTableToggleBtn.onclick = () => {
       const t = I18N[curLang] || I18N.fr;
