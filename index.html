@@ -1120,6 +1120,15 @@
               <label id="label-cp-location">Lieu</label>
               <select id="cp-location"></select>
             </div>
+            <div class="field">
+              <label id="label-cp-sort">Trier par</label>
+              <select id="cp-sort">
+                <option id="cp-sort-opt-name" value="name">Nom</option>
+                <option id="cp-sort-opt-sow" value="sow">Semis</option>
+                <option id="cp-sort-opt-plant" value="plant">Plantation</option>
+                <option id="cp-sort-opt-harvest" value="harvest">Récolte</option>
+              </select>
+            </div>
           </div>
           <p id="cp-no-frost-hint" class="muted hide"></p>
 
@@ -1540,6 +1549,11 @@ const I18N = {
     crop_planning_h2: 'Planification des cultures',
     crop_planning_placeholder: 'À venir.',
     cp_location_label: 'Lieu',
+    cp_sort_label: 'Trier par',
+    cp_sort_name: 'Nom',
+    cp_sort_sow: 'Semis',
+    cp_sort_plant: 'Plantation',
+    cp_sort_harvest: 'Récolte',
     cp_chart_title: 'Calendrier de culture',
     cp_chart_subtitle: 'Semis, plantation et récolte estimés à partir des dates de gel du lieu sélectionné',
     cp_legend_sow: 'Semis',
@@ -1852,6 +1866,11 @@ const I18N = {
     crop_planning_h2: 'Crop planning',
     crop_planning_placeholder: 'Coming soon.',
     cp_location_label: 'Location',
+    cp_sort_label: 'Sort by',
+    cp_sort_name: 'Name',
+    cp_sort_sow: 'Sowing',
+    cp_sort_plant: 'Transplanting',
+    cp_sort_harvest: 'Harvest',
     cp_chart_title: 'Growing calendar',
     cp_chart_subtitle: 'Sowing, transplanting, and harvest estimated from the selected location\'s frost dates',
     cp_legend_sow: 'Sowing',
@@ -2107,6 +2126,11 @@ function applyI18n(){
   setTxt('#nav-crop-planning', t.nav_crop_planning);
   setTxt('#crop-planning-h2', t.crop_planning_h2);
   setTxt('#label-cp-location', t.cp_location_label);
+  setTxt('#label-cp-sort', t.cp_sort_label);
+  setTxt('#cp-sort-opt-name', t.cp_sort_name);
+  setTxt('#cp-sort-opt-sow', t.cp_sort_sow);
+  setTxt('#cp-sort-opt-plant', t.cp_sort_plant);
+  setTxt('#cp-sort-opt-harvest', t.cp_sort_harvest);
   setTxt('#cp-chart-title', t.cp_chart_title);
   setTxt('#cp-chart-subtitle', t.cp_chart_subtitle);
   setTxt('#cp-legend-sow', t.cp_legend_sow);
@@ -3620,6 +3644,7 @@ function applyI18n(){
     }
 
     const cpLocationSel = document.getElementById('cp-location');
+    const cpSortSel = document.getElementById('cp-sort');
     const cpNoFrostHint = document.getElementById('cp-no-frost-hint');
     const cpChartContainer = document.getElementById('cp-chart-container');
     const cpChartEmpty = document.getElementById('cp-chart-empty');
@@ -3766,6 +3791,29 @@ function applyI18n(){
       }
       cpChartEmpty.classList.add('hide');
 
+      const sortBy = cpSortSel.value;
+      if (sortBy === 'name'){
+        rows.sort((a, b) => a.label.localeCompare(b.label, isFr ? 'fr' : 'en'));
+      } else {
+        const earliestPct = (r) => {
+          let best = null;
+          r.rounds.forEach(w => {
+            const win = w[sortBy];
+            if (!win) return;
+            const pct = cpPct(win.start);
+            if (best === null || pct < best) best = pct;
+          });
+          return best;
+        };
+        rows.forEach(r => { r._sortKey = earliestPct(r); });
+        rows.sort((a, b) => {
+          if (a._sortKey === null && b._sortKey === null) return a.label.localeCompare(b.label, isFr ? 'fr' : 'en');
+          if (a._sortKey === null) return 1; // rows without this phase go last
+          if (b._sortKey === null) return -1;
+          return a._sortKey - b._sortKey || a.label.localeCompare(b.label, isFr ? 'fr' : 'en');
+        });
+      }
+
       const monthLabels = isFr
         ? ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.']
         : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -3823,6 +3871,7 @@ function applyI18n(){
     });
 
     cpLocationSel.onchange = () => renderCropPlanning();
+    cpSortSel.onchange = () => renderCropPlanning();
     cpTableToggleBtn.onclick = () => {
       const t = I18N[curLang] || I18N.fr;
       const willShow = cpTableWrap.classList.contains('hide');
