@@ -1397,23 +1397,6 @@
 
       <div id="view-discussion" class="hide">
         <div class="card">
-          <h2 id="discussion-messages-h2">Messages</h2>
-          <p id="discussion-messages-hint" class="muted"></p>
-          <div id="messages-list" class="messages-list"></div>
-          <p id="messages-empty" class="muted hide"></p>
-          <div class="stats-filters" style="margin-top:12px;align-items:end">
-            <div class="field" style="flex:1 1 auto">
-              <label id="label-message-body" class="hide">Message</label>
-              <textarea id="message-body" rows="2" maxlength="2000"></textarea>
-            </div>
-            <div class="field" style="align-self:end">
-              <button type="button" class="btn-primary" id="message-send" style="width:auto">Envoyer</button>
-            </div>
-          </div>
-          <p id="message-msg" class="muted"></p>
-        </div>
-
-        <div class="card">
           <h2 id="discussion-suggestions-h2">Suggestions d'amélioration</h2>
           <p id="discussion-suggestions-hint" class="muted"></p>
           <div class="row" style="margin-top:.5rem">
@@ -1434,6 +1417,23 @@
           <p id="suggestion-msg" class="muted"></p>
           <div id="suggestions-list" class="suggestions-list" style="margin-top:14px"></div>
           <p id="suggestions-empty" class="muted hide"></p>
+        </div>
+
+        <div class="card">
+          <h2 id="discussion-messages-h2">Messages</h2>
+          <p id="discussion-messages-hint" class="muted"></p>
+          <div id="messages-list" class="messages-list"></div>
+          <p id="messages-empty" class="muted hide"></p>
+          <div class="stats-filters" style="margin-top:12px;align-items:end">
+            <div class="field" style="flex:1 1 auto">
+              <label id="label-message-body" class="hide">Message</label>
+              <textarea id="message-body" rows="2" maxlength="2000"></textarea>
+            </div>
+            <div class="field" style="align-self:end">
+              <button type="button" class="btn-primary" id="message-send" style="width:auto">Envoyer</button>
+            </div>
+          </div>
+          <p id="message-msg" class="muted"></p>
         </div>
       </div>
 
@@ -5773,9 +5773,10 @@ function applyI18n(){
     let messagesPollTimer = null;
 
     async function loadMessages(){
+      // Newest first — most recent message at the top of the list.
       const { data, error } = await db.from('messages_view').select('*').order('created_at', { ascending: false }).limit(200);
       if (error){ messageMsgEl.className = 'muted msg-err'; messageMsgEl.textContent = error.message; return; }
-      dcMessages = (data || []).slice().reverse();
+      dcMessages = data || [];
     }
 
     function renderMessages(){
@@ -5789,14 +5790,17 @@ function applyI18n(){
         return;
       }
       messagesEmptyEl.classList.add('hide');
-      const wasAtBottom = messagesListEl.scrollTop + messagesListEl.clientHeight >= messagesListEl.scrollHeight - 20;
+      // Newest is now at the top, so "was reading the latest" means being
+      // scrolled near the top — keep them there after a refresh, but don't
+      // yank the scroll position if they've scrolled down into older history.
+      const wasAtTop = messagesListEl.scrollTop <= 20;
       messagesListEl.innerHTML = dcMessages.map(m => `
         <div class="msg-bubble${m.user_id === currentUserId ? ' mine' : ''}">
           <div class="msg-meta"><span class="msg-author">${escapeHtml(m.author_name || '?')}</span> · <span class="msg-time">${escapeHtml(dtFmt.format(new Date(m.created_at)))}</span></div>
           <div class="msg-body">${escapeHtml(m.body)}</div>
         </div>`).join('');
-      if (wasAtBottom || messagesListEl.dataset.firstRender !== 'done'){
-        messagesListEl.scrollTop = messagesListEl.scrollHeight;
+      if (wasAtTop || messagesListEl.dataset.firstRender !== 'done'){
+        messagesListEl.scrollTop = 0;
         messagesListEl.dataset.firstRender = 'done';
       }
     }
@@ -5811,6 +5815,7 @@ function applyI18n(){
       messageBodyInput.value = '';
       await loadMessages();
       renderMessages();
+      messagesListEl.scrollTop = 0; // your own new message is now at the top
     };
     messageBodyInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); messageSendBtn.click(); }
