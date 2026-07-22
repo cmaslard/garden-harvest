@@ -162,11 +162,12 @@
       border-radius:14px; padding:16px; margin:16px 0; background:var(--card);
     }
     label{font-size:.9rem;color:var(--muted);display:block;margin-bottom:6px}
-    input,select,button{
+    input,select,button,textarea{
       padding:.6rem;border:1px solid var(--border);border-radius:12px;width:100%;
-      background:transparent;color:var(--fg)
+      background:transparent;color:var(--fg);font:inherit
     }
-    input::placeholder{color:#6b7280}
+    textarea{resize:vertical;min-height:2.4em}
+    input::placeholder,textarea::placeholder{color:#6b7280}
     button{cursor:pointer}
     .qty-input-group{ display:flex; align-items:stretch; }
     .qty-input-group input{ border-top-right-radius:0; border-bottom-right-radius:0; border-right:none; min-width:0; flex:1 1 auto; }
@@ -474,6 +475,41 @@
     .fi-monthly-bar-col:focus-within .fi-monthly-bar-tooltip,
     .fi-monthly-bar-col.tapped .fi-monthly-bar-tooltip{ opacity:1; }
     .fi-monthly-container{ padding-top:44px; }
+
+    /* ===== Discussion ===== */
+    .messages-list{
+      display:flex; flex-direction:column; gap:10px;
+      max-height:420px; overflow-y:auto; padding:4px 2px;
+      border:1px solid var(--border); border-radius:12px; padding:12px;
+    }
+    .msg-bubble{
+      align-self:flex-start; max-width:80%;
+      background:var(--card); border:1px solid var(--border); border-radius:12px;
+      padding:8px 12px;
+    }
+    .msg-bubble.mine{ align-self:flex-end; background:color-mix(in srgb, var(--accent) 16%, var(--card)); }
+    .msg-meta{ font-size:.72rem; color:var(--muted); margin-bottom:2px; }
+    .msg-body{ font-size:.92rem; white-space:pre-wrap; word-break:break-word; }
+    .suggestion-row{
+      display:flex; gap:12px; align-items:flex-start;
+      border-top:1px solid var(--border); padding:10px 0;
+    }
+    .suggestion-row:first-child{ border-top:none; }
+    .suggestion-votebox{
+      display:flex; flex-direction:column; align-items:center; gap:2px; flex:0 0 auto; width:36px;
+    }
+    .suggestion-vote-btn{
+      width:auto; padding:2px 0; border:none; background:transparent; color:var(--muted);
+      font-size:.9rem; line-height:1; cursor:pointer;
+    }
+    .suggestion-vote-btn:hover{ color:var(--fg); }
+    .suggestion-vote-btn.up.active{ color:var(--accent); }
+    .suggestion-vote-btn.down.active{ color:var(--err); }
+    .suggestion-score{ font-weight:600; font-size:.9rem; }
+    .suggestion-content{ flex:1 1 auto; min-width:0; }
+    .suggestion-title{ font-weight:600; }
+    .suggestion-body{ font-size:.88rem; color:var(--muted); margin-top:2px; }
+    .suggestion-meta{ font-size:.74rem; margin-top:4px; }
   </style>
 </head>
 
@@ -569,6 +605,7 @@
         <button type="button" class="tab" id="nav-food-independence" data-view="food-independence">Vers l'autonomie alimentaire</button>
         <button type="button" class="tab" id="nav-crop-planning" data-view="crop-planning">Planification des cultures</button>
         <button type="button" class="tab" id="nav-locations" data-view="locations">Lieux</button>
+        <button type="button" class="tab" id="nav-discussion" data-view="discussion">Discussion</button>
         <button type="button" class="tab" id="nav-profile" data-view="profile">Profil</button>
       </nav>
       <select class="mobile-nav-select" id="main-nav-mobile">
@@ -579,6 +616,7 @@
         <option value="food-independence">Vers l'autonomie alimentaire</option>
         <option value="crop-planning">Planification des cultures</option>
         <option value="locations">Lieux</option>
+        <option value="discussion">Discussion</option>
         <option value="profile">Profil</option>
       </select>
 
@@ -1357,6 +1395,48 @@
         </div>
       </div>
 
+      <div id="view-discussion" class="hide">
+        <div class="card">
+          <h2 id="discussion-messages-h2">Messages</h2>
+          <p id="discussion-messages-hint" class="muted"></p>
+          <div id="messages-list" class="messages-list"></div>
+          <p id="messages-empty" class="muted hide"></p>
+          <div class="stats-filters" style="margin-top:12px;align-items:end">
+            <div class="field" style="flex:1 1 auto">
+              <label id="label-message-body" class="hide">Message</label>
+              <textarea id="message-body" rows="2" maxlength="2000"></textarea>
+            </div>
+            <div class="field" style="align-self:end">
+              <button type="button" class="btn-primary" id="message-send" style="width:auto">Envoyer</button>
+            </div>
+          </div>
+          <p id="message-msg" class="muted"></p>
+        </div>
+
+        <div class="card">
+          <h2 id="discussion-suggestions-h2">Suggestions d'amélioration</h2>
+          <p id="discussion-suggestions-hint" class="muted"></p>
+          <div class="row" style="margin-top:.5rem">
+            <div>
+              <label id="label-suggestion-title">Titre</label>
+              <input id="suggestion-title" type="text" maxlength="200" />
+            </div>
+            <div>
+              <label id="label-suggestion-body">Description (optionnel)</label>
+              <input id="suggestion-body" type="text" />
+            </div>
+          </div>
+          <div class="row" style="margin-top:.5rem">
+            <div style="align-self:end">
+              <button type="button" class="btn-primary" id="suggestion-add" style="width:auto">Proposer</button>
+            </div>
+          </div>
+          <p id="suggestion-msg" class="muted"></p>
+          <div id="suggestions-list" class="suggestions-list" style="margin-top:14px"></div>
+          <p id="suggestions-empty" class="muted hide"></p>
+        </div>
+      </div>
+
       <div id="view-profile" class="hide">
         <div class="card">
           <h2 id="profile-h2">Mon profil</h2>
@@ -1755,6 +1835,21 @@ const I18N = {
     fi_cellar: 'cave',
     fi_frozen: 'congélateur',
     nav_crop_planning: 'Planification des cultures',
+    nav_discussion: 'Discussion',
+    discussion_messages_h2: 'Messages',
+    discussion_messages_hint: "Discussion ouverte à tous les comptes actifs de l'appli.",
+    messages_empty: 'Aucun message pour le moment — sois le premier à écrire !',
+    message_send_btn: 'Envoyer',
+    discussion_suggestions_h2: "Suggestions d'amélioration",
+    discussion_suggestions_hint: "Propose une idée pour l'appli, ou vote pour les idées des autres — les plus votées remontent en haut.",
+    suggestion_title_label: 'Titre',
+    suggestion_body_label: 'Description (optionnel)',
+    suggestion_add_btn: 'Proposer',
+    suggestion_invalid: 'Donne au moins un titre à ta suggestion.',
+    suggestion_added_ok: 'Suggestion ajoutée, merci !',
+    suggestions_empty: 'Aucune suggestion pour le moment — propose la première !',
+    suggestion_upvote: 'Pour',
+    suggestion_downvote: 'Contre',
     crop_planning_h2: 'Planification des cultures',
     crop_planning_placeholder: 'À venir.',
     cp_location_label: 'Lieu',
@@ -2125,6 +2220,21 @@ const I18N = {
     fi_cellar: 'cellar',
     fi_frozen: 'frozen',
     nav_crop_planning: 'Crop planning',
+    nav_discussion: 'Discussion',
+    discussion_messages_h2: 'Messages',
+    discussion_messages_hint: "Open discussion for every active account on the app.",
+    messages_empty: 'No messages yet — be the first to write something!',
+    message_send_btn: 'Send',
+    discussion_suggestions_h2: 'Improvement suggestions',
+    discussion_suggestions_hint: "Suggest an idea for the app, or vote on others' ideas — the most-voted ones rise to the top.",
+    suggestion_title_label: 'Title',
+    suggestion_body_label: 'Description (optional)',
+    suggestion_add_btn: 'Suggest',
+    suggestion_invalid: 'Give your suggestion at least a title.',
+    suggestion_added_ok: 'Suggestion added, thanks!',
+    suggestions_empty: 'No suggestions yet — add the first one!',
+    suggestion_upvote: 'Upvote',
+    suggestion_downvote: 'Downvote',
     crop_planning_h2: 'Crop planning',
     crop_planning_placeholder: 'Coming soon.',
     cp_location_label: 'Location',
@@ -2435,6 +2545,15 @@ function applyI18n(){
     }
   }
   setTxt('#nav-crop-planning', t.nav_crop_planning);
+  setTxt('#nav-discussion', t.nav_discussion);
+  setTxt('#discussion-messages-h2', t.discussion_messages_h2);
+  setTxt('#discussion-messages-hint', t.discussion_messages_hint);
+  setTxt('#message-send', t.message_send_btn);
+  setTxt('#discussion-suggestions-h2', t.discussion_suggestions_h2);
+  setTxt('#discussion-suggestions-hint', t.discussion_suggestions_hint);
+  setTxt('#label-suggestion-title', t.suggestion_title_label);
+  setTxt('#label-suggestion-body', t.suggestion_body_label);
+  setTxt('#suggestion-add', t.suggestion_add_btn);
   setTxt('#crop-planning-h2', t.crop_planning_h2);
   setTxt('#label-cp-location', t.cp_location_label);
   setTxt('#label-cp-sort', t.cp_sort_label);
@@ -2911,6 +3030,7 @@ function applyI18n(){
       stats:     document.getElementById('view-stats'),
       'food-independence': document.getElementById('view-food-independence'),
       'crop-planning': document.getElementById('view-crop-planning'),
+      discussion: document.getElementById('view-discussion'),
       profile:   document.getElementById('view-profile')
     };
     function refreshViewByName(view){
@@ -2920,6 +3040,7 @@ function applyI18n(){
       if (view === 'stats') refreshStatsView();
       if (view === 'crop-planning') refreshCropPlanningView();
       if (view === 'food-independence') refreshFoodIndependenceView();
+      if (view === 'discussion') refreshDiscussionView(); else stopMessagesPolling();
       if (view === 'profile') loadProfile();
     }
 
@@ -5631,6 +5752,156 @@ function applyI18n(){
       await loadFoodIndependenceData();
       fiPopulateFilters();
       renderFoodIndependence();
+    }
+
+    // === Vue Discussion ===
+    const messagesListEl = document.getElementById('messages-list');
+    const messagesEmptyEl = document.getElementById('messages-empty');
+    const messageBodyInput = document.getElementById('message-body');
+    const messageSendBtn = document.getElementById('message-send');
+    const messageMsgEl = document.getElementById('message-msg');
+    const suggestionTitleInput = document.getElementById('suggestion-title');
+    const suggestionBodyInput = document.getElementById('suggestion-body');
+    const suggestionAddBtn = document.getElementById('suggestion-add');
+    const suggestionMsgEl = document.getElementById('suggestion-msg');
+    const suggestionsListEl = document.getElementById('suggestions-list');
+    const suggestionsEmptyEl = document.getElementById('suggestions-empty');
+
+    let dcMessages = [];
+    let dcSuggestions = [];
+    let dcMyVotes = {}; // suggestion_id -> -1|1
+    let messagesPollTimer = null;
+
+    async function loadMessages(){
+      const { data, error } = await db.from('messages_view').select('*').order('created_at', { ascending: false }).limit(200);
+      if (error){ messageMsgEl.className = 'muted msg-err'; messageMsgEl.textContent = error.message; return; }
+      dcMessages = (data || []).slice().reverse();
+    }
+
+    function renderMessages(){
+      const isFr = (curLang === 'fr');
+      const t = I18N[curLang] || I18N.fr;
+      const dtFmt = new Intl.DateTimeFormat(isFr ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+      if (!dcMessages.length){
+        messagesListEl.innerHTML = '';
+        messagesEmptyEl.textContent = t.messages_empty;
+        messagesEmptyEl.classList.remove('hide');
+        return;
+      }
+      messagesEmptyEl.classList.add('hide');
+      const wasAtBottom = messagesListEl.scrollTop + messagesListEl.clientHeight >= messagesListEl.scrollHeight - 20;
+      messagesListEl.innerHTML = dcMessages.map(m => `
+        <div class="msg-bubble${m.user_id === currentUserId ? ' mine' : ''}">
+          <div class="msg-meta"><span class="msg-author">${escapeHtml(m.author_name || '?')}</span> · <span class="msg-time">${escapeHtml(dtFmt.format(new Date(m.created_at)))}</span></div>
+          <div class="msg-body">${escapeHtml(m.body)}</div>
+        </div>`).join('');
+      if (wasAtBottom || messagesListEl.dataset.firstRender !== 'done'){
+        messagesListEl.scrollTop = messagesListEl.scrollHeight;
+        messagesListEl.dataset.firstRender = 'done';
+      }
+    }
+
+    messageSendBtn.onclick = async () => {
+      const t = I18N[curLang] || I18N.fr;
+      const body = messageBodyInput.value.trim();
+      if (!body) return;
+      messageMsgEl.textContent = '';
+      const { error } = await db.from('messages').insert({ user_id: currentUserId, body });
+      if (error){ messageMsgEl.className = 'muted msg-err'; messageMsgEl.textContent = error.message; return; }
+      messageBodyInput.value = '';
+      await loadMessages();
+      renderMessages();
+    };
+    messageBodyInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); messageSendBtn.click(); }
+    });
+
+    function startMessagesPolling(){
+      if (messagesPollTimer) return;
+      messagesPollTimer = setInterval(async () => { await loadMessages(); renderMessages(); }, 20000);
+    }
+    function stopMessagesPolling(){
+      if (messagesPollTimer){ clearInterval(messagesPollTimer); messagesPollTimer = null; }
+    }
+
+    async function loadSuggestions(){
+      const [{ data: sData, error: sErr }, { data: vData, error: vErr }] = await Promise.all([
+        db.from('suggestions_view').select('*').order('score', { ascending: false }).order('created_at', { ascending: true }),
+        db.from('suggestion_votes').select('suggestion_id,vote').eq('user_id', currentUserId)
+      ]);
+      if (sErr){ suggestionMsgEl.className = 'muted msg-err'; suggestionMsgEl.textContent = sErr.message; return; }
+      dcSuggestions = sData || [];
+      dcMyVotes = {};
+      (vData || []).forEach(v => { dcMyVotes[v.suggestion_id] = v.vote; });
+      if (vErr){ suggestionMsgEl.className = 'muted msg-err'; suggestionMsgEl.textContent = vErr.message; }
+    }
+
+    function renderSuggestions(){
+      const isFr = (curLang === 'fr');
+      const t = I18N[curLang] || I18N.fr;
+      const dtFmt = new Intl.DateTimeFormat(isFr ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+      if (!dcSuggestions.length){
+        suggestionsListEl.innerHTML = '';
+        suggestionsEmptyEl.textContent = t.suggestions_empty;
+        suggestionsEmptyEl.classList.remove('hide');
+        return;
+      }
+      suggestionsEmptyEl.classList.add('hide');
+      suggestionsListEl.innerHTML = dcSuggestions.map(s => {
+        const myVote = dcMyVotes[s.id];
+        return `
+          <div class="suggestion-row">
+            <div class="suggestion-votebox">
+              <button type="button" class="suggestion-vote-btn up${myVote === 1 ? ' active' : ''}" data-id="${s.id}" data-vote="1" title="${escapeHtml(t.suggestion_upvote)}" aria-label="${escapeHtml(t.suggestion_upvote)}">▲</button>
+              <span class="suggestion-score">${s.score}</span>
+              <button type="button" class="suggestion-vote-btn down${myVote === -1 ? ' active' : ''}" data-id="${s.id}" data-vote="-1" title="${escapeHtml(t.suggestion_downvote)}" aria-label="${escapeHtml(t.suggestion_downvote)}">▼</button>
+            </div>
+            <div class="suggestion-content">
+              <div class="suggestion-title">${escapeHtml(s.title)}</div>
+              ${s.body ? `<div class="suggestion-body">${escapeHtml(s.body)}</div>` : ''}
+              <div class="suggestion-meta muted">${escapeHtml(s.author_name || '?')} · ${escapeHtml(dtFmt.format(new Date(s.created_at)))}</div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    suggestionsListEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('.suggestion-vote-btn');
+      if (!btn) return;
+      const suggestionId = Number(btn.dataset.id);
+      const value = Number(btn.dataset.vote);
+      const current = dcMyVotes[suggestionId];
+      let error;
+      if (current === value){
+        ({ error } = await db.from('suggestion_votes').delete().eq('suggestion_id', suggestionId).eq('user_id', currentUserId));
+      } else {
+        ({ error } = await db.from('suggestion_votes').upsert({ suggestion_id: suggestionId, user_id: currentUserId, vote: value }, { onConflict: 'suggestion_id,user_id' }));
+      }
+      if (error){ suggestionMsgEl.className = 'muted msg-err'; suggestionMsgEl.textContent = error.message; return; }
+      await loadSuggestions();
+      renderSuggestions();
+    });
+
+    suggestionAddBtn.onclick = async () => {
+      const t = I18N[curLang] || I18N.fr;
+      suggestionMsgEl.textContent = '';
+      const title = suggestionTitleInput.value.trim();
+      const body = suggestionBodyInput.value.trim();
+      if (!title){ suggestionMsgEl.className = 'muted msg-err'; suggestionMsgEl.textContent = t.suggestion_invalid; return; }
+      const { error } = await db.from('suggestions').insert({ user_id: currentUserId, title, body: body || null });
+      if (error){ suggestionMsgEl.className = 'muted msg-err'; suggestionMsgEl.textContent = error.message; return; }
+      suggestionTitleInput.value = ''; suggestionBodyInput.value = '';
+      suggestionMsgEl.className = 'muted msg-ok';
+      suggestionMsgEl.textContent = t.suggestion_added_ok;
+      await loadSuggestions();
+      renderSuggestions();
+    };
+
+    async function refreshDiscussionView(){
+      await Promise.all([loadMessages(), loadSuggestions()]);
+      renderMessages();
+      renderSuggestions();
+      startMessagesPolling();
     }
 
     // === Vue Profil ===
