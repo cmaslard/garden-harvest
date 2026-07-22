@@ -4571,7 +4571,20 @@ function applyI18n(){
         tooltip.classList.remove('hide');
         tooltip.style.left = `${(x / W * 100).toFixed(2)}%`;
         tooltip.style.top = `${(yFor((hit.lower[dayIdx] + hit.upper[dayIdx]) / 2) / H * 100).toFixed(2)}%`;
-        tooltip.innerHTML = `<b>${escapeHtml(hit.label)}</b><br/><span class="tt-label">${numFmt.format(hit.days[dayIdx])} m² — ${escapeHtml(cpMonthDayLabel(dayIdx + 1, isFr))}</span>`;
+        if (hit.members){
+          // "Autres" is a pooled band — list what's actually in it that day
+          // rather than just the combined total, so a small crop (like 1kg
+          // of courge spaghetti) is still findable by name.
+          const parts = hit.members
+            .map(m => ({ label: m.label, val: m.days[dayIdx] }))
+            .filter(p => p.val > 0.001)
+            .sort((a, b) => b.val - a.val)
+            .map(p => `${numFmt.format(p.val)} m² ${escapeHtml(p.label)}`);
+          const valueText = parts.length ? parts.join(' + ') : `0 m²`;
+          tooltip.innerHTML = `<b>${escapeHtml(hit.label)}</b> — ${escapeHtml(valueText)}<br/><span class="tt-label">${escapeHtml(cpMonthDayLabel(dayIdx + 1, isFr))}</span>`;
+        } else {
+          tooltip.innerHTML = `<b>${escapeHtml(hit.label)}</b><br/><span class="tt-label">${numFmt.format(hit.days[dayIdx])} m² — ${escapeHtml(cpMonthDayLabel(dayIdx + 1, isFr))}</span>`;
+        }
       }
 
       hoverTarget.addEventListener('pointermove', (e) => showAt(e.clientX, e.clientY));
@@ -4589,7 +4602,7 @@ function applyI18n(){
       if (cppAreaStacked){
         cpRenderAreaSvgStacked(series, days, availableAreaM2, isFr, t, cppAreaContainer);
         cppAreaLegend.innerHTML = series.map(s => `
-          <span class="cpa-legend-item"><i class="cpa-legend-swatch" style="background:${s.color}"></i>${escapeHtml(s.label)}</span>
+          <span class="cpa-legend-item"><i class="cpa-legend-swatch" style="background:${s.color}"></i>${escapeHtml(s.label)}${s.members ? ` (${s.members.length})` : ''}</span>
         `).join('');
         cppAreaLegend.classList.remove('hide');
       } else {
@@ -4671,7 +4684,10 @@ function applyI18n(){
       if (rest.length){
         const otherDays = new Array(365).fill(0);
         rest.forEach(s => s.days.forEach((v, i) => { otherDays[i] += v; }));
-        series.push({ label: t.cpp_area_other_label, color: CPA_STACK_COLORS[CPA_STACK_COLORS.length - 1], days: otherDays });
+        // Kept so hovering "Autres" can list what's actually in it — a small
+        // crop (e.g. 1kg of courge spaghetti) is still findable by name,
+        // just not with its own dedicated color.
+        series.push({ label: t.cpp_area_other_label, color: CPA_STACK_COLORS[CPA_STACK_COLORS.length - 1], days: otherDays, members: rest });
       }
 
       const availableAreaM2 = loc.area_m2 > 0 ? loc.area_m2 : 0;
