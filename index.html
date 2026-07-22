@@ -1194,6 +1194,10 @@
                 <label id="label-cp-plan-qty">Objectif (kg)</label>
                 <input id="cp-plan-qty" type="number" step="0.1" min="0" style="width:120px" />
               </div>
+              <div class="field">
+                <label id="label-cp-plan-freq">Fréquence des semis (semaines)</label>
+                <input id="cp-plan-freq" type="number" step="0.5" min="0" style="width:120px" placeholder="défaut du produit" />
+              </div>
               <div class="field" style="align-self:end">
                 <button type="button" class="btn-primary" id="cp-plan-add" style="width:auto">Ajouter au plan</button>
               </div>
@@ -1644,6 +1648,8 @@ const I18N = {
     cp_plan_subtitle: "Choisis ce que tu veux cultiver et l'objectif en kg, pour voir combien de pieds il te faut et comment ça se répartit dans l'année.",
     cp_plan_product_label: 'Produit',
     cp_plan_qty_label: 'Objectif (kg)',
+    cp_plan_freq_label: 'Fréquence des semis (semaines)',
+    cp_plan_freq_placeholder: 'défaut du produit',
     cp_plan_add_btn: 'Ajouter au plan',
     cp_plan_empty: "Ton plan est vide — choisis un produit et un objectif en kg ci-dessus pour commencer.",
     cp_plan_invalid: 'Choisis un produit et un objectif en kg supérieur à 0.',
@@ -1986,6 +1992,8 @@ const I18N = {
     cp_plan_subtitle: "Pick what you want to grow and your target in kg, to see how many plants you need and how it's spread across the year.",
     cp_plan_product_label: 'Product',
     cp_plan_qty_label: 'Target (kg)',
+    cp_plan_freq_label: 'Sowing frequency (weeks)',
+    cp_plan_freq_placeholder: 'product default',
     cp_plan_add_btn: 'Add to plan',
     cp_plan_empty: 'Your plan is empty — pick a product and a target in kg above to get started.',
     cp_plan_invalid: 'Pick a product and a target in kg greater than 0.',
@@ -2271,6 +2279,8 @@ function applyI18n(){
   setTxt('#cp-plan-subtitle', t.cp_plan_subtitle);
   setTxt('#label-cp-plan-product', t.cp_plan_product_label);
   setTxt('#label-cp-plan-qty', t.cp_plan_qty_label);
+  setTxt('#label-cp-plan-freq', t.cp_plan_freq_label);
+  updateCpPlanFreqPlaceholder();
   setTxt('#cp-plan-add', t.cp_plan_add_btn);
   setTxt('#th-cp-plan-product', t.th_cp_plan_product);
   setTxt('#th-cp-plan-target', t.th_cp_plan_target);
@@ -4065,6 +4075,7 @@ function applyI18n(){
     // === Vue Planification des cultures — mon plan de culture ===
     const cpPlanProductSel = document.getElementById('cp-plan-product');
     const cpPlanQtyInput = document.getElementById('cp-plan-qty');
+    const cpPlanFreqInput = document.getElementById('cp-plan-freq');
     const cpPlanAddBtn = document.getElementById('cp-plan-add');
     const cpPlanMsg = document.getElementById('cp-plan-msg');
     const cpPlanEmpty = document.getElementById('cp-plan-empty');
@@ -4094,11 +4105,21 @@ function applyI18n(){
         return `<option value="${p.id}">${escapeHtml(n)}${v ? ` — ${escapeHtml(v)}` : ''}</option>`;
       }).join('');
       if (keep) cpPlanProductSel.value = keep;
+      updateCpPlanFreqPlaceholder();
     }
+
+    function updateCpPlanFreqPlaceholder(){
+      const t = I18N[curLang] || I18N.fr;
+      const p = cpProducts.find(pr => String(pr.id) === cpPlanProductSel.value);
+      cpPlanFreqInput.placeholder = (p && p.succession_interval_weeks)
+        ? `${t.cp_plan_freq_placeholder} : ${p.succession_interval_weeks}`
+        : t.cp_plan_freq_placeholder;
+    }
+    cpPlanProductSel.addEventListener('change', updateCpPlanFreqPlaceholder);
 
     async function loadCropPlans(){
       const { data, error } = await db.from('crop_plans')
-        .select('id,product_id,target_qty_kg')
+        .select('id,product_id,target_qty_kg,succession_interval_weeks_override')
         .eq('user_id', currentUserId)
         .order('created_at');
       if (error){ cpPlanMsg.className = 'muted msg-err'; cpPlanMsg.textContent = error.message; return; }
@@ -4116,6 +4137,14 @@ function applyI18n(){
 
     function cpYieldFor(product){
       return product?.yield_per_plant_kg > 0 ? product.yield_per_plant_kg : null;
+    }
+
+    // A plan can override the product's own succession frequency (e.g. sow
+    // radish every 3 weeks instead of the product default of 2) without
+    // touching the shared product record used by everyone else.
+    function cpProductForPlan(product, plan){
+      if (plan.succession_interval_weeks_override == null) return product;
+      return { ...product, succession_interval_weeks: plan.succession_interval_weeks_override };
     }
 
     // Rounds the number of plants up PER SOWING ROUND, not just once for the
@@ -4142,7 +4171,7 @@ function applyI18n(){
         if (!p) return;
         const cat = fiCategoryForProduct(p);
         if (!cat) return;
-        const rounds = cpComputeProductWindows(p, loc).rounds.filter(r => r.harvest);
+        const rounds = cpComputeProductWindows(cpProductForPlan(p, plan), loc).rounds.filter(r => r.harvest);
         if (!rounds.length) return;
         const quantities = cpPlantsForPlan(p, plan.target_qty_kg, rounds.length);
         if (!quantities) return;
@@ -4246,7 +4275,7 @@ function applyI18n(){
             ? `${isFr ? (p.name_fr || p.name) : p.name}${p.variety ? ' — ' + (isFr ? (p.variety_fr || p.variety) : p.variety) : ''}`
             : '?';
           const yieldPerPlant = p ? cpYieldFor(p) : null;
-          const rounds = (p && loc && loc.last_spring_frost) ? cpComputeProductWindows(p, loc).rounds.filter(r => r.harvest).length : 0;
+          const rounds = (p && loc && loc.last_spring_frost) ? cpComputeProductWindows(cpProductForPlan(p, plan), loc).rounds.filter(r => r.harvest).length : 0;
           const quantities = p ? cpPlantsForPlan(p, plan.target_qty_kg, rounds || 1) : null;
           const plants = quantities ? quantities.totalPlants : null;
           const actualQty = quantities ? quantities.actualQty : null;
@@ -4282,11 +4311,13 @@ function applyI18n(){
       cpPlanMsg.textContent = '';
       const productId = cpPlanProductSel.value;
       const qty = Number(cpPlanQtyInput.value);
+      const freq = cpPlanFreqInput.value === '' ? null : Number(cpPlanFreqInput.value);
       if (!productId || !(qty > 0)){ cpPlanMsg.className = 'muted msg-err'; cpPlanMsg.textContent = t.cp_plan_invalid; return; }
       const { error } = await db.from('crop_plans')
-        .upsert({ user_id: currentUserId, product_id: Number(productId), target_qty_kg: qty }, { onConflict: 'user_id,product_id' });
+        .upsert({ user_id: currentUserId, product_id: Number(productId), target_qty_kg: qty, succession_interval_weeks_override: freq }, { onConflict: 'user_id,product_id' });
       if (error){ cpPlanMsg.className = 'muted msg-err'; cpPlanMsg.textContent = error.message; return; }
       cpPlanQtyInput.value = '';
+      cpPlanFreqInput.value = '';
       cpPlanMsg.className = 'muted msg-ok';
       cpPlanMsg.textContent = t.cp_plan_added_ok;
       await loadCropPlans();
