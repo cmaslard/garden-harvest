@@ -326,7 +326,9 @@
     #cp-table-wrap th:first-child,
     #cp-table-wrap td:first-child,
     #fi-detail-table-wrap th:first-child,
-    #fi-detail-table-wrap td:first-child{
+    #fi-detail-table-wrap td:first-child,
+    #cp-plan-table-wrap th:first-child,
+    #cp-plan-table-wrap td:first-child{
       position:sticky; left:0; z-index:2;
       background: color-mix(in srgb, var(--card) 92%, transparent);
       border-right:1px solid var(--border);
@@ -701,6 +703,12 @@
             <div>
               <label id="label-p-succession">Semis échelonnés (tous les X semaines)</label>
               <input id="p-succession" type="number" step="0.5" min="0" />
+            </div>
+          </div>
+          <div class="row" style="margin-top:1rem">
+            <div>
+              <label id="label-p-yield">Rendement par pied (kg)</label>
+              <input id="p-yield" type="number" step="0.1" min="0" placeholder="ex: 4" />
             </div>
           </div>
 
@@ -1157,6 +1165,64 @@
               </table>
             </div>
           </div>
+
+          <div class="glass-card">
+            <div class="barchart-title" id="cp-plan-title">Mon plan de culture</div>
+            <div class="barchart-subtitle" id="cp-plan-subtitle">Choisis ce que tu veux cultiver et l'objectif en kg, pour voir combien de pieds il te faut et comment ça se répartit dans l'année.</div>
+
+            <div class="stats-filters">
+              <div class="field">
+                <label id="label-cp-plan-product">Produit</label>
+                <select id="cp-plan-product"></select>
+              </div>
+              <div class="field">
+                <label id="label-cp-plan-qty">Objectif (kg)</label>
+                <input id="cp-plan-qty" type="number" step="0.1" min="0" style="width:120px" />
+              </div>
+              <div class="field" style="align-self:end">
+                <button type="button" class="btn-primary" id="cp-plan-add" style="width:auto">Ajouter au plan</button>
+              </div>
+            </div>
+            <p id="cp-plan-msg" class="muted"></p>
+            <p id="cp-plan-empty" class="muted hide"></p>
+
+            <div class="table-wrap" id="cp-plan-table-wrap" style="margin-top:14px">
+              <table>
+                <thead>
+                  <tr>
+                    <th id="th-cp-plan-product">Produit</th>
+                    <th id="th-cp-plan-target">Objectif</th>
+                    <th id="th-cp-plan-yield">Rendement/pied</th>
+                    <th id="th-cp-plan-plants">Pieds nécessaires</th>
+                    <th id="th-cp-plan-actual">Production prévue</th>
+                    <th id="th-cp-plan-actions">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="cp-plan-rows"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="cp-forecast-section" class="hide">
+            <div class="glass-card">
+              <div class="barchart-title" id="cpf-hero-title">Autonomie prévisionnelle</div>
+              <div class="fi-hero" id="cpf-hero-value">—</div>
+              <p class="barchart-subtitle" id="cpf-hero-subtitle"></p>
+            </div>
+
+            <div class="fi-categories" id="cpf-categories"></div>
+
+            <div class="glass-card">
+              <div class="barchart-title" id="cpf-monthly-title">Couverture mensuelle prévisionnelle (avec conservation)</div>
+              <div class="fi-monthly-legend">
+                <span class="fi-monthly-legend-item"><i class="fi-monthly-legend-swatch fresh"></i><span id="cpf-legend-fresh">Frais</span></span>
+                <span class="fi-monthly-legend-item"><i class="fi-monthly-legend-swatch cellar"></i><span id="cpf-legend-cellar">Cave</span></span>
+                <span class="fi-monthly-legend-item"><i class="fi-monthly-legend-swatch frozen"></i><span id="cpf-legend-frozen">Congélateur</span></span>
+              </div>
+              <div id="cpf-monthly-container" class="fi-monthly-container"></div>
+            </div>
+            <p id="cpf-estimate-hint" class="muted"></p>
+          </div>
         </div>
       </div>
 
@@ -1409,6 +1475,7 @@ const I18N = {
     p_maturity_min_label: "Jours jusqu'à maturité (min)",
     p_maturity_max_label: "Jours jusqu'à maturité (max)",
     p_succession_label: 'Semis échelonnés (tous les X semaines)',
+    p_yield_label: 'Rendement par pied (kg)',
     p_perennial_h2: 'Récolte à date fixe (plantes pérennes)',
     p_perennial_hint: 'Pour les arbres fruitiers et vivaces : une période de récolte habituelle, indépendante des semis/gel. Si renseignée, elle remplace le calcul ci-dessus.',
     p_harvest_fixed_start_label: 'Début de récolte habituel',
@@ -1554,6 +1621,25 @@ const I18N = {
     cp_sort_sow: 'Semis',
     cp_sort_plant: 'Plantation',
     cp_sort_harvest: 'Récolte',
+    cp_plan_title: 'Mon plan de culture',
+    cp_plan_subtitle: "Choisis ce que tu veux cultiver et l'objectif en kg, pour voir combien de pieds il te faut et comment ça se répartit dans l'année.",
+    cp_plan_product_label: 'Produit',
+    cp_plan_qty_label: 'Objectif (kg)',
+    cp_plan_add_btn: 'Ajouter au plan',
+    cp_plan_empty: "Ton plan est vide — choisis un produit et un objectif en kg ci-dessus pour commencer.",
+    cp_plan_invalid: 'Choisis un produit et un objectif en kg supérieur à 0.',
+    cp_plan_added_ok: 'Plan mis à jour.',
+    cp_plan_no_yield: 'rendement non renseigné',
+    th_cp_plan_product: 'Produit',
+    th_cp_plan_target: 'Objectif',
+    th_cp_plan_yield: 'Rendement / pied',
+    th_cp_plan_plants: 'Pieds nécessaires',
+    th_cp_plan_actual: 'Production prévue',
+    th_cp_plan_actions: 'Actions',
+    cpf_hero_title: 'Autonomie prévisionnelle',
+    cpf_hero_subtitle_with_goal: "Selon ton plan de culture, par rapport à ton objectif de {goal}% d'autonomie.",
+    cpf_hero_subtitle_no_goal: 'Selon ton plan de culture, par rapport à une autonomie complète.',
+    cpf_monthly_title: 'Couverture mensuelle prévisionnelle (avec conservation)',
     cp_chart_title: 'Calendrier de culture',
     cp_chart_subtitle: 'Semis, plantation et récolte estimés à partir des dates de gel du lieu sélectionné',
     cp_legend_sow: 'Semis',
@@ -1726,6 +1812,7 @@ const I18N = {
     p_maturity_min_label: 'Days to maturity (min)',
     p_maturity_max_label: 'Days to maturity (max)',
     p_succession_label: 'Succession sowing (every X weeks)',
+    p_yield_label: 'Yield per plant (kg)',
     p_perennial_h2: 'Fixed harvest window (perennials)',
     p_perennial_hint: 'For fruit trees and perennials: a usual harvest period, independent of sowing/frost. If set, it overrides the calculation above.',
     p_harvest_fixed_start_label: 'Usual harvest start',
@@ -1871,6 +1958,25 @@ const I18N = {
     cp_sort_sow: 'Sowing',
     cp_sort_plant: 'Transplanting',
     cp_sort_harvest: 'Harvest',
+    cp_plan_title: 'My crop plan',
+    cp_plan_subtitle: "Pick what you want to grow and your target in kg, to see how many plants you need and how it's spread across the year.",
+    cp_plan_product_label: 'Product',
+    cp_plan_qty_label: 'Target (kg)',
+    cp_plan_add_btn: 'Add to plan',
+    cp_plan_empty: 'Your plan is empty — pick a product and a target in kg above to get started.',
+    cp_plan_invalid: 'Pick a product and a target in kg greater than 0.',
+    cp_plan_added_ok: 'Plan updated.',
+    cp_plan_no_yield: 'yield not set',
+    th_cp_plan_product: 'Product',
+    th_cp_plan_target: 'Target',
+    th_cp_plan_yield: 'Yield / plant',
+    th_cp_plan_plants: 'Plants needed',
+    th_cp_plan_actual: 'Planned production',
+    th_cp_plan_actions: 'Actions',
+    cpf_hero_title: 'Planned self-sufficiency',
+    cpf_hero_subtitle_with_goal: 'Based on your crop plan, against your goal of {goal}% self-sufficiency.',
+    cpf_hero_subtitle_no_goal: 'Based on your crop plan, against full self-sufficiency.',
+    cpf_monthly_title: 'Planned monthly coverage (with storage)',
     cp_chart_title: 'Growing calendar',
     cp_chart_subtitle: 'Sowing, transplanting, and harvest estimated from the selected location\'s frost dates',
     cp_legend_sow: 'Sowing',
@@ -2052,6 +2158,7 @@ function applyI18n(){
   setTxt('#label-p-maturity-min', t.p_maturity_min_label);
   setTxt('#label-p-maturity-max', t.p_maturity_max_label);
   setTxt('#label-p-succession', t.p_succession_label);
+  setTxt('#label-p-yield', t.p_yield_label);
   setTxt('#p-perennial-h2', t.p_perennial_h2);
   setTxt('#p-perennial-hint', t.p_perennial_hint);
   setTxt('#label-p-harvest-fixed-start', t.p_harvest_fixed_start_label);
@@ -2131,6 +2238,22 @@ function applyI18n(){
   setTxt('#cp-sort-opt-sow', t.cp_sort_sow);
   setTxt('#cp-sort-opt-plant', t.cp_sort_plant);
   setTxt('#cp-sort-opt-harvest', t.cp_sort_harvest);
+  setTxt('#cp-plan-title', t.cp_plan_title);
+  setTxt('#cp-plan-subtitle', t.cp_plan_subtitle);
+  setTxt('#label-cp-plan-product', t.cp_plan_product_label);
+  setTxt('#label-cp-plan-qty', t.cp_plan_qty_label);
+  setTxt('#cp-plan-add', t.cp_plan_add_btn);
+  setTxt('#th-cp-plan-product', t.th_cp_plan_product);
+  setTxt('#th-cp-plan-target', t.th_cp_plan_target);
+  setTxt('#th-cp-plan-yield', t.th_cp_plan_yield);
+  setTxt('#th-cp-plan-plants', t.th_cp_plan_plants);
+  setTxt('#th-cp-plan-actual', t.th_cp_plan_actual);
+  setTxt('#th-cp-plan-actions', t.th_cp_plan_actions);
+  setTxt('#cpf-hero-title', t.cpf_hero_title);
+  setTxt('#cpf-monthly-title', t.cpf_monthly_title);
+  setTxt('#cpf-legend-fresh', t.fi_legend_fresh);
+  setTxt('#cpf-legend-cellar', t.fi_legend_cellar);
+  setTxt('#cpf-legend-frozen', t.fi_legend_frozen);
   setTxt('#cp-chart-title', t.cp_chart_title);
   setTxt('#cp-chart-subtitle', t.cp_chart_subtitle);
   setTxt('#cp-legend-sow', t.cp_legend_sow);
@@ -2593,6 +2716,7 @@ function applyI18n(){
     const pConservation  = document.getElementById('p-conservation');
     const pConservationCellar = document.getElementById('p-conservation-cellar');
     const pConservationFrozen = document.getElementById('p-conservation-frozen');
+    const pYield = document.getElementById('p-yield');
     const pSaveBtn       = document.getElementById('p-save');
     const pCancelEditBtn = document.getElementById('p-cancel-edit');
     const pMsg           = document.getElementById('product-msg');
@@ -2664,6 +2788,7 @@ function applyI18n(){
       pConservation.value = row.conservation_days ?? '';
       pConservationCellar.value = row.conservation_days_cellar ?? '';
       pConservationFrozen.value = row.conservation_days_frozen ?? '';
+      pYield.value = row.yield_per_plant_kg ?? '';
       pMsg.textContent = '';
       renderProductFormMode();
       document.getElementById('product-form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2678,7 +2803,7 @@ function applyI18n(){
       pSowIndoor.value = ''; pSowDirect.value = ''; pTransplant.value = '';
       pMaturityMin.value = ''; pMaturityMax.value = '';
       pSuccession.value = ''; pHarvestFixedStart.value = ''; pHarvestFixedEnd.value = ''; pConservation.value = '';
-      pConservationCellar.value = ''; pConservationFrozen.value = '';
+      pConservationCellar.value = ''; pConservationFrozen.value = ''; pYield.value = '';
       selPType.value = 'Fruit';
       pMsg.textContent = '';
       renderProductFormMode();
@@ -2712,7 +2837,7 @@ function applyI18n(){
         .select('id,name,name_fr,type,variety,variety_fr,unit_harvest,unit_harvest_fr,latin_name,' +
           'sow_indoor_weeks_before_frost,sow_direct_weeks_after_frost,transplant_weeks_after_frost,' +
           'days_to_maturity_min,days_to_maturity_max,succession_interval_weeks,harvest_fixed_start,harvest_fixed_end,' +
-          'conservation_days,conservation_days_cellar,conservation_days_frozen')
+          'conservation_days,conservation_days_cellar,conservation_days_frozen,yield_per_plant_kg')
         .order('name');
       if (error){
         productsListMsg.textContent = (window.__i18n_products_err_hint2||'Erreur produits : ') + error.message;
@@ -2799,7 +2924,8 @@ function applyI18n(){
         harvest_fixed_end: pHarvestFixedEnd.value || null,
         conservation_days: numOrNull(pConservation.value),
         conservation_days_cellar: numOrNull(pConservationCellar.value),
-        conservation_days_frozen: numOrNull(pConservationFrozen.value)
+        conservation_days_frozen: numOrNull(pConservationFrozen.value),
+        yield_per_plant_kg: numOrNull(pYield.value)
       };
 
       const { error } = editingProductId
@@ -3659,9 +3785,10 @@ function applyI18n(){
     async function loadCropPlanningData(){
       const [{ data: locs }, { data: prods }] = await Promise.all([
         db.from('locations').select('id,name,name_fr,last_spring_frost,first_fall_frost').order('name'),
-        db.from('products').select('id,name,name_fr,variety,variety_fr,' +
+        db.from('products').select('id,name,name_fr,variety,variety_fr,type,unit_harvest,' +
           'sow_indoor_weeks_before_frost,sow_direct_weeks_after_frost,transplant_weeks_after_frost,' +
-          'days_to_maturity_min,days_to_maturity_max,succession_interval_weeks,harvest_fixed_start,harvest_fixed_end').order('name')
+          'days_to_maturity_min,days_to_maturity_max,succession_interval_weeks,harvest_fixed_start,harvest_fixed_end,' +
+          'conservation_days,conservation_days_cellar,conservation_days_frozen,yield_per_plant_kg').order('name')
       ]);
       cpLocations = locs || [];
       cpProducts = prods || [];
@@ -3870,7 +3997,7 @@ function applyI18n(){
       if (bar && !wasTapped) bar.classList.add('tapped');
     });
 
-    cpLocationSel.onchange = () => renderCropPlanning();
+    cpLocationSel.onchange = () => { renderCropPlanning(); renderCropPlan(); };
     cpSortSel.onchange = () => renderCropPlanning();
     cpTableToggleBtn.onclick = () => {
       const t = I18N[curLang] || I18N.fr;
@@ -3879,10 +4006,217 @@ function applyI18n(){
       cpTableToggleBtn.textContent = willShow ? t.stats_hide_table : t.stats_show_table;
     };
 
+    // === Vue Planification des cultures — mon plan de culture ===
+    const cpPlanProductSel = document.getElementById('cp-plan-product');
+    const cpPlanQtyInput = document.getElementById('cp-plan-qty');
+    const cpPlanAddBtn = document.getElementById('cp-plan-add');
+    const cpPlanMsg = document.getElementById('cp-plan-msg');
+    const cpPlanEmpty = document.getElementById('cp-plan-empty');
+    const cpPlanRows = document.getElementById('cp-plan-rows');
+    const cpForecastSection = document.getElementById('cp-forecast-section');
+    const cpfHeroValue = document.getElementById('cpf-hero-value');
+    const cpfHeroSubtitle = document.getElementById('cpf-hero-subtitle');
+    const cpfCategories = document.getElementById('cpf-categories');
+    const cpfMonthlyContainer = document.getElementById('cpf-monthly-container');
+    const cpfEstimateHint = document.getElementById('cpf-estimate-hint');
+
+    let cpUserPlans = [];
+
+    function populateCropPlanProductOptions(){
+      const isFr = (curLang === 'fr');
+      const keep = cpPlanProductSel.value;
+      const sorted = [...cpProducts].sort((a, b) => {
+        const an = isFr ? (a.name_fr || a.name) : a.name;
+        const bn = isFr ? (b.name_fr || b.name) : b.name;
+        const av = isFr ? (a.variety_fr || a.variety) : a.variety;
+        const bv = isFr ? (b.variety_fr || b.variety) : b.variety;
+        return an.localeCompare(bn, isFr ? 'fr' : 'en') || (av || '').localeCompare(bv || '', isFr ? 'fr' : 'en');
+      });
+      cpPlanProductSel.innerHTML = sorted.map(p => {
+        const n = isFr ? (p.name_fr || p.name) : p.name;
+        const v = isFr ? (p.variety_fr || p.variety) : p.variety;
+        return `<option value="${p.id}">${escapeHtml(n)}${v ? ` — ${escapeHtml(v)}` : ''}</option>`;
+      }).join('');
+      if (keep) cpPlanProductSel.value = keep;
+    }
+
+    async function loadCropPlans(){
+      const { data, error } = await db.from('crop_plans')
+        .select('id,product_id,target_qty_kg')
+        .eq('user_id', currentUserId)
+        .order('created_at');
+      if (error){ cpPlanMsg.className = 'muted msg-err'; cpPlanMsg.textContent = error.message; return; }
+      cpUserPlans = data || [];
+    }
+
+    async function cpEnsureProfileLoaded(){
+      if (fiProfile) return;
+      const { data } = await db.from('profiles')
+        .select('household_adults,household_children,diet,self_sufficiency_goal,has_cellar,has_freezer')
+        .eq('user_id', currentUserId)
+        .maybeSingle();
+      fiProfile = data;
+    }
+
+    function cpYieldFor(product){
+      return product?.yield_per_plant_kg > 0 ? product.yield_per_plant_kg : null;
+    }
+
+    function cpBuildPlannedBatches(loc, hasCellar, hasFreezer){
+      const productById = {};
+      cpProducts.forEach(p => { productById[p.id] = p; });
+      const batchesByCat = { vegetables: [], fruits: [], grains: [] };
+
+      cpUserPlans.forEach(plan => {
+        const p = productById[plan.product_id];
+        if (!p) return;
+        const cat = fiCategoryForProduct(p);
+        if (!cat) return;
+        const yieldPerPlant = cpYieldFor(p);
+        if (!yieldPerPlant) return;
+        const plants = Math.ceil(plan.target_qty_kg / yieldPerPlant);
+        const actualQty = plants * yieldPerPlant;
+
+        const rounds = cpComputeProductWindows(p, loc).rounds.filter(r => r.harvest);
+        if (!rounds.length) return;
+        const qtyPerRound = actualQty / rounds.length;
+        const { freshDays, extendedDays, source } = fiConservationWindow(p, hasCellar, hasFreezer);
+
+        rounds.forEach(r => {
+          const midRaw = Math.round((r.harvest.start + r.harvest.end) / 2);
+          const wrapped = ((midRaw - 1) % 365 + 365) % 365 + 1; // 1-365, nominal single-year position
+          // Repeat into both the "prior" and "selected" year slots of the
+          // shared simulation, modeling a steady-state plan (same crops,
+          // same quantities, every year) so cellar/freezer carryover into
+          // January works the same way it does for real logged harvests.
+          [0, 365].forEach(offset => {
+            const harvestDoy = offset + wrapped;
+            batchesByCat[cat].push({
+              harvestDoy, qty: qtyPerRound, originalQty: qtyPerRound,
+              freshEndDoy: harvestDoy + freshDays,
+              extendedEndDoy: harvestDoy + extendedDays,
+              source,
+              productId: p.id, cat,
+              isSelectedYear: offset === 365,
+              eatenFresh: 0, eatenCellar: 0, eatenFrozen: 0
+            });
+          });
+        });
+      });
+
+      return batchesByCat;
+    }
+
+    async function renderCropForecast(){
+      const t = I18N[curLang] || I18N.fr;
+      const locId = cpLocationSel.value;
+      const loc = cpLocations.find(l => String(l.id) === locId);
+
+      if (!cpUserPlans.length || !loc || !loc.last_spring_frost){
+        cpForecastSection.classList.add('hide');
+        return;
+      }
+
+      await cpEnsureProfileLoaded();
+      if (!fiProfile || !fiProfile.household_adults){
+        cpForecastSection.classList.add('hide');
+        return;
+      }
+      cpForecastSection.classList.remove('hide');
+
+      const hasCellar = !!fiProfile.has_cellar;
+      const hasFreezer = !!fiProfile.has_freezer;
+      const fullTargets = fiComputeTargets();
+      const rawGoal = fiProfile.self_sufficiency_goal || null;
+      const goal = rawGoal || 100;
+      const targets = {};
+      FI_CATEGORIES.forEach(cat => { targets[cat] = fullTargets[cat] * goal / 100; });
+
+      const batchesByCat = cpBuildPlannedBatches(loc, hasCellar, hasFreezer);
+      const { monthly, productSummary } = fiSimulateBatches(batchesByCat, targets);
+
+      const actuals = {};
+      FI_CATEGORIES.forEach(cat => {
+        actuals[cat] = productSummary.filter(s => s.cat === cat).reduce((sum, s) => sum + s.harvested, 0);
+      });
+
+      fiRenderCategoryCardsAndHero(cpfCategories, cpfHeroValue, actuals, targets);
+      cpfHeroSubtitle.textContent = rawGoal
+        ? t.cpf_hero_subtitle_with_goal.replace('{goal}', goal)
+        : t.cpf_hero_subtitle_no_goal;
+
+      renderFiMonthly(cpfMonthlyContainer, monthly, targets);
+      cpfEstimateHint.textContent = t.fi_estimate_hint;
+    }
+
+    function renderCropPlan(){
+      const isFr = (curLang === 'fr');
+      const t = I18N[curLang] || I18N.fr;
+      const numFmt = new Intl.NumberFormat(isFr ? 'fr-FR' : 'en-US', { maximumFractionDigits: 1 });
+      const productById = {};
+      cpProducts.forEach(p => { productById[p.id] = p; });
+
+      if (!cpUserPlans.length){
+        cpPlanRows.innerHTML = '';
+        cpPlanEmpty.textContent = t.cp_plan_empty;
+        cpPlanEmpty.classList.remove('hide');
+      } else {
+        cpPlanEmpty.classList.add('hide');
+        cpPlanRows.innerHTML = cpUserPlans.map(plan => {
+          const p = productById[plan.product_id];
+          const label = p
+            ? `${isFr ? (p.name_fr || p.name) : p.name}${p.variety ? ' — ' + (isFr ? (p.variety_fr || p.variety) : p.variety) : ''}`
+            : '?';
+          const yieldPerPlant = p ? cpYieldFor(p) : null;
+          const plants = yieldPerPlant ? Math.ceil(plan.target_qty_kg / yieldPerPlant) : null;
+          const actualQty = plants ? plants * yieldPerPlant : null;
+          return `
+            <tr>
+              <td>${escapeHtml(label)}</td>
+              <td>${numFmt.format(plan.target_qty_kg)} kg</td>
+              <td>${yieldPerPlant ? numFmt.format(yieldPerPlant) + ' kg' : `<span class="muted">${escapeHtml(t.cp_plan_no_yield)}</span>`}</td>
+              <td>${plants ?? '–'}</td>
+              <td>${actualQty != null ? numFmt.format(actualQty) + ' kg' : '–'}</td>
+              <td><button type="button" class="cp-plan-delete-btn" data-id="${plan.id}">${t.delete_btn}</button></td>
+            </tr>`;
+        }).join('');
+      }
+
+      renderCropForecast();
+    }
+
+    cpPlanRows.addEventListener('click', async (e) => {
+      const btn = e.target.closest('.cp-plan-delete-btn');
+      if (!btn) return;
+      const { error } = await db.from('crop_plans').delete().eq('id', btn.dataset.id);
+      if (error){ cpPlanMsg.className = 'muted msg-err'; cpPlanMsg.textContent = error.message; return; }
+      await loadCropPlans();
+      renderCropPlan();
+    });
+
+    cpPlanAddBtn.onclick = async () => {
+      const t = I18N[curLang] || I18N.fr;
+      cpPlanMsg.textContent = '';
+      const productId = cpPlanProductSel.value;
+      const qty = Number(cpPlanQtyInput.value);
+      if (!productId || !(qty > 0)){ cpPlanMsg.className = 'muted msg-err'; cpPlanMsg.textContent = t.cp_plan_invalid; return; }
+      const { error } = await db.from('crop_plans')
+        .upsert({ user_id: currentUserId, product_id: Number(productId), target_qty_kg: qty }, { onConflict: 'user_id,product_id' });
+      if (error){ cpPlanMsg.className = 'muted msg-err'; cpPlanMsg.textContent = error.message; return; }
+      cpPlanQtyInput.value = '';
+      cpPlanMsg.className = 'muted msg-ok';
+      cpPlanMsg.textContent = t.cp_plan_added_ok;
+      await loadCropPlans();
+      renderCropPlan();
+    };
+
     async function refreshCropPlanningView(){
       await loadCropPlanningData();
       populateCropPlanningLocations();
       renderCropPlanning();
+      populateCropPlanProductOptions();
+      await loadCropPlans();
+      renderCropPlan();
     }
 
     // === Vue Vers l'autonomie alimentaire ===
@@ -4010,60 +4344,33 @@ function applyI18n(){
     // product's base conservation window) and "stored" (only available thanks
     // to cave/freezer — whichever the profile unlocks and gives the longest
     // extension for that product; left blank on a product = not applicable).
+    // Builds the { harvestDoy, freshEndDoy, extendedEndDoy, source, ... }
+    // batch shape shared by both the "actual harvests" and "planned crops"
+    // simulations, given a fresh/cellar/frozen day count for one entry.
+    function fiConservationWindow(product, hasCellar, hasFreezer){
+      const freshDays = product.conservation_days != null ? product.conservation_days : FI_DEFAULT_CONSERVATION_DAYS;
+      let extendedDays = freshDays;
+      let source = null;
+      if (hasCellar && product.conservation_days_cellar != null && product.conservation_days_cellar > extendedDays){
+        extendedDays = product.conservation_days_cellar; source = 'cellar';
+      }
+      if (hasFreezer && product.conservation_days_frozen != null && product.conservation_days_frozen > extendedDays){
+        extendedDays = product.conservation_days_frozen; source = 'frozen';
+      }
+      return { freshDays, extendedDays, source };
+    }
+
     // Simulates a real pantry: each month, need is met from fresh harvest
     // first, then cellar stock, then frozen stock (capped at the month's
     // share of the yearly target — you don't "eat" more than you need).
     // Whatever isn't consumed carries forward as stock for later months,
     // until its conservation window (fresh/cellar/frozen, whichever unlocked
     // method lasts longest) runs out — including rolling into January.
-    function fiComputeMonthlyAvailability(year, locationId, targets){
-      const productById = {};
-      fiProducts.forEach(p => { productById[p.id] = p; });
-
-      const hasCellar = !!fiProfile?.has_cellar;
-      const hasFreezer = !!fiProfile?.has_freezer;
-      const yearNum = Number(year);
-
-      // Also pull in the prior year's harvests (as pure carryover seed stock,
-      // not displayed) so long-lasting stock picked late last year can still
-      // roll into this January and beyond, instead of resetting every Jan 1.
-      const batchesByCat = { vegetables: [], fruits: [], grains: [] };
-      fiHarvests.forEach(h => {
-        const hy = Number((h.harvest_date || '').slice(0, 4));
-        if (hy !== yearNum && hy !== yearNum - 1) return;
-        if (locationId && String(h.location_id) !== locationId) return;
-        const p = productById[h.product_id];
-        if (!p) return;
-        const cat = fiCategoryForProduct(p);
-        if (!cat) return;
-        const unit = (p.unit_harvest || '').toLowerCase();
-        if (!FI_KG_UNITS.includes(unit)) return;
-        const qty = Number(h.quantity) || 0;
-        if (!qty) return;
-
-        const freshDays = p.conservation_days != null ? p.conservation_days : FI_DEFAULT_CONSERVATION_DAYS;
-        let extendedDays = freshDays;
-        let source = null;
-        if (hasCellar && p.conservation_days_cellar != null && p.conservation_days_cellar > extendedDays){
-          extendedDays = p.conservation_days_cellar; source = 'cellar';
-        }
-        if (hasFreezer && p.conservation_days_frozen != null && p.conservation_days_frozen > extendedDays){
-          extendedDays = p.conservation_days_frozen; source = 'frozen';
-        }
-
-        const [, hm, hd] = h.harvest_date.split('-').map(Number);
-        // Continuous 2-year scale: prior year = days 1-365, selected year = 366-730.
-        const harvestDoy = (hy === yearNum ? 365 : 0) + cpDayOfYear(hm - 1, hd);
-        batchesByCat[cat].push({
-          harvestDoy, qty, originalQty: qty,
-          freshEndDoy: harvestDoy + freshDays,
-          extendedEndDoy: harvestDoy + extendedDays,
-          source,
-          productId: p.id, cat,
-          isSelectedYear: hy === yearNum,
-          eatenFresh: 0, eatenCellar: 0, eatenFrozen: 0
-        });
-      });
+    // Shared by both "actual harvests" (Vers l'autonomie alimentaire) and
+    // "planned crops" (Planification des cultures) — both just need to hand
+    // it a batchesByCat of { harvestDoy, freshEndDoy, extendedEndDoy, source,
+    // productId, cat, isSelectedYear, qty, originalQty } entries.
+    function fiSimulateBatches(batchesByCat, targets){
       FI_CATEGORIES.forEach(cat => batchesByCat[cat].sort((a, b) => a.harvestDoy - b.harvestDoy));
 
       const monthly = {};
@@ -4138,13 +4445,58 @@ function applyI18n(){
       return { monthly, productSummary: Object.values(productSummary) };
     }
 
+    // Builds batches from real logged harvests, then runs them through the
+    // shared pantry simulation.
+    function fiComputeMonthlyAvailability(year, locationId, targets){
+      const productById = {};
+      fiProducts.forEach(p => { productById[p.id] = p; });
+
+      const hasCellar = !!fiProfile?.has_cellar;
+      const hasFreezer = !!fiProfile?.has_freezer;
+      const yearNum = Number(year);
+
+      // Also pull in the prior year's harvests (as pure carryover seed stock,
+      // not displayed) so long-lasting stock picked late last year can still
+      // roll into this January and beyond, instead of resetting every Jan 1.
+      const batchesByCat = { vegetables: [], fruits: [], grains: [] };
+      fiHarvests.forEach(h => {
+        const hy = Number((h.harvest_date || '').slice(0, 4));
+        if (hy !== yearNum && hy !== yearNum - 1) return;
+        if (locationId && String(h.location_id) !== locationId) return;
+        const p = productById[h.product_id];
+        if (!p) return;
+        const cat = fiCategoryForProduct(p);
+        if (!cat) return;
+        const unit = (p.unit_harvest || '').toLowerCase();
+        if (!FI_KG_UNITS.includes(unit)) return;
+        const qty = Number(h.quantity) || 0;
+        if (!qty) return;
+
+        const { freshDays, extendedDays, source } = fiConservationWindow(p, hasCellar, hasFreezer);
+        const [, hm, hd] = h.harvest_date.split('-').map(Number);
+        // Continuous 2-year scale: prior year = days 1-365, selected year = 366-730.
+        const harvestDoy = (hy === yearNum ? 365 : 0) + cpDayOfYear(hm - 1, hd);
+        batchesByCat[cat].push({
+          harvestDoy, qty, originalQty: qty,
+          freshEndDoy: harvestDoy + freshDays,
+          extendedEndDoy: harvestDoy + extendedDays,
+          source,
+          productId: p.id, cat,
+          isSelectedYear: hy === yearNum,
+          eatenFresh: 0, eatenCellar: 0, eatenFrozen: 0
+        });
+      });
+
+      return fiSimulateBatches(batchesByCat, targets);
+    }
+
     function fiTier(pct){
       if (pct >= 75) return 'good';
       if (pct >= 40) return 'warning';
       return 'critical';
     }
 
-    function renderFiMonthly(monthly, targets){
+    function renderFiMonthly(container, monthly, targets){
       const isFr = (curLang === 'fr');
       const t = I18N[curLang] || I18N.fr;
       const monthLabels = isFr
@@ -4156,7 +4508,7 @@ function applyI18n(){
       const catLabels = { vegetables: t.fi_cat_vegetables, fruits: t.fi_cat_fruits, grains: t.fi_cat_grains };
       const numFmt = new Intl.NumberFormat(isFr ? 'fr-FR' : 'en-US', { maximumFractionDigits: 1 });
 
-      fiMonthlyContainer.innerHTML = FI_CATEGORIES.map(cat => {
+      container.innerHTML = FI_CATEGORIES.map(cat => {
         const monthlyTarget = targets[cat] / 12;
         const barsHtml = monthly[cat].map((m, i) => {
           const totalKg = m.fresh + m.cellar + m.frozen;
@@ -4267,6 +4619,39 @@ function applyI18n(){
       fiDetailToggle.textContent = willShow ? t.fi_hide_detail : t.fi_show_detail;
     };
 
+    // Shared by the real dashboard (Vers l'autonomie alimentaire) and the
+    // planned-crops forecast (Planification des cultures) — renders the
+    // per-category cards and the hero %, returns the overall % for the
+    // caller to use in its own subtitle wording.
+    function fiRenderCategoryCardsAndHero(categoriesEl, heroValueEl, actuals, targets){
+      const t = I18N[curLang] || I18N.fr;
+      const catLabels = { vegetables: t.fi_cat_vegetables, fruits: t.fi_cat_fruits, grains: t.fi_cat_grains };
+      let totalTarget = 0, totalActual = 0;
+      categoriesEl.innerHTML = FI_CATEGORIES.map(cat => {
+        const target = targets[cat];
+        const actual = actuals[cat];
+        const pct = target > 0 ? Math.round(actual / target * 100) : 0;
+        totalTarget += target; totalActual += actual;
+        const tier = fiTier(pct);
+        const fillPct = Math.min(pct, 100);
+        return `
+          <div class="fi-cat-card">
+            <div class="fi-cat-name">${escapeHtml(catLabels[cat])}</div>
+            <div class="fi-cat-pct tier-${tier}">${pct}%</div>
+            <div class="fi-meter">
+              <div class="fi-meter-fill tier-${tier}" style="width:${fillPct}%"></div>
+            </div>
+            <div class="fi-cat-detail">${Math.round(actual)} kg ${escapeHtml(t.fi_of)} ${Math.round(target)} kg</div>
+          </div>`;
+      }).join('');
+
+      const overallPct = totalTarget > 0 ? Math.round(totalActual / totalTarget * 100) : 0;
+      const overallTier = fiTier(overallPct);
+      heroValueEl.textContent = `${overallPct}%`;
+      heroValueEl.className = `fi-hero tier-${overallTier}`;
+      return overallPct;
+    }
+
     function renderFoodIndependence(){
       if (!fiDataLoaded) return;
       const t = I18N[curLang] || I18N.fr;
@@ -4297,35 +4682,13 @@ function applyI18n(){
       FI_CATEGORIES.forEach(cat => { targets[cat] = fullTargets[cat] * goal / 100; });
       const catLabels = { vegetables: t.fi_cat_vegetables, fruits: t.fi_cat_fruits, grains: t.fi_cat_grains };
 
-      let totalTarget = 0, totalActual = 0;
-      fiCategories.innerHTML = FI_CATEGORIES.map(cat => {
-        const target = targets[cat];
-        const actual = actuals[cat];
-        const pct = target > 0 ? Math.round(actual / target * 100) : 0;
-        totalTarget += target; totalActual += actual;
-        const tier = fiTier(pct);
-        const fillPct = Math.min(pct, 100);
-        return `
-          <div class="fi-cat-card">
-            <div class="fi-cat-name">${escapeHtml(catLabels[cat])}</div>
-            <div class="fi-cat-pct tier-${tier}">${pct}%</div>
-            <div class="fi-meter">
-              <div class="fi-meter-fill tier-${tier}" style="width:${fillPct}%"></div>
-            </div>
-            <div class="fi-cat-detail">${Math.round(actual)} kg ${escapeHtml(t.fi_of)} ${Math.round(target)} kg</div>
-          </div>`;
-      }).join('');
-
-      const overallPct = totalTarget > 0 ? Math.round(totalActual / totalTarget * 100) : 0;
-      const overallTier = fiTier(overallPct);
-      fiHeroValue.textContent = `${overallPct}%`;
-      fiHeroValue.className = `fi-hero tier-${overallTier}`;
+      const overallPct = fiRenderCategoryCardsAndHero(fiCategories, fiHeroValue, actuals, targets);
       fiHeroSubtitle.textContent = rawGoal
         ? t.fi_hero_subtitle_with_goal.replace('{goal}', goal).replace('{year}', year)
         : t.fi_hero_subtitle_no_goal.replace('{year}', year);
 
       const { monthly, productSummary } = fiComputeMonthlyAvailability(year, locationId, targets);
-      renderFiMonthly(monthly, targets);
+      renderFiMonthly(fiMonthlyContainer, monthly, targets);
       renderFiDetail(productSummary, targets, goal);
 
       const under = FI_CATEGORIES.filter(cat => {
