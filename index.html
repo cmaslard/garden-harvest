@@ -4457,7 +4457,11 @@ function applyI18n(){
     // Fixed categorical order (no blue — reserved look of the app's own
     // primary/accent — and the last slot is always "Autres" for whatever
     // doesn't fit in the top N series).
-    const CPA_STACK_COLORS = ['#e15759', '#f28e2b', '#edc948', '#76b7b2', '#ff9da7', '#b07aa1', '#9c755f', '#bab0ac'];
+    const CPA_STACK_COLORS = [
+      '#e15759', '#f28e2b', '#edc948', '#9c755f', '#ff9da7',
+      '#b07aa1', '#d37295', '#86bcb6', '#d4a373', '#c9cc3f',
+      '#bab0ac'
+    ];
 
     function cpRenderAreaSvgStacked(series, days, availableAreaM2, isFr, t, container){
       const numFmt = new Intl.NumberFormat(isFr ? 'fr-FR' : 'en-US', { maximumFractionDigits: 1 });
@@ -4500,15 +4504,20 @@ function applyI18n(){
       }
 
       // Stack the bands: each series' band spans [cumulative-so-far, +its own days].
+      // Bounds are kept (not just the path) so hover can hit-test which band
+      // the pointer is actually over.
       let cumulative = new Array(365).fill(0);
-      const bandsHtml = series.map(s => {
+      const bounds = series.map((s, idx) => {
         const lower = cumulative;
         const upper = lower.map((v, i) => v + s.days[i]);
         cumulative = upper;
-        const topPts = upper.map((v, i) => `${i === 0 ? 'M' : 'L'}${xFor(i).toFixed(1)},${yFor(v).toFixed(1)}`).join(' ');
+        return { ...s, idx, lower, upper };
+      });
+      const bandsHtml = bounds.map(b => {
+        const topPts = b.upper.map((v, i) => `${i === 0 ? 'M' : 'L'}${xFor(i).toFixed(1)},${yFor(v).toFixed(1)}`).join(' ');
         const bottomPts = [];
-        for (let i = 364; i >= 0; i--) bottomPts.push(`L${xFor(i).toFixed(1)},${yFor(lower[i]).toFixed(1)}`);
-        return `<path d="${topPts} ${bottomPts.join(' ')} Z" fill="${s.color}" opacity="0.88" />`;
+        for (let i = 364; i >= 0; i--) bottomPts.push(`L${xFor(i).toFixed(1)},${yFor(b.lower[i]).toFixed(1)}`);
+        return `<path class="cpa-stack-band" data-idx="${b.idx}" d="${topPts} ${bottomPts.join(' ')} Z" fill="${b.color}" opacity="0.88" />`;
       }).join('');
 
       container.innerHTML = `
@@ -4533,32 +4542,44 @@ function applyI18n(){
       const hoverGroup = container.querySelector('.cpa-hover-group');
       const hoverLine = container.querySelector('.cpa-hover-line');
       const tooltip = container.querySelector('.cpa-tooltip');
+      const bandEls = container.querySelectorAll('.cpa-stack-band');
 
-      function showAt(clientX){
+      const valFor = (y) => Math.max(0, ((padT + plotH - y) / plotH) * niceMax);
+
+      function showAt(clientX, clientY){
         const rect = svgEl.getBoundingClientRect();
         const relX = ((clientX - rect.left) / rect.width) * W;
+        const relY = ((clientY - rect.top) / rect.height) * H;
         const dayIdx = Math.max(0, Math.min(364, Math.round(((relX - padL) / plotW) * 364)));
+        const val = valFor(relY);
         const x = xFor(dayIdx);
-        const total = days[dayIdx];
+
+        // Only the band the pointer is actually over — not everything active that day.
+        const hit = bounds.find(b => val >= b.lower[dayIdx] - 1e-9 && val <= b.upper[dayIdx] + 1e-9 && b.upper[dayIdx] > b.lower[dayIdx]);
+
+        bandEls.forEach(el => {
+          el.style.opacity = hit && Number(el.dataset.idx) === hit.idx ? '1' : '0.3';
+        });
+
         hoverGroup.style.display = '';
         hoverLine.setAttribute('x1', x); hoverLine.setAttribute('x2', x);
+
+        if (!hit){
+          tooltip.classList.add('hide');
+          return;
+        }
         tooltip.classList.remove('hide');
         tooltip.style.left = `${(x / W * 100).toFixed(2)}%`;
-        tooltip.style.top = `${(yFor(total) / H * 100).toFixed(2)}%`;
-        const parts = series
-          .map(s => ({ label: s.label, val: s.days[dayIdx] }))
-          .filter(p => p.val > 0.001)
-          .sort((a, b) => b.val - a.val)
-          .map(p => `${numFmt.format(p.val)} m² ${escapeHtml(p.label)}`);
-        const valueText = parts.length ? parts.join(' + ') : `0 m²`;
-        tooltip.innerHTML = `<b>${escapeHtml(valueText)}</b><br/><span class="tt-label">${escapeHtml(cpMonthDayLabel(dayIdx + 1, isFr))} — ${t.cpp_area_stack_total.replace('{n}', numFmt.format(total))}</span>`;
+        tooltip.style.top = `${(yFor((hit.lower[dayIdx] + hit.upper[dayIdx]) / 2) / H * 100).toFixed(2)}%`;
+        tooltip.innerHTML = `<b>${escapeHtml(hit.label)}</b><br/><span class="tt-label">${numFmt.format(hit.days[dayIdx])} m² — ${escapeHtml(cpMonthDayLabel(dayIdx + 1, isFr))}</span>`;
       }
 
-      hoverTarget.addEventListener('pointermove', (e) => showAt(e.clientX));
-      hoverTarget.addEventListener('pointerdown', (e) => showAt(e.clientX));
+      hoverTarget.addEventListener('pointermove', (e) => showAt(e.clientX, e.clientY));
+      hoverTarget.addEventListener('pointerdown', (e) => showAt(e.clientX, e.clientY));
       hoverTarget.addEventListener('pointerleave', () => {
         hoverGroup.style.display = 'none';
         tooltip.classList.add('hide');
+        bandEls.forEach(el => { el.style.opacity = '0.88'; });
       });
     }
 
