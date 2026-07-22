@@ -418,6 +418,9 @@
       box-shadow:0 6px 16px rgba(0,0,0,.18); pointer-events:none; z-index:5;
     }
     .cpa-tooltip b{ color:var(--fg); }
+    .cpa-legend{ display:flex; flex-wrap:wrap; gap:10px 16px; margin-top:12px; font-size:.78rem; color:var(--muted); }
+    .cpa-legend-item{ display:flex; align-items:center; gap:6px; }
+    .cpa-legend-swatch{ width:10px; height:10px; border-radius:3px; flex:0 0 auto; }
 
     /* ===== Vers l'autonomie alimentaire — dashboard ===== */
     .fi-hero{ font-size:2.6rem; font-weight:800; letter-spacing:-.02em; margin:4px 0 2px; font-variant-numeric:tabular-nums; }
@@ -1312,7 +1315,9 @@
               <div class="barchart-subtitle" id="cpp-area-subtitle">Surface occupée par ton plan de culture au cours de l'année</div>
               <p id="cpp-area-hint" class="muted"></p>
               <div id="cpp-area-container"></div>
+              <div class="cpa-legend hide" id="cpp-area-legend"></div>
               <p id="cpp-area-empty" class="stats-empty hide"></p>
+              <button type="button" class="table-toggle-btn hide" id="cpp-area-stack-toggle">Détail par culture</button>
               <button type="button" class="table-toggle-btn hide" id="cpp-area-table-toggle">Voir en tableau</button>
               <div class="stats-table-wrap table-wrap hide" id="cpp-area-table-wrap">
                 <table>
@@ -1805,6 +1810,10 @@ const I18N = {
     cpp_area_partial_hint: "Estimation partielle : certains produits de ton plan n'ont pas de surface par pied renseignée (onglet Produits) et ne sont pas comptés ici.",
     cpp_area_empty: "Renseigne une surface par pied (onglet Produits) pour au moins un produit de ton plan pour voir ce graphique.",
     cpp_area_ref_label: 'Surface disponible : {n} m²',
+    cpp_area_stack_btn: 'Détail par culture',
+    cpp_area_total_btn: 'Vue globale',
+    cpp_area_other_label: 'Autres',
+    cpp_area_stack_total: 'Total : {n} m²',
     th_cpp_area_month: 'Mois',
     th_cpp_area_peak: 'Surface maximale',
     nav_locations: 'Lieux',
@@ -2171,6 +2180,10 @@ const I18N = {
     cpp_area_partial_hint: "Partial estimate: some products in your plan don't have an area per plant set (Products tab) and aren't counted here.",
     cpp_area_empty: 'Set an area per plant (Products tab) for at least one product in your plan to see this chart.',
     cpp_area_ref_label: 'Available area: {n} m²',
+    cpp_area_stack_btn: 'Breakdown by crop',
+    cpp_area_total_btn: 'Overall view',
+    cpp_area_other_label: 'Other',
+    cpp_area_stack_total: 'Total: {n} m²',
     th_cpp_area_month: 'Month',
     th_cpp_area_peak: 'Peak area',
     nav_locations: 'Locations',
@@ -2498,6 +2511,10 @@ function applyI18n(){
     const cppGanttExpandToggleBtnEl = document.getElementById('cpp-gantt-expand-toggle');
     if (cppGanttExpandToggleBtnEl){
       cppGanttExpandToggleBtnEl.textContent = cppGanttExpanded ? t.cp_gantt_compact_btn : t.cp_gantt_expand_btn;
+    }
+    const cppAreaStackToggleBtnEl = document.getElementById('cpp-area-stack-toggle');
+    if (cppAreaStackToggleBtnEl){
+      cppAreaStackToggleBtnEl.textContent = cppAreaStacked ? t.cpp_area_total_btn : t.cpp_area_stack_btn;
     }
   }
 
@@ -4048,6 +4065,10 @@ function applyI18n(){
     const cppAreaTableToggleBtn = document.getElementById('cpp-area-table-toggle');
     const cppAreaTableWrap = document.getElementById('cpp-area-table-wrap');
     const cppAreaTableRows = document.getElementById('cpp-area-table-rows');
+    const cppAreaStackToggleBtn = document.getElementById('cpp-area-stack-toggle');
+    const cppAreaLegend = document.getElementById('cpp-area-legend');
+    let cppAreaStacked = false;
+    let cppAreaCache = null;
 
     let cpLocations = [];
     let cpProducts = [];
@@ -4433,6 +4454,129 @@ function applyI18n(){
       });
     }
 
+    // Fixed categorical order (no blue — reserved look of the app's own
+    // primary/accent — and the last slot is always "Autres" for whatever
+    // doesn't fit in the top N series).
+    const CPA_STACK_COLORS = ['#e15759', '#f28e2b', '#edc948', '#76b7b2', '#ff9da7', '#b07aa1', '#9c755f', '#bab0ac'];
+
+    function cpRenderAreaSvgStacked(series, days, availableAreaM2, isFr, t, container){
+      const numFmt = new Intl.NumberFormat(isFr ? 'fr-FR' : 'en-US', { maximumFractionDigits: 1 });
+      const W = 760, H = 260, padL = 44, padR = 12, padT = 14, padB = 26;
+      const plotW = W - padL - padR, plotH = H - padT - padB;
+
+      const peak = Math.max(...days, 0);
+      const refMax = availableAreaM2 > 0 ? availableAreaM2 : 0;
+      const rawMax = Math.max(peak, refMax, 0.01);
+      const magnitude = Math.pow(10, Math.floor(Math.log10(rawMax)));
+      const step = [1, 2, 5, 10].map(m => m * magnitude).find(s => Math.ceil(rawMax / s) <= 6) || Math.ceil(rawMax / 5);
+      const niceMax = Math.ceil(rawMax / step) * step;
+
+      const xFor = (dayIdx) => padL + (dayIdx / 364) * plotW;
+      const yFor = (val) => padT + plotH - (val / niceMax) * plotH;
+
+      let gridHtml = '';
+      const gridCount = Math.round(niceMax / step);
+      for (let i = 0; i <= gridCount; i++){
+        const val = i * step;
+        const y = yFor(val);
+        gridHtml += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" class="cpa-grid" />`;
+        gridHtml += `<text x="${padL - 6}" y="${(y + 3).toFixed(1)}" class="cpa-axis-label" text-anchor="end">${numFmt.format(val)}</text>`;
+      }
+
+      const monthLabels = isFr
+        ? ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.']
+        : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      let monthHtml = '';
+      for (let m = 0; m < 12; m++){
+        const dayIdx = Math.min((CP_MONTH_CUM_DAYS[m] + CP_MONTH_CUM_DAYS[m + 1]) / 2, 364);
+        monthHtml += `<text x="${xFor(dayIdx).toFixed(1)}" y="${H - 8}" class="cpa-axis-label" text-anchor="middle">${monthLabels[m]}</text>`;
+      }
+
+      let refHtml = '';
+      if (refMax > 0){
+        const y = yFor(availableAreaM2);
+        refHtml = `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" class="cpa-ref-line" />
+          <text x="${W - padR}" y="${(y - 5).toFixed(1)}" class="cpa-ref-label" text-anchor="end">${t.cpp_area_ref_label.replace('{n}', numFmt.format(availableAreaM2))}</text>`;
+      }
+
+      // Stack the bands: each series' band spans [cumulative-so-far, +its own days].
+      let cumulative = new Array(365).fill(0);
+      const bandsHtml = series.map(s => {
+        const lower = cumulative;
+        const upper = lower.map((v, i) => v + s.days[i]);
+        cumulative = upper;
+        const topPts = upper.map((v, i) => `${i === 0 ? 'M' : 'L'}${xFor(i).toFixed(1)},${yFor(v).toFixed(1)}`).join(' ');
+        const bottomPts = [];
+        for (let i = 364; i >= 0; i--) bottomPts.push(`L${xFor(i).toFixed(1)},${yFor(lower[i]).toFixed(1)}`);
+        return `<path d="${topPts} ${bottomPts.join(' ')} Z" fill="${s.color}" opacity="0.88" />`;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="cpa-wrap">
+          <svg viewBox="0 0 ${W} ${H}" class="cpa-svg" role="img" aria-label="${escapeHtml(t.cpp_area_title)}">
+            ${gridHtml}
+            ${bandsHtml}
+            ${refHtml}
+            ${monthHtml}
+            <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H - padB}" class="cpa-axis-line" />
+            <line x1="${padL}" y1="${H - padB}" x2="${W - padR}" y2="${H - padB}" class="cpa-axis-line" />
+            <g class="cpa-hover-group" style="display:none">
+              <line class="cpa-hover-line" y1="${padT}" y2="${H - padB}" />
+            </g>
+            <rect class="cpa-hover-target" x="${padL}" y="${padT}" width="${plotW}" height="${plotH}" fill="transparent" />
+          </svg>
+          <div class="cpa-tooltip hide"></div>
+        </div>`;
+
+      const svgEl = container.querySelector('.cpa-svg');
+      const hoverTarget = container.querySelector('.cpa-hover-target');
+      const hoverGroup = container.querySelector('.cpa-hover-group');
+      const hoverLine = container.querySelector('.cpa-hover-line');
+      const tooltip = container.querySelector('.cpa-tooltip');
+
+      function showAt(clientX){
+        const rect = svgEl.getBoundingClientRect();
+        const relX = ((clientX - rect.left) / rect.width) * W;
+        const dayIdx = Math.max(0, Math.min(364, Math.round(((relX - padL) / plotW) * 364)));
+        const x = xFor(dayIdx);
+        const total = days[dayIdx];
+        hoverGroup.style.display = '';
+        hoverLine.setAttribute('x1', x); hoverLine.setAttribute('x2', x);
+        tooltip.classList.remove('hide');
+        tooltip.style.left = `${(x / W * 100).toFixed(2)}%`;
+        tooltip.style.top = `${(yFor(total) / H * 100).toFixed(2)}%`;
+        const parts = series
+          .map(s => ({ label: s.label, val: s.days[dayIdx] }))
+          .filter(p => p.val > 0.001)
+          .sort((a, b) => b.val - a.val)
+          .map(p => `${numFmt.format(p.val)} m² ${escapeHtml(p.label)}`);
+        const valueText = parts.length ? parts.join(' + ') : `0 m²`;
+        tooltip.innerHTML = `<b>${escapeHtml(valueText)}</b><br/><span class="tt-label">${escapeHtml(cpMonthDayLabel(dayIdx + 1, isFr))} — ${t.cpp_area_stack_total.replace('{n}', numFmt.format(total))}</span>`;
+      }
+
+      hoverTarget.addEventListener('pointermove', (e) => showAt(e.clientX));
+      hoverTarget.addEventListener('pointerdown', (e) => showAt(e.clientX));
+      hoverTarget.addEventListener('pointerleave', () => {
+        hoverGroup.style.display = 'none';
+        tooltip.classList.add('hide');
+      });
+    }
+
+    function cpRenderAreaDispatch(){
+      if (!cppAreaCache) return;
+      const { days, series, availableAreaM2, isFr, t } = cppAreaCache;
+      if (cppAreaStacked){
+        cpRenderAreaSvgStacked(series, days, availableAreaM2, isFr, t, cppAreaContainer);
+        cppAreaLegend.innerHTML = series.map(s => `
+          <span class="cpa-legend-item"><i class="cpa-legend-swatch" style="background:${s.color}"></i>${escapeHtml(s.label)}</span>
+        `).join('');
+        cppAreaLegend.classList.remove('hide');
+      } else {
+        cpRenderAreaSvg(days, availableAreaM2, isFr, t, cppAreaContainer);
+        cppAreaLegend.classList.add('hide');
+      }
+    }
+
     function renderCropArea(){
       const isFr = (curLang === 'fr');
       const t = I18N[curLang] || I18N.fr;
@@ -4449,6 +4593,7 @@ function applyI18n(){
       cpProducts.forEach(p => { productById[p.id] = p; });
 
       const days = new Array(365).fill(0);
+      const perProduct = {}; // productId -> { label, days }
       let hasAnyArea = false;
       let missingArea = false;
 
@@ -4462,6 +4607,10 @@ function applyI18n(){
         if (!(p.area_per_plant_m2 > 0)){ missingArea = true; return; }
         hasAnyArea = true;
         const areaPerRound = quantities.plantsPerRound * p.area_per_plant_m2;
+        if (!perProduct[p.id]){
+          const label = `${isFr ? (p.name_fr || p.name) : p.name}${p.variety ? ' — ' + (isFr ? (p.variety_fr || p.variety) : p.variety) : ''}`;
+          perProduct[p.id] = { label, days: new Array(365).fill(0) };
+        }
         rounds.forEach(r => {
           const occStart = r.plant ? r.plant.start : (r.sow ? r.sow.start : (r.harvest ? r.harvest.start : null));
           let occEnd = r.harvest ? r.harvest.end : (r.plant ? r.plant.end : (r.sow ? r.sow.end : null));
@@ -4471,6 +4620,7 @@ function applyI18n(){
           // than the sow raw-day — it actually falls in the following year.
           if (occEnd < occStart) occEnd += 365;
           cpAddAreaToDays(days, occStart, occEnd, areaPerRound);
+          cpAddAreaToDays(perProduct[p.id].days, occStart, occEnd, areaPerRound);
         });
       });
 
@@ -4480,14 +4630,32 @@ function applyI18n(){
         cppAreaEmpty.classList.remove('hide');
         cppAreaHint.textContent = '';
         cppAreaTableToggleBtn.classList.add('hide');
+        cppAreaStackToggleBtn.classList.add('hide');
         cppAreaTableWrap.classList.add('hide');
+        cppAreaLegend.classList.add('hide');
+        cppAreaCache = null;
         return;
       }
       cppAreaEmpty.classList.add('hide');
       cppAreaTableToggleBtn.classList.remove('hide');
+      cppAreaStackToggleBtn.classList.remove('hide');
+
+      // Top N products by peak area get their own color; the rest are
+      // pooled into "Autres" so the stacked chart stays legible.
+      const MAX_SERIES = CPA_STACK_COLORS.length - 1;
+      const sorted = Object.values(perProduct).sort((a, b) => Math.max(...b.days) - Math.max(...a.days));
+      const top = sorted.slice(0, MAX_SERIES);
+      const rest = sorted.slice(MAX_SERIES);
+      const series = top.map((s, i) => ({ label: s.label, color: CPA_STACK_COLORS[i], days: s.days }));
+      if (rest.length){
+        const otherDays = new Array(365).fill(0);
+        rest.forEach(s => s.days.forEach((v, i) => { otherDays[i] += v; }));
+        series.push({ label: t.cpp_area_other_label, color: CPA_STACK_COLORS[CPA_STACK_COLORS.length - 1], days: otherDays });
+      }
 
       const availableAreaM2 = loc.area_m2 > 0 ? loc.area_m2 : 0;
-      cpRenderAreaSvg(days, availableAreaM2, isFr, t, cppAreaContainer);
+      cppAreaCache = { days, series, availableAreaM2, isFr, t };
+      cpRenderAreaDispatch();
       cppAreaHint.textContent = missingArea ? t.cpp_area_partial_hint : t.cpp_area_hint;
 
       const numFmt = new Intl.NumberFormat(isFr ? 'fr-FR' : 'en-US', { maximumFractionDigits: 1 });
@@ -4545,6 +4713,12 @@ function applyI18n(){
       const willShow = cppAreaTableWrap.classList.contains('hide');
       cppAreaTableWrap.classList.toggle('hide', !willShow);
       cppAreaTableToggleBtn.textContent = willShow ? t.stats_hide_table : t.stats_show_table;
+    };
+    cppAreaStackToggleBtn.onclick = () => {
+      const t = I18N[curLang] || I18N.fr;
+      cppAreaStacked = !cppAreaStacked;
+      cppAreaStackToggleBtn.textContent = cppAreaStacked ? t.cpp_area_total_btn : t.cpp_area_stack_btn;
+      cpRenderAreaDispatch();
     };
 
     // === Vue Planification des cultures — mon plan de culture ===
