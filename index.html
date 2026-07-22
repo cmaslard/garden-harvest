@@ -728,6 +728,17 @@
               <input id="p-harvest-fixed-end" type="date" />
             </div>
           </div>
+          <p id="p-sow-fixed-hint" class="muted" style="margin-top:.5rem">Optionnel : période de semis habituelle à afficher sur le calendrier (ex : semis d'hiver pour une récolte fixe au printemps).</p>
+          <div class="row" style="margin-top:.5rem">
+            <div>
+              <label id="label-p-sow-fixed-start">Début de semis habituel</label>
+              <input id="p-sow-fixed-start" type="date" />
+            </div>
+            <div>
+              <label id="label-p-sow-fixed-end">Fin de semis habituel</label>
+              <input id="p-sow-fixed-end" type="date" />
+            </div>
+          </div>
 
           <h2 id="p-conservation-h2" style="font-size:1.1rem;margin:1.5rem 0 .75rem">Conservation après récolte</h2>
           <p id="p-conservation-hint" class="muted">Sert à savoir combien de temps une récolte reste disponible (onglet Autonomie alimentaire). Laisse vide un mode de conservation qui ne convient pas à ce produit — le calcul privilégiera toujours le frais en premier.</p>
@@ -1485,6 +1496,9 @@ const I18N = {
     p_perennial_hint: 'Pour les arbres fruitiers et vivaces : une période de récolte habituelle, indépendante des semis/gel. Si renseignée, elle remplace le calcul ci-dessus.',
     p_harvest_fixed_start_label: 'Début de récolte habituel',
     p_harvest_fixed_end_label: 'Fin de récolte habituelle',
+    p_sow_fixed_hint: "Optionnel : période de semis habituelle à afficher sur le calendrier (ex : semis d'hiver pour une récolte fixe au printemps).",
+    p_sow_fixed_start_label: 'Début de semis habituel',
+    p_sow_fixed_end_label: 'Fin de semis habituel',
     p_conservation_h2: 'Conservation après récolte',
     p_conservation_hint: "Sert à savoir combien de temps une récolte reste disponible (onglet Autonomie alimentaire). Laisse vide un mode de conservation qui ne convient pas à ce produit — le calcul privilégiera toujours le frais en premier.",
     p_conservation_label: 'Frais (jours)',
@@ -1635,7 +1649,7 @@ const I18N = {
     cp_plan_invalid: 'Choisis un produit et un objectif en kg supérieur à 0.',
     cp_plan_added_ok: 'Plan mis à jour.',
     cp_plan_no_yield: 'rendement non renseigné',
-    cp_plan_rounds_hint: '{n} semis échelonnés',
+    cp_plan_rounds_hint: '{n} semis de ~{k} pieds',
     th_cp_plan_product: 'Produit',
     th_cp_plan_target: 'Objectif',
     th_cp_plan_yield: 'Rendement / pied',
@@ -1824,6 +1838,9 @@ const I18N = {
     p_perennial_hint: 'For fruit trees and perennials: a usual harvest period, independent of sowing/frost. If set, it overrides the calculation above.',
     p_harvest_fixed_start_label: 'Usual harvest start',
     p_harvest_fixed_end_label: 'Usual harvest end',
+    p_sow_fixed_hint: 'Optional: usual sowing period to show on the calendar (e.g. winter sowing for a fixed spring harvest).',
+    p_sow_fixed_start_label: 'Usual sowing start',
+    p_sow_fixed_end_label: 'Usual sowing end',
     p_conservation_h2: 'Storage after harvest',
     p_conservation_hint: "Used to know how long a harvest stays available (Food self-sufficiency tab). Leave blank any storage method that doesn't suit this product — the calculation always prefers fresh first.",
     p_conservation_label: 'Fresh (days)',
@@ -1974,7 +1991,7 @@ const I18N = {
     cp_plan_invalid: 'Pick a product and a target in kg greater than 0.',
     cp_plan_added_ok: 'Plan updated.',
     cp_plan_no_yield: 'yield not set',
-    cp_plan_rounds_hint: '{n} staggered sowings',
+    cp_plan_rounds_hint: '{n} sowings of ~{k} plants',
     th_cp_plan_product: 'Product',
     th_cp_plan_target: 'Target',
     th_cp_plan_yield: 'Yield / plant',
@@ -2172,6 +2189,9 @@ function applyI18n(){
   setTxt('#p-perennial-hint', t.p_perennial_hint);
   setTxt('#label-p-harvest-fixed-start', t.p_harvest_fixed_start_label);
   setTxt('#label-p-harvest-fixed-end', t.p_harvest_fixed_end_label);
+  setTxt('#p-sow-fixed-hint', t.p_sow_fixed_hint);
+  setTxt('#label-p-sow-fixed-start', t.p_sow_fixed_start_label);
+  setTxt('#label-p-sow-fixed-end', t.p_sow_fixed_end_label);
   setTxt('#p-conservation-h2', t.p_conservation_h2);
   setTxt('#p-conservation-hint', t.p_conservation_hint);
   setTxt('#label-p-conservation', t.p_conservation_label);
@@ -2722,6 +2742,8 @@ function applyI18n(){
     const pSuccession    = document.getElementById('p-succession');
     const pHarvestFixedStart = document.getElementById('p-harvest-fixed-start');
     const pHarvestFixedEnd   = document.getElementById('p-harvest-fixed-end');
+    const pSowFixedStart = document.getElementById('p-sow-fixed-start');
+    const pSowFixedEnd   = document.getElementById('p-sow-fixed-end');
     const pConservation  = document.getElementById('p-conservation');
     const pConservationCellar = document.getElementById('p-conservation-cellar');
     const pConservationFrozen = document.getElementById('p-conservation-frozen');
@@ -2795,6 +2817,8 @@ function applyI18n(){
       pSuccession.value = row.succession_interval_weeks ?? '';
       pHarvestFixedStart.value = row.harvest_fixed_start || '';
       pHarvestFixedEnd.value = row.harvest_fixed_end || '';
+      pSowFixedStart.value = row.sow_fixed_start || '';
+      pSowFixedEnd.value = row.sow_fixed_end || '';
       pConservation.value = row.conservation_days ?? '';
       pConservationCellar.value = row.conservation_days_cellar ?? '';
       pConservationFrozen.value = row.conservation_days_frozen ?? '';
@@ -2814,6 +2838,7 @@ function applyI18n(){
       pSowIndoor.value = ''; pSowDirect.value = ''; pTransplant.value = '';
       pMaturityMin.value = ''; pMaturityMax.value = '';
       pSuccession.value = ''; pHarvestFixedStart.value = ''; pHarvestFixedEnd.value = ''; pConservation.value = '';
+      pSowFixedStart.value = ''; pSowFixedEnd.value = '';
       pConservationCellar.value = ''; pConservationFrozen.value = ''; pYield.value = '';
       pHarvestDuration.value = '';
       selPType.value = 'Fruit';
@@ -2849,6 +2874,7 @@ function applyI18n(){
         .select('id,name,name_fr,type,variety,variety_fr,unit_harvest,unit_harvest_fr,latin_name,' +
           'sow_indoor_weeks_before_frost,sow_direct_weeks_after_frost,transplant_weeks_after_frost,' +
           'days_to_maturity_min,days_to_maturity_max,succession_interval_weeks,harvest_fixed_start,harvest_fixed_end,' +
+          'sow_fixed_start,sow_fixed_end,' +
           'conservation_days,conservation_days_cellar,conservation_days_frozen,yield_per_plant_kg,harvest_duration_weeks')
         .order('name');
       if (error){
@@ -2934,6 +2960,8 @@ function applyI18n(){
         succession_interval_weeks: numOrNull(pSuccession.value),
         harvest_fixed_start: pHarvestFixedStart.value || null,
         harvest_fixed_end: pHarvestFixedEnd.value || null,
+        sow_fixed_start: pSowFixedStart.value || null,
+        sow_fixed_end: pSowFixedEnd.value || null,
         conservation_days: numOrNull(pConservation.value),
         conservation_days_cellar: numOrNull(pConservationCellar.value),
         conservation_days_frozen: numOrNull(pConservationFrozen.value),
@@ -2958,6 +2986,7 @@ function applyI18n(){
         pName.value=''; pNameFr.value=''; pVariety.value=''; pVarietyFr.value=''; pUnit.value=''; pUnitFr.value=''; pLatin.value='';
         pSowIndoor.value=''; pSowDirect.value=''; pTransplant.value=''; pMaturityMin.value=''; pMaturityMax.value='';
         pSuccession.value=''; pHarvestFixedStart.value=''; pHarvestFixedEnd.value='';
+        pSowFixedStart.value=''; pSowFixedEnd.value='';
       }
 
       await Promise.all([refreshProductsList(), loadProducts()]);
@@ -3801,6 +3830,7 @@ function applyI18n(){
         db.from('products').select('id,name,name_fr,variety,variety_fr,type,unit_harvest,' +
           'sow_indoor_weeks_before_frost,sow_direct_weeks_after_frost,transplant_weeks_after_frost,' +
           'days_to_maturity_min,days_to_maturity_max,succession_interval_weeks,harvest_fixed_start,harvest_fixed_end,' +
+          'sow_fixed_start,sow_fixed_end,' +
           'conservation_days,conservation_days_cellar,conservation_days_frozen,yield_per_plant_kg,harvest_duration_weeks').order('name')
       ]);
       cpLocations = locs || [];
@@ -3866,7 +3896,16 @@ function applyI18n(){
         const hsDoy = cpDayOfYear(hs.month, hs.day);
         let heDoy = cpDayOfYear(he.month, he.day);
         if (heDoy < hsDoy) heDoy += 365; // wraps the year boundary (e.g. Nov -> Feb)
-        return { rounds: [{ sow: null, plant: null, harvest: { start: hsDoy, end: heDoy } }] };
+        let sow = null;
+        if (product.sow_fixed_start && product.sow_fixed_end){
+          const ss = cpParseDate(product.sow_fixed_start);
+          const se = cpParseDate(product.sow_fixed_end);
+          const ssDoy = cpDayOfYear(ss.month, ss.day);
+          let seDoy = cpDayOfYear(se.month, se.day);
+          if (seDoy < ssDoy) seDoy += 365;
+          sow = { start: ssDoy, end: seDoy };
+        }
+        return { rounds: [{ sow, plant: null, harvest: { start: hsDoy, end: heDoy } }] };
       }
 
       const lastFrost = cpParseDate(frostLoc.last_spring_frost);
@@ -4079,6 +4118,20 @@ function applyI18n(){
       return product?.yield_per_plant_kg > 0 ? product.yield_per_plant_kg : null;
     }
 
+    // Rounds the number of plants up PER SOWING ROUND, not just once for the
+    // whole-year total — e.g. for a succession crop like radish, "45 plants"
+    // (3 per sowing x 15 sowings) is what you'd actually go sow, rather than a
+    // vague "40 plants total" that doesn't divide evenly across the season.
+    function cpPlantsForPlan(product, targetQtyKg, roundsCount){
+      const yieldPerPlant = cpYieldFor(product);
+      if (!yieldPerPlant || !roundsCount) return null;
+      const targetPerRound = targetQtyKg / roundsCount;
+      const plantsPerRound = Math.ceil(targetPerRound / yieldPerPlant);
+      const totalPlants = plantsPerRound * roundsCount;
+      const actualQty = totalPlants * yieldPerPlant;
+      return { yieldPerPlant, plantsPerRound, totalPlants, actualQty, roundsCount };
+    }
+
     function cpBuildPlannedBatches(loc, hasCellar, hasFreezer){
       const productById = {};
       cpProducts.forEach(p => { productById[p.id] = p; });
@@ -4089,14 +4142,11 @@ function applyI18n(){
         if (!p) return;
         const cat = fiCategoryForProduct(p);
         if (!cat) return;
-        const yieldPerPlant = cpYieldFor(p);
-        if (!yieldPerPlant) return;
-        const plants = Math.ceil(plan.target_qty_kg / yieldPerPlant);
-        const actualQty = plants * yieldPerPlant;
-
         const rounds = cpComputeProductWindows(p, loc).rounds.filter(r => r.harvest);
         if (!rounds.length) return;
-        const qtyPerRound = actualQty / rounds.length;
+        const quantities = cpPlantsForPlan(p, plan.target_qty_kg, rounds.length);
+        if (!quantities) return;
+        const qtyPerRound = quantities.actualQty / rounds.length;
         const { freshDays, extendedDays, source } = fiConservationWindow(p, hasCellar, hasFreezer);
 
         rounds.forEach(r => {
@@ -4196,10 +4246,13 @@ function applyI18n(){
             ? `${isFr ? (p.name_fr || p.name) : p.name}${p.variety ? ' — ' + (isFr ? (p.variety_fr || p.variety) : p.variety) : ''}`
             : '?';
           const yieldPerPlant = p ? cpYieldFor(p) : null;
-          const plants = yieldPerPlant ? Math.ceil(plan.target_qty_kg / yieldPerPlant) : null;
-          const actualQty = plants ? plants * yieldPerPlant : null;
           const rounds = (p && loc && loc.last_spring_frost) ? cpComputeProductWindows(p, loc).rounds.filter(r => r.harvest).length : 0;
-          const roundsHint = rounds > 1 ? `<br/><span class="muted" style="font-size:.8em">${t.cp_plan_rounds_hint.replace('{n}', rounds)}</span>` : '';
+          const quantities = p ? cpPlantsForPlan(p, plan.target_qty_kg, rounds || 1) : null;
+          const plants = quantities ? quantities.totalPlants : null;
+          const actualQty = quantities ? quantities.actualQty : null;
+          const roundsHint = (rounds > 1 && quantities)
+            ? `<br/><span class="muted" style="font-size:.8em">${t.cp_plan_rounds_hint.replace('{n}', rounds).replace('{k}', quantities.plantsPerRound)}</span>`
+            : '';
           return `
             <tr>
               <td>${escapeHtml(label)}</td>
