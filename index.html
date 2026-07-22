@@ -362,6 +362,7 @@
     }
     .cp-track{
       position:relative; flex:1 1 auto; height:34px;
+      display:flex; flex-direction:column;
       background-repeat: no-repeat;
       background-image:
         linear-gradient(var(--border), var(--border)), linear-gradient(var(--border), var(--border)),
@@ -376,8 +377,9 @@
         49.5890% 0, 58.0822% 0, 66.5753% 0, 74.7945% 0, 83.2877% 0, 91.5068% 0;
       opacity: 1;
     }
+    .cp-subtrack{ position:relative; flex:1 1 auto; }
     .cp-bar{
-      position:absolute; top:9px; height:16px; border-radius:4px;
+      position:absolute; top:50%; transform:translateY(-50%); height:16px; border-radius:4px;
       cursor:pointer; transition:filter .15s ease;
     }
     .cp-bar:hover, .cp-bar:focus-visible{ filter:brightness(1.15); outline:none; }
@@ -4229,17 +4231,26 @@ function applyI18n(){
           </div>`).join('');
       }
 
-      const rowsHtml = rows.map(r => `
-        <div class="cp-row">
+      // Each succession round gets its own horizontal lane within the row —
+      // otherwise several rounds' wide harvest bars (extended via
+      // harvest_duration_weeks) overlap almost entirely and read as one
+      // solid block instead of distinct sowings.
+      const rowsHtml = rows.map(r => {
+        const rowH = Math.max(34, r.rounds.length * 20);
+        return `
+        <div class="cp-row" style="min-height:${rowH}px">
           <div class="cp-row-label" title="${escapeHtml(r.label)}">${escapeHtml(r.label)}</div>
-          <div class="cp-track">
-            ${r.rounds.map(w => `
-              ${barsFor(w.sow, 'cp-sow', t.cp_legend_sow)}
-              ${barsFor(w.plant, 'cp-plant', t.cp_legend_plant)}
-              ${barsFor(w.harvest, 'cp-harvest', t.cp_legend_harvest)}
+          <div class="cp-track" style="height:${rowH}px">
+            ${r.rounds.map((w, i) => `
+              <div class="cp-subtrack" title="${r.rounds.length > 1 ? escapeHtml(`${t.cp_cycle} ${i + 1}`) : ''}">
+                ${barsFor(w.sow, 'cp-sow', t.cp_legend_sow)}
+                ${barsFor(w.plant, 'cp-plant', t.cp_legend_plant)}
+                ${barsFor(w.harvest, 'cp-harvest', t.cp_legend_harvest)}
+              </div>
             `).join('')}
           </div>
-        </div>`).join('');
+        </div>`;
+      }).join('');
 
       chartEl.innerHTML = `
         <div class="cp-outer">
