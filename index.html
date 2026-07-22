@@ -4454,12 +4454,13 @@ function applyI18n(){
       });
     }
 
-    // Fixed categorical order (no blue — reserved look of the app's own
-    // primary/accent — and the last slot is always "Autres" for whatever
-    // doesn't fit in the top N series).
+    // Fixed categorical order, 16 named colors (Tableau20 minus its two
+    // blues — reserved look of the app's own primary/accent — and minus
+    // its two grays, since gray is kept exclusively for "Autres" below).
     const CPA_STACK_COLORS = [
-      '#e15759', '#f28e2b', '#edc948', '#9c755f', '#ff9da7',
-      '#b07aa1', '#d37295', '#86bcb6', '#d4a373', '#c9cc3f',
+      '#f28e2b', '#ffbe7d', '#59a14f', '#8cd17d', '#b6992d', '#f1ce63',
+      '#499894', '#86bcb6', '#e15759', '#ff9d9a', '#d37295', '#fabfd2',
+      '#b07aa1', '#d4a6c8', '#9d7660', '#d7b5a6',
       '#bab0ac'
     ];
 
