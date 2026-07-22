@@ -394,6 +394,27 @@
     .cp-bar-tooltip .tt-value{ font-weight:600; color:var(--fg); }
     .cp-bar-tooltip .tt-label{ color:var(--muted); }
 
+    /* ===== Planification des cultures — surface nécessaire (courbe) ===== */
+    .cpa-wrap{ position:relative; }
+    .cpa-svg{ width:100%; height:auto; display:block; touch-action:pan-y; }
+    .cpa-grid{ stroke:var(--border); stroke-width:1; }
+    .cpa-axis-line{ stroke:var(--border); stroke-width:1; }
+    .cpa-axis-label{ fill:var(--muted); font-size:9.5px; }
+    .cpa-fill{ fill:color-mix(in srgb, var(--accent) 22%, transparent); stroke:none; }
+    .cpa-line{ fill:none; stroke:var(--accent); stroke-width:2.5; stroke-linejoin:round; stroke-linecap:round; }
+    .cpa-ref-line{ stroke:var(--status-critical); stroke-width:1.5; stroke-dasharray:5 4; }
+    .cpa-ref-label{ fill:var(--status-critical); font-size:10px; font-weight:600; }
+    .cpa-hover-line{ stroke:var(--fg); stroke-width:1; opacity:.35; }
+    .cpa-hover-dot{ fill:var(--accent); stroke:var(--card); stroke-width:2; }
+    .cpa-hover-target{ cursor:crosshair; }
+    .cpa-tooltip{
+      position:absolute; transform:translate(-50%,-115%);
+      background:var(--card); border:1px solid var(--border); border-radius:10px;
+      padding:6px 10px; font-size:.78rem; white-space:nowrap;
+      box-shadow:0 6px 16px rgba(0,0,0,.18); pointer-events:none; z-index:5;
+    }
+    .cpa-tooltip b{ color:var(--fg); }
+
     /* ===== Vers l'autonomie alimentaire — dashboard ===== */
     .fi-hero{ font-size:2.6rem; font-weight:800; letter-spacing:-.02em; margin:4px 0 2px; font-variant-numeric:tabular-nums; }
     .fi-hero.tier-good{ color:var(--accent); }
@@ -715,6 +736,18 @@
             <div>
               <label id="label-p-harvest-duration">Récolte continue pendant (semaines)</label>
               <input id="p-harvest-duration" type="number" step="0.5" min="0" placeholder="ex: 8 (tomate)" />
+            </div>
+          </div>
+          <div class="row" style="margin-top:1rem">
+            <div>
+              <label id="label-p-area">Surface par pied (m²)</label>
+              <input id="p-area" type="number" step="0.01" min="0" placeholder="ex: 0.36 (tomate)" />
+            </div>
+            <div style="align-self:end">
+              <label style="display:flex;align-items:center;gap:.5rem;font-weight:normal">
+                <input id="p-excludes-area" type="checkbox" style="width:auto" />
+                <span id="label-p-excludes-area">Ne compte pas dans la surface du jardin (arbre planté ailleurs, etc.)</span>
+              </label>
             </div>
           </div>
 
@@ -1252,6 +1285,28 @@
             </div>
           </div>
 
+          <div id="cpp-area-section" class="hide">
+            <div class="glass-card">
+              <div class="barchart-title" id="cpp-area-title">Surface nécessaire</div>
+              <div class="barchart-subtitle" id="cpp-area-subtitle">Surface occupée par ton plan de culture au cours de l'année</div>
+              <p id="cpp-area-hint" class="muted"></p>
+              <div id="cpp-area-container"></div>
+              <p id="cpp-area-empty" class="stats-empty hide"></p>
+              <button type="button" class="table-toggle-btn hide" id="cpp-area-table-toggle">Voir en tableau</button>
+              <div class="stats-table-wrap table-wrap hide" id="cpp-area-table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th id="th-cpp-area-month">Mois</th>
+                      <th id="th-cpp-area-peak">Surface maximale</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cpp-area-table-rows"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
           <div id="cp-forecast-section" class="hide">
             <div class="glass-card">
               <div class="barchart-title" id="cpf-hero-title">Autonomie prévisionnelle</div>
@@ -1526,6 +1581,8 @@ const I18N = {
     p_succession_label: 'Semis échelonnés (tous les X semaines)',
     p_yield_label: 'Rendement par pied (kg)',
     p_harvest_duration_label: 'Récolte continue pendant (semaines)',
+    p_area_label: 'Surface par pied (m²)',
+    p_excludes_area_label: 'Ne compte pas dans la surface du jardin (arbre planté ailleurs, etc.)',
     p_perennial_h2: 'Récolte à date fixe (plantes pérennes)',
     p_perennial_hint: 'Pour les arbres fruitiers et vivaces : une période de récolte habituelle, indépendante des semis/gel. Si renseignée, elle remplace le calcul ci-dessus.',
     p_harvest_fixed_start_label: 'Début de récolte habituel',
@@ -1711,6 +1768,14 @@ const I18N = {
     cpp_chart_title: 'Calendrier de mon plan de culture',
     cpp_chart_subtitle: "Semis, plantation et récolte estimés pour les cultures de ton plan, à partir des dates de gel du lieu sélectionné",
     cpp_empty: "Ajoute des produits à ton plan ci-dessus (avec un rendement par pied renseigné) pour voir leur calendrier ici.",
+    cpp_area_title: 'Surface nécessaire',
+    cpp_area_subtitle: 'Surface occupée par ton plan de culture au cours de l\'année',
+    cpp_area_hint: "Estimation basée sur la surface par pied renseignée pour chaque produit. Les arbres marqués « ne compte pas dans la surface » sont exclus.",
+    cpp_area_partial_hint: "Estimation partielle : certains produits de ton plan n'ont pas de surface par pied renseignée (onglet Produits) et ne sont pas comptés ici.",
+    cpp_area_empty: "Renseigne une surface par pied (onglet Produits) pour au moins un produit de ton plan pour voir ce graphique.",
+    cpp_area_ref_label: 'Surface disponible : {n} m²',
+    th_cpp_area_month: 'Mois',
+    th_cpp_area_peak: 'Surface maximale',
     nav_locations: 'Lieux',
     locations_h2: 'Ajouter un lieu',
     locations_edit_h2: 'Modifier le lieu',
@@ -1873,6 +1938,8 @@ const I18N = {
     p_succession_label: 'Succession sowing (every X weeks)',
     p_yield_label: 'Yield per plant (kg)',
     p_harvest_duration_label: 'Continuous harvest for (weeks)',
+    p_area_label: 'Area per plant (m²)',
+    p_excludes_area_label: "Doesn't count toward garden area (tree planted elsewhere, etc.)",
     p_perennial_h2: 'Fixed harvest window (perennials)',
     p_perennial_hint: 'For fruit trees and perennials: a usual harvest period, independent of sowing/frost. If set, it overrides the calculation above.',
     p_harvest_fixed_start_label: 'Usual harvest start',
@@ -2058,6 +2125,14 @@ const I18N = {
     cpp_chart_title: 'My crop plan calendar',
     cpp_chart_subtitle: "Sowing, transplanting, and harvest estimated for the crops in your plan, from the selected location's frost dates",
     cpp_empty: 'Add products to your plan above (with a yield per plant set) to see their calendar here.',
+    cpp_area_title: 'Area needed',
+    cpp_area_subtitle: 'Area occupied by your crop plan over the year',
+    cpp_area_hint: "Estimated from the area per plant set on each product. Trees flagged \"doesn't count toward garden area\" are excluded.",
+    cpp_area_partial_hint: "Partial estimate: some products in your plan don't have an area per plant set (Products tab) and aren't counted here.",
+    cpp_area_empty: 'Set an area per plant (Products tab) for at least one product in your plan to see this chart.',
+    cpp_area_ref_label: 'Available area: {n} m²',
+    th_cpp_area_month: 'Month',
+    th_cpp_area_peak: 'Peak area',
     nav_locations: 'Locations',
     locations_h2: 'Add a location',
     locations_edit_h2: 'Edit location',
@@ -2229,6 +2304,8 @@ function applyI18n(){
   setTxt('#label-p-succession', t.p_succession_label);
   setTxt('#label-p-yield', t.p_yield_label);
   setTxt('#label-p-harvest-duration', t.p_harvest_duration_label);
+  setTxt('#label-p-area', t.p_area_label);
+  setTxt('#label-p-excludes-area', t.p_excludes_area_label);
   setTxt('#p-perennial-h2', t.p_perennial_h2);
   setTxt('#p-perennial-hint', t.p_perennial_hint);
   setTxt('#label-p-harvest-fixed-start', t.p_harvest_fixed_start_label);
@@ -2347,6 +2424,10 @@ function applyI18n(){
   setTxt('#th-cpp-sow', t.th_cp_sow);
   setTxt('#th-cpp-plant', t.th_cp_plant);
   setTxt('#th-cpp-harvest', t.th_cp_harvest);
+  setTxt('#cpp-area-title', t.cpp_area_title);
+  setTxt('#cpp-area-subtitle', t.cpp_area_subtitle);
+  setTxt('#th-cpp-area-month', t.th_cpp_area_month);
+  setTxt('#th-cpp-area-peak', t.th_cpp_area_peak);
   {
     const cpTableWrapEl = document.getElementById('cp-table-wrap');
     const cpTableToggleBtnEl = document.getElementById('cp-table-toggle');
@@ -2358,6 +2439,12 @@ function applyI18n(){
     const cppTableToggleBtnEl = document.getElementById('cpp-table-toggle');
     if (cppTableToggleBtnEl){
       cppTableToggleBtnEl.textContent = (cppTableWrapEl && !cppTableWrapEl.classList.contains('hide'))
+        ? t.stats_hide_table : t.stats_show_table;
+    }
+    const cppAreaTableWrapEl = document.getElementById('cpp-area-table-wrap');
+    const cppAreaTableToggleBtnEl = document.getElementById('cpp-area-table-toggle');
+    if (cppAreaTableToggleBtnEl){
+      cppAreaTableToggleBtnEl.textContent = (cppAreaTableWrapEl && !cppAreaTableWrapEl.classList.contains('hide'))
         ? t.stats_hide_table : t.stats_show_table;
     }
   }
@@ -2810,6 +2897,8 @@ function applyI18n(){
     const pConservationFrozen = document.getElementById('p-conservation-frozen');
     const pYield = document.getElementById('p-yield');
     const pHarvestDuration = document.getElementById('p-harvest-duration');
+    const pArea = document.getElementById('p-area');
+    const pExcludesArea = document.getElementById('p-excludes-area');
     const pSaveBtn       = document.getElementById('p-save');
     const pCancelEditBtn = document.getElementById('p-cancel-edit');
     const pMsg           = document.getElementById('product-msg');
@@ -2885,6 +2974,8 @@ function applyI18n(){
       pConservationFrozen.value = row.conservation_days_frozen ?? '';
       pYield.value = row.yield_per_plant_kg ?? '';
       pHarvestDuration.value = row.harvest_duration_weeks ?? '';
+      pArea.value = row.area_per_plant_m2 ?? '';
+      pExcludesArea.checked = !!row.excludes_from_area;
       pMsg.textContent = '';
       renderProductFormMode();
       document.getElementById('product-form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2902,6 +2993,7 @@ function applyI18n(){
       pSowFixedStart.value = ''; pSowFixedEnd.value = '';
       pConservationCellar.value = ''; pConservationFrozen.value = ''; pYield.value = '';
       pHarvestDuration.value = '';
+      pArea.value = ''; pExcludesArea.checked = false;
       selPType.value = 'Fruit';
       pMsg.textContent = '';
       renderProductFormMode();
@@ -2936,7 +3028,8 @@ function applyI18n(){
           'sow_indoor_weeks_before_frost,sow_direct_weeks_after_frost,transplant_weeks_after_frost,' +
           'days_to_maturity_min,days_to_maturity_max,succession_interval_weeks,harvest_fixed_start,harvest_fixed_end,' +
           'sow_fixed_start,sow_fixed_end,' +
-          'conservation_days,conservation_days_cellar,conservation_days_frozen,yield_per_plant_kg,harvest_duration_weeks')
+          'conservation_days,conservation_days_cellar,conservation_days_frozen,yield_per_plant_kg,harvest_duration_weeks,' +
+          'area_per_plant_m2,excludes_from_area')
         .order('name');
       if (error){
         productsListMsg.textContent = (window.__i18n_products_err_hint2||'Erreur produits : ') + error.message;
@@ -3027,7 +3120,9 @@ function applyI18n(){
         conservation_days_cellar: numOrNull(pConservationCellar.value),
         conservation_days_frozen: numOrNull(pConservationFrozen.value),
         yield_per_plant_kg: numOrNull(pYield.value),
-        harvest_duration_weeks: numOrNull(pHarvestDuration.value)
+        harvest_duration_weeks: numOrNull(pHarvestDuration.value),
+        area_per_plant_m2: numOrNull(pArea.value),
+        excludes_from_area: pExcludesArea.checked
       };
 
       const { error } = editingProductId
@@ -3886,6 +3981,13 @@ function applyI18n(){
     const cppTableToggleBtn = document.getElementById('cpp-table-toggle');
     const cppTableWrap = document.getElementById('cpp-table-wrap');
     const cppTableRows = document.getElementById('cpp-table-rows');
+    const cppAreaSection = document.getElementById('cpp-area-section');
+    const cppAreaHint = document.getElementById('cpp-area-hint');
+    const cppAreaContainer = document.getElementById('cpp-area-container');
+    const cppAreaEmpty = document.getElementById('cpp-area-empty');
+    const cppAreaTableToggleBtn = document.getElementById('cpp-area-table-toggle');
+    const cppAreaTableWrap = document.getElementById('cpp-area-table-wrap');
+    const cppAreaTableRows = document.getElementById('cpp-area-table-rows');
 
     let cpLocations = [];
     let cpProducts = [];
@@ -3893,12 +3995,13 @@ function applyI18n(){
 
     async function loadCropPlanningData(){
       const [{ data: locs }, { data: prods }] = await Promise.all([
-        db.from('locations').select('id,name,name_fr,last_spring_frost,first_fall_frost').order('name'),
+        db.from('locations').select('id,name,name_fr,last_spring_frost,first_fall_frost,area_m2').order('name'),
         db.from('products').select('id,name,name_fr,variety,variety_fr,type,unit_harvest,' +
           'sow_indoor_weeks_before_frost,sow_direct_weeks_after_frost,transplant_weeks_after_frost,' +
           'days_to_maturity_min,days_to_maturity_max,succession_interval_weeks,harvest_fixed_start,harvest_fixed_end,' +
           'sow_fixed_start,sow_fixed_end,' +
-          'conservation_days,conservation_days_cellar,conservation_days_frozen,yield_per_plant_kg,harvest_duration_weeks').order('name')
+          'conservation_days,conservation_days_cellar,conservation_days_frozen,yield_per_plant_kg,harvest_duration_weeks,' +
+          'area_per_plant_m2,excludes_from_area').order('name')
       ]);
       cpLocations = locs || [];
       cpProducts = prods || [];
@@ -4157,6 +4260,176 @@ function applyI18n(){
       cpRenderGanttInto(rows, 'sow', isFr, t, cppChartContainer, cppTableRows);
     }
 
+    // Adds `area` to every day a round occupies the garden, handling the
+    // year-boundary wraparound the same way the Gantt bars do.
+    function cpAddAreaToDays(days, rawStart, rawEnd, area){
+      cpSegments(rawStart, rawEnd).forEach(seg => {
+        const startDay = Math.max(0, Math.round(seg.startPct / 100 * 365));
+        const endDay = Math.min(365, Math.round((seg.startPct + seg.widthPct) / 100 * 365));
+        for (let d = startDay; d < endDay; d++) days[d] += area;
+      });
+    }
+
+    function cpRenderAreaSvg(days, availableAreaM2, isFr, t, container){
+      const numFmt = new Intl.NumberFormat(isFr ? 'fr-FR' : 'en-US', { maximumFractionDigits: 1 });
+      const W = 760, H = 260, padL = 44, padR = 12, padT = 14, padB = 26;
+      const plotW = W - padL - padR, plotH = H - padT - padB;
+
+      const peak = Math.max(...days, 0);
+      const refMax = availableAreaM2 > 0 ? availableAreaM2 : 0;
+      const rawMax = Math.max(peak, refMax, 0.01);
+      const magnitude = Math.pow(10, Math.floor(Math.log10(rawMax)));
+      const step = [1, 2, 5, 10].map(m => m * magnitude).find(s => Math.ceil(rawMax / s) <= 6) || Math.ceil(rawMax / 5);
+      const niceMax = Math.ceil(rawMax / step) * step;
+
+      const xFor = (dayIdx) => padL + (dayIdx / 364) * plotW;
+      const yFor = (val) => padT + plotH - (val / niceMax) * plotH;
+
+      const pathD = days.map((v, i) => `${i === 0 ? 'M' : 'L'}${xFor(i).toFixed(1)},${yFor(v).toFixed(1)}`).join(' ');
+      const areaD = `${pathD} L${xFor(364).toFixed(1)},${yFor(0).toFixed(1)} L${xFor(0).toFixed(1)},${yFor(0).toFixed(1)} Z`;
+
+      let gridHtml = '';
+      const gridCount = Math.round(niceMax / step);
+      for (let i = 0; i <= gridCount; i++){
+        const val = i * step;
+        const y = yFor(val);
+        gridHtml += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" class="cpa-grid" />`;
+        gridHtml += `<text x="${padL - 6}" y="${(y + 3).toFixed(1)}" class="cpa-axis-label" text-anchor="end">${numFmt.format(val)}</text>`;
+      }
+
+      const monthLabels = isFr
+        ? ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.']
+        : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      let monthHtml = '';
+      for (let m = 0; m < 12; m++){
+        const dayIdx = Math.min((CP_MONTH_CUM_DAYS[m] + CP_MONTH_CUM_DAYS[m + 1]) / 2, 364);
+        monthHtml += `<text x="${xFor(dayIdx).toFixed(1)}" y="${H - 8}" class="cpa-axis-label" text-anchor="middle">${monthLabels[m]}</text>`;
+      }
+
+      let refHtml = '';
+      if (refMax > 0){
+        const y = yFor(availableAreaM2);
+        refHtml = `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" class="cpa-ref-line" />
+          <text x="${W - padR}" y="${(y - 5).toFixed(1)}" class="cpa-ref-label" text-anchor="end">${t.cpp_area_ref_label.replace('{n}', numFmt.format(availableAreaM2))}</text>`;
+      }
+
+      container.innerHTML = `
+        <div class="cpa-wrap">
+          <svg viewBox="0 0 ${W} ${H}" class="cpa-svg" role="img" aria-label="${escapeHtml(t.cpp_area_title)}">
+            ${gridHtml}
+            <path d="${areaD}" class="cpa-fill" />
+            <path d="${pathD}" class="cpa-line" />
+            ${refHtml}
+            ${monthHtml}
+            <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H - padB}" class="cpa-axis-line" />
+            <line x1="${padL}" y1="${H - padB}" x2="${W - padR}" y2="${H - padB}" class="cpa-axis-line" />
+            <g class="cpa-hover-group" style="display:none">
+              <line class="cpa-hover-line" y1="${padT}" y2="${H - padB}" />
+              <circle class="cpa-hover-dot" r="4" />
+            </g>
+            <rect class="cpa-hover-target" x="${padL}" y="${padT}" width="${plotW}" height="${plotH}" fill="transparent" />
+          </svg>
+          <div class="cpa-tooltip hide"></div>
+        </div>`;
+
+      const svgEl = container.querySelector('.cpa-svg');
+      const hoverTarget = container.querySelector('.cpa-hover-target');
+      const hoverGroup = container.querySelector('.cpa-hover-group');
+      const hoverLine = container.querySelector('.cpa-hover-line');
+      const hoverDot = container.querySelector('.cpa-hover-dot');
+      const tooltip = container.querySelector('.cpa-tooltip');
+
+      function showAt(clientX){
+        const rect = svgEl.getBoundingClientRect();
+        const relX = ((clientX - rect.left) / rect.width) * W;
+        const dayIdx = Math.max(0, Math.min(364, Math.round(((relX - padL) / plotW) * 364)));
+        const val = days[dayIdx];
+        const x = xFor(dayIdx), y = yFor(val);
+        hoverGroup.style.display = '';
+        hoverLine.setAttribute('x1', x); hoverLine.setAttribute('x2', x);
+        hoverDot.setAttribute('cx', x); hoverDot.setAttribute('cy', y);
+        tooltip.classList.remove('hide');
+        tooltip.style.left = `${(x / W * 100).toFixed(2)}%`;
+        tooltip.style.top = `${(y / H * 100).toFixed(2)}%`;
+        tooltip.innerHTML = `<b>${escapeHtml(cpMonthDayLabel(dayIdx + 1, isFr))}</b><br/>${numFmt.format(val)} m²`;
+      }
+
+      hoverTarget.addEventListener('pointermove', (e) => showAt(e.clientX));
+      hoverTarget.addEventListener('pointerdown', (e) => showAt(e.clientX));
+      hoverTarget.addEventListener('pointerleave', () => {
+        hoverGroup.style.display = 'none';
+        tooltip.classList.add('hide');
+      });
+    }
+
+    function renderCropArea(){
+      const isFr = (curLang === 'fr');
+      const t = I18N[curLang] || I18N.fr;
+      const locId = cpLocationSel.value;
+      const loc = cpLocations.find(l => String(l.id) === locId);
+
+      if (!cpUserPlans.length || !loc || !loc.last_spring_frost){
+        cppAreaSection.classList.add('hide');
+        return;
+      }
+      cppAreaSection.classList.remove('hide');
+
+      const productById = {};
+      cpProducts.forEach(p => { productById[p.id] = p; });
+
+      const days = new Array(365).fill(0);
+      let hasAnyArea = false;
+      let missingArea = false;
+
+      cpUserPlans.forEach(plan => {
+        const p = productById[plan.product_id];
+        if (!p || p.excludes_from_area) return;
+        const product = cpProductForPlan(p, plan);
+        const rounds = cpComputeProductWindows(product, loc).rounds.filter(r => r.harvest || r.sow || r.plant);
+        if (!rounds.length) return;
+        const quantities = cpPlantsForPlan(p, plan.target_qty_kg, rounds.length);
+        if (!quantities) return; // no yield set — can't know how many plants
+        if (!(p.area_per_plant_m2 > 0)){ missingArea = true; return; }
+        hasAnyArea = true;
+        const areaPerRound = quantities.plantsPerRound * p.area_per_plant_m2;
+        rounds.forEach(r => {
+          const occStart = r.plant ? r.plant.start : (r.sow ? r.sow.start : (r.harvest ? r.harvest.start : null));
+          let occEnd = r.harvest ? r.harvest.end : (r.plant ? r.plant.end : (r.sow ? r.sow.end : null));
+          if (occStart == null || occEnd == null) return;
+          // Fall-sown / spring-harvested crops (fixed sow + fixed harvest
+          // windows computed independently) can have a harvest raw-day lower
+          // than the sow raw-day — it actually falls in the following year.
+          if (occEnd < occStart) occEnd += 365;
+          cpAddAreaToDays(days, occStart, occEnd, areaPerRound);
+        });
+      });
+
+      if (!hasAnyArea){
+        cppAreaContainer.innerHTML = '';
+        cppAreaEmpty.textContent = t.cpp_area_empty;
+        cppAreaEmpty.classList.remove('hide');
+        cppAreaHint.textContent = '';
+        cppAreaTableToggleBtn.classList.add('hide');
+        cppAreaTableWrap.classList.add('hide');
+        return;
+      }
+      cppAreaEmpty.classList.add('hide');
+      cppAreaTableToggleBtn.classList.remove('hide');
+
+      const availableAreaM2 = loc.area_m2 > 0 ? loc.area_m2 : 0;
+      cpRenderAreaSvg(days, availableAreaM2, isFr, t, cppAreaContainer);
+      cppAreaHint.textContent = missingArea ? t.cpp_area_partial_hint : t.cpp_area_hint;
+
+      const numFmt = new Intl.NumberFormat(isFr ? 'fr-FR' : 'en-US', { maximumFractionDigits: 1 });
+      const monthNames = isFr
+        ? ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+        : ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      cppAreaTableRows.innerHTML = monthNames.map((name, i) => {
+        const peak = Math.max(...days.slice(CP_MONTH_CUM_DAYS[i], CP_MONTH_CUM_DAYS[i + 1]));
+        return `<tr><td>${escapeHtml(name)}</td><td>${numFmt.format(peak)} m²</td></tr>`;
+      }).join('');
+    }
+
     // Tap-to-show tooltip (mobile — hover/focus alone isn't reliable on touch)
     cpChartContainer.addEventListener('click', (e) => {
       const bar = e.target.closest('.cp-bar');
@@ -4184,6 +4457,12 @@ function applyI18n(){
       const willShow = cppTableWrap.classList.contains('hide');
       cppTableWrap.classList.toggle('hide', !willShow);
       cppTableToggleBtn.textContent = willShow ? t.stats_hide_table : t.stats_show_table;
+    };
+    cppAreaTableToggleBtn.onclick = () => {
+      const t = I18N[curLang] || I18N.fr;
+      const willShow = cppAreaTableWrap.classList.contains('hide');
+      cppAreaTableWrap.classList.toggle('hide', !willShow);
+      cppAreaTableToggleBtn.textContent = willShow ? t.stats_hide_table : t.stats_show_table;
     };
 
     // === Vue Planification des cultures — mon plan de culture ===
@@ -4409,6 +4688,7 @@ function applyI18n(){
       }
 
       renderCropPlanCalendar();
+      renderCropArea();
       renderCropForecast();
     }
 
