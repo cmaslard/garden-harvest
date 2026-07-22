@@ -328,7 +328,9 @@
     #fi-detail-table-wrap th:first-child,
     #fi-detail-table-wrap td:first-child,
     #cp-plan-table-wrap th:first-child,
-    #cp-plan-table-wrap td:first-child{
+    #cp-plan-table-wrap td:first-child,
+    #cpp-table-wrap th:first-child,
+    #cpp-table-wrap td:first-child{
       position:sticky; left:0; z-index:2;
       background: color-mix(in srgb, var(--card) 92%, transparent);
       border-right:1px solid var(--border);
@@ -1222,6 +1224,34 @@
             </div>
           </div>
 
+          <div id="cpp-chart-section" class="hide">
+            <div class="glass-card">
+              <div class="barchart-title" id="cpp-chart-title">Calendrier de mon plan de culture</div>
+              <div class="barchart-subtitle" id="cpp-chart-subtitle">Semis, plantation et récolte estimés pour les cultures de ton plan, à partir des dates de gel du lieu sélectionné</div>
+              <div class="cp-legend">
+                <span class="cp-legend-item"><i class="cp-swatch cp-sow"></i><span id="cpp-legend-sow">Semis</span></span>
+                <span class="cp-legend-item"><i class="cp-swatch cp-plant"></i><span id="cpp-legend-plant">Plantation</span></span>
+                <span class="cp-legend-item"><i class="cp-swatch cp-harvest"></i><span id="cpp-legend-harvest">Récolte</span></span>
+              </div>
+              <div id="cpp-chart-container"></div>
+              <p id="cpp-chart-empty" class="stats-empty hide"></p>
+              <button type="button" class="table-toggle-btn" id="cpp-table-toggle">Voir en tableau</button>
+              <div class="stats-table-wrap table-wrap hide" id="cpp-table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th id="th-cpp-product">Produit</th>
+                      <th id="th-cpp-sow">Semis</th>
+                      <th id="th-cpp-plant">Plantation</th>
+                      <th id="th-cpp-harvest">Récolte</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cpp-table-rows"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
           <div id="cp-forecast-section" class="hide">
             <div class="glass-card">
               <div class="barchart-title" id="cpf-hero-title">Autonomie prévisionnelle</div>
@@ -1678,6 +1708,9 @@ const I18N = {
     th_cp_plant: 'Plantation',
     th_cp_harvest: 'Récolte',
     cp_cycle: 'semis',
+    cpp_chart_title: 'Calendrier de mon plan de culture',
+    cpp_chart_subtitle: "Semis, plantation et récolte estimés pour les cultures de ton plan, à partir des dates de gel du lieu sélectionné",
+    cpp_empty: "Ajoute des produits à ton plan ci-dessus (avec un rendement par pied renseigné) pour voir leur calendrier ici.",
     nav_locations: 'Lieux',
     locations_h2: 'Ajouter un lieu',
     locations_edit_h2: 'Modifier le lieu',
@@ -2022,6 +2055,9 @@ const I18N = {
     th_cp_plant: 'Transplanting',
     th_cp_harvest: 'Harvest',
     cp_cycle: 'sowing',
+    cpp_chart_title: 'My crop plan calendar',
+    cpp_chart_subtitle: "Sowing, transplanting, and harvest estimated for the crops in your plan, from the selected location's frost dates",
+    cpp_empty: 'Add products to your plan above (with a yield per plant set) to see their calendar here.',
     nav_locations: 'Locations',
     locations_h2: 'Add a location',
     locations_edit_h2: 'Edit location',
@@ -2302,11 +2338,26 @@ function applyI18n(){
   setTxt('#th-cp-sow', t.th_cp_sow);
   setTxt('#th-cp-plant', t.th_cp_plant);
   setTxt('#th-cp-harvest', t.th_cp_harvest);
+  setTxt('#cpp-chart-title', t.cpp_chart_title);
+  setTxt('#cpp-chart-subtitle', t.cpp_chart_subtitle);
+  setTxt('#cpp-legend-sow', t.cp_legend_sow);
+  setTxt('#cpp-legend-plant', t.cp_legend_plant);
+  setTxt('#cpp-legend-harvest', t.cp_legend_harvest);
+  setTxt('#th-cpp-product', t.th_cp_product);
+  setTxt('#th-cpp-sow', t.th_cp_sow);
+  setTxt('#th-cpp-plant', t.th_cp_plant);
+  setTxt('#th-cpp-harvest', t.th_cp_harvest);
   {
     const cpTableWrapEl = document.getElementById('cp-table-wrap');
     const cpTableToggleBtnEl = document.getElementById('cp-table-toggle');
     if (cpTableToggleBtnEl){
       cpTableToggleBtnEl.textContent = (cpTableWrapEl && !cpTableWrapEl.classList.contains('hide'))
+        ? t.stats_hide_table : t.stats_show_table;
+    }
+    const cppTableWrapEl = document.getElementById('cpp-table-wrap');
+    const cppTableToggleBtnEl = document.getElementById('cpp-table-toggle');
+    if (cppTableToggleBtnEl){
+      cppTableToggleBtnEl.textContent = (cppTableWrapEl && !cppTableWrapEl.classList.contains('hide'))
         ? t.stats_hide_table : t.stats_show_table;
     }
   }
@@ -3829,6 +3880,12 @@ function applyI18n(){
     const cpTableToggleBtn = document.getElementById('cp-table-toggle');
     const cpTableWrap = document.getElementById('cp-table-wrap');
     const cpTableRows = document.getElementById('cp-table-rows');
+    const cppChartSection = document.getElementById('cpp-chart-section');
+    const cppChartContainer = document.getElementById('cpp-chart-container');
+    const cppChartEmpty = document.getElementById('cpp-chart-empty');
+    const cppTableToggleBtn = document.getElementById('cpp-table-toggle');
+    const cppTableWrap = document.getElementById('cpp-table-wrap');
+    const cppTableRows = document.getElementById('cpp-table-rows');
 
     let cpLocations = [];
     let cpProducts = [];
@@ -3984,7 +4041,13 @@ function applyI18n(){
       }
       cpChartEmpty.classList.add('hide');
 
-      const sortBy = cpSortSel.value;
+      cpRenderGanttInto(rows, cpSortSel.value, isFr, t, cpChartContainer, cpTableRows);
+    }
+
+    // Shared Gantt renderer for both the full product calendar and the
+    // plan-scoped calendar below "Mon plan de culture" — same bars, same
+    // table-view twin, just fed a different `rows` list.
+    function cpRenderGanttInto(rows, sortBy, isFr, t, chartEl, tableRowsEl){
       if (sortBy === 'name'){
         rows.sort((a, b) => a.label.localeCompare(b.label, isFr ? 'fr' : 'en'));
       } else {
@@ -4035,7 +4098,7 @@ function applyI18n(){
           </div>
         </div>`).join('');
 
-      cpChartContainer.innerHTML = `
+      chartEl.innerHTML = `
         <div class="cp-outer">
           <div class="cp-inner">
             <div class="cp-months">${monthsHtml}</div>
@@ -4043,7 +4106,7 @@ function applyI18n(){
           </div>
         </div>`;
 
-      cpTableRows.innerHTML = rows.flatMap(r => r.rounds.map((w, i) => {
+      tableRowsEl.innerHTML = rows.flatMap(r => r.rounds.map((w, i) => {
         const label = r.rounds.length > 1 ? `${r.label} (${t.cp_cycle} ${i + 1})` : r.label;
         return `
           <tr>
@@ -4055,11 +4118,56 @@ function applyI18n(){
       })).join('');
     }
 
+    function renderCropPlanCalendar(){
+      const isFr = (curLang === 'fr');
+      const t = I18N[curLang] || I18N.fr;
+      const locId = cpLocationSel.value;
+      const loc = cpLocations.find(l => String(l.id) === locId);
+
+      if (!cpUserPlans.length || !loc || !loc.last_spring_frost){
+        cppChartSection.classList.add('hide');
+        return;
+      }
+      cppChartSection.classList.remove('hide');
+
+      const productById = {};
+      cpProducts.forEach(p => { productById[p.id] = p; });
+      const rows = cpUserPlans.map(plan => {
+        const p = productById[plan.product_id];
+        if (!p) return null;
+        const product = cpProductForPlan(p, plan);
+        return {
+          product: p,
+          label: `${isFr ? (p.name_fr || p.name) : p.name}${p.variety ? ' — ' + (isFr ? (p.variety_fr || p.variety) : p.variety) : ''}`,
+          rounds: cpComputeProductWindows(product, loc).rounds
+        };
+      }).filter(r => r && r.rounds.some(w => w.sow || w.plant || w.harvest));
+
+      if (!rows.length){
+        cppChartContainer.innerHTML = '';
+        cppChartEmpty.textContent = t.cpp_empty;
+        cppChartEmpty.classList.remove('hide');
+        cppTableRows.innerHTML = '';
+        return;
+      }
+      cppChartEmpty.classList.add('hide');
+
+      // Chronological read of "what to do first" for the plan, not tied to
+      // the main calendar's user-selectable sort.
+      cpRenderGanttInto(rows, 'sow', isFr, t, cppChartContainer, cppTableRows);
+    }
+
     // Tap-to-show tooltip (mobile — hover/focus alone isn't reliable on touch)
     cpChartContainer.addEventListener('click', (e) => {
       const bar = e.target.closest('.cp-bar');
       const wasTapped = bar && bar.classList.contains('tapped');
       cpChartContainer.querySelectorAll('.cp-bar.tapped').forEach(b => b.classList.remove('tapped'));
+      if (bar && !wasTapped) bar.classList.add('tapped');
+    });
+    cppChartContainer.addEventListener('click', (e) => {
+      const bar = e.target.closest('.cp-bar');
+      const wasTapped = bar && bar.classList.contains('tapped');
+      cppChartContainer.querySelectorAll('.cp-bar.tapped').forEach(b => b.classList.remove('tapped'));
       if (bar && !wasTapped) bar.classList.add('tapped');
     });
 
@@ -4070,6 +4178,12 @@ function applyI18n(){
       const willShow = cpTableWrap.classList.contains('hide');
       cpTableWrap.classList.toggle('hide', !willShow);
       cpTableToggleBtn.textContent = willShow ? t.stats_hide_table : t.stats_show_table;
+    };
+    cppTableToggleBtn.onclick = () => {
+      const t = I18N[curLang] || I18N.fr;
+      const willShow = cppTableWrap.classList.contains('hide');
+      cppTableWrap.classList.toggle('hide', !willShow);
+      cppTableToggleBtn.textContent = willShow ? t.stats_hide_table : t.stats_show_table;
     };
 
     // === Vue Planification des cultures — mon plan de culture ===
@@ -4294,6 +4408,7 @@ function applyI18n(){
         }).join('');
       }
 
+      renderCropPlanCalendar();
       renderCropForecast();
     }
 
